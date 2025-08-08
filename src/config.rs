@@ -11,7 +11,11 @@ use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoEnumIterator};
 
-use crate::{color::Colors, cs2::weapon::Weapon, key_codes::KeyCode};
+use crate::{
+    color::Colors,
+    cs2::{bones::Bones, weapon::Weapon},
+    key_codes::KeyCode,
+};
 
 const REFRESH_RATE: u64 = 100;
 pub const LOOP_DURATION: Duration = Duration::from_millis(1000 / REFRESH_RATE);
@@ -86,6 +90,7 @@ pub struct AimbotConfig {
     pub fov: f32,
     pub smooth: f32,
     pub multibone: bool,
+    pub bones: Vec<Bones>,
 }
 
 impl Default for AimbotConfig {
@@ -99,6 +104,15 @@ impl Default for AimbotConfig {
             fov: 2.5,
             smooth: 5.0,
             multibone: true,
+            bones: vec![
+                Bones::Head,
+                Bones::Neck,
+                Bones::Spine4,
+                Bones::Spine3,
+                Bones::Spine2,
+                Bones::Spine1,
+                Bones::Hip,
+            ],
         }
     }
 }

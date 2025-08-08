@@ -1,7 +1,8 @@
 #![allow(unused)]
+use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
-#[derive(Debug, Clone, Copy, EnumIter, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Bones {
     Hip = 0,
     Spine1 = 1,
