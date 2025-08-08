@@ -220,13 +220,6 @@ impl App {
                 }
                 ui.label("Start Bullet");
             });
-
-            if ui
-                .checkbox(&mut self.weapon_config().aimbot.multibone, "Multibone")
-                .changed()
-            {
-                self.send_config();
-            }
         });
 
         ui.collapsing("Checks", |ui| {

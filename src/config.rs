@@ -89,7 +89,6 @@ pub struct AimbotConfig {
     pub flash_check: bool,
     pub fov: f32,
     pub smooth: f32,
-    pub multibone: bool,
     pub bones: Vec<Bones>,
 }
 
@@ -103,7 +102,6 @@ impl Default for AimbotConfig {
             flash_check: true,
             fov: 2.5,
             smooth: 5.0,
-            multibone: true,
             bones: vec![
                 Bones::Head,
                 Bones::Neck,

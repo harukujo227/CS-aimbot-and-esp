@@ -6,7 +6,7 @@ use crate::{
     mouse::Mouse,
 };
 
-use super::{CS2, bones::Bones, player::Player};
+use super::{CS2, player::Player};
 
 impl CS2 {
     pub fn aimbot(&mut self, config: &Config, mouse: &mut Mouse) {
@@ -29,15 +29,20 @@ impl CS2 {
             return;
         }
 
-        let target_angle = if config.multibone {
-            self.target.angle
-        } else {
-            let head_position = target.bone_position(self, Bones::Head.u64());
-            self.angle_to_target(
-                &local_player,
-                &head_position,
-                &self.target.previous_aim_punch,
-            )
+        let target_angle = {
+            let mut smallest_fov = 360.0;
+            let mut smallest_angle = glam::Vec2::ZERO;
+            for bone in &config.bones {
+                let bone_pos = target.bone_position(self, bone.u64());
+                let angle =
+                    self.angle_to_target(&local_player, &bone_pos, &self.target.previous_aim_punch);
+                let fov = angles_to_fov(&local_player.view_angles(self), &angle);
+                if fov < smallest_fov {
+                    smallest_fov = fov;
+                    smallest_angle = angle;
+                }
+            }
+            smallest_angle
         };
 
         let view_angles = local_player.view_angles(self);
