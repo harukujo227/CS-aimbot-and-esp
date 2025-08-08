@@ -4,7 +4,7 @@ use glam::Vec2;
 use rand::rng;
 
 use crate::{
-    config::Config,
+    config::{Config, TriggerbotMode},
     cs2::{CS2, bones::Bones, player::Player, weapon_class::WeaponClass},
     math::angles_to_fov,
     mouse::Mouse,
@@ -13,14 +13,31 @@ use crate::{
 #[derive(Debug, Default)]
 pub struct Triggerbot {
     next_shot: Option<Instant>,
+    previous_button_state: bool,
+    pub(crate) active: bool,
 }
 
 impl CS2 {
     pub fn triggerbot(&mut self, config: &Config) {
+        let hotkey = config.aim.triggerbot_hotkey;
         let config = self.triggerbot_config(config);
 
         if !config.enabled || self.trigger.next_shot.is_some() {
             return;
+        }
+
+        // button state
+        let button_state = self.is_button_down(&hotkey);
+        if config.mode == TriggerbotMode::Hold && !button_state {
+            return;
+        } else {
+            if button_state && !self.trigger.previous_button_state {
+                self.trigger.active = !self.trigger.active;
+            }
+            self.trigger.previous_button_state = button_state;
+            if !self.trigger.active {
+                return;
+            }
         }
 
         let Some(local_player) = Player::local_player(self) else {

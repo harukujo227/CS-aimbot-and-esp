@@ -11,7 +11,7 @@ use rcs::Recoil;
 
 use crate::{
     bvh::Bvh,
-    config::{AimbotConfig, Config, RcsConfig, TriggerbotConfig},
+    config::{AimbotConfig, Config, RcsConfig, TriggerbotConfig, TriggerbotMode},
     constants::cs2::{self, TEAM_CT, TEAM_T},
     cs2::{
         bones::Bones, offsets::Offsets, planted_c4::PlantedC4, smoke::Smoke, target::Target,
@@ -105,9 +105,8 @@ impl Game for CS2 {
         self.fov_changer(config);
 
         self.rcs(config, mouse);
-        if self.is_button_down(&config.aim.triggerbot_hotkey) {
-            self.triggerbot(config);
-        }
+        self.triggerbot(config);
+
         self.triggerbot_shoot(mouse);
 
         self.find_target();
@@ -117,7 +116,7 @@ impl Game for CS2 {
         }
     }
 
-    fn data(&self, data: &mut Data) {
+    fn data(&self, config: &Config, data: &mut Data) {
         data.players.clear();
         data.weapons.clear();
         let Some(local_player) = Player::local_player(self) else {
@@ -175,6 +174,11 @@ impl Game for CS2 {
         data.weapon = local_player.weapon(self);
         data.in_game = true;
         data.is_ffa = self.is_ffa();
+        data.triggerbot_active = if self.triggerbot_config(config).mode == TriggerbotMode::Toggle {
+            self.trigger.active
+        } else {
+            false
+        };
 
         data.view_matrix = self.process.read::<Mat4>(self.offsets.direct.view_matrix);
         let sdl_window = self.process.read::<u64>(self.offsets.direct.sdl_window);
@@ -213,7 +217,7 @@ impl CS2 {
         }
     }
 
-    fn aimbot_config<'a>(&mut self, config: &'a Config) -> &'a AimbotConfig {
+    fn aimbot_config<'a>(&self, config: &'a Config) -> &'a AimbotConfig {
         if let Some(weapon_config) = config.aim.weapons.get(&self.weapon)
             && weapon_config.aimbot.enable_override
         {
@@ -222,7 +226,7 @@ impl CS2 {
         &config.aim.global.aimbot
     }
 
-    fn rcs_config<'a>(&mut self, config: &'a Config) -> &'a RcsConfig {
+    fn rcs_config<'a>(&self, config: &'a Config) -> &'a RcsConfig {
         if let Some(weapon_config) = config.aim.weapons.get(&self.weapon)
             && weapon_config.rcs.enable_override
         {
@@ -231,7 +235,7 @@ impl CS2 {
         &config.aim.global.rcs
     }
 
-    fn triggerbot_config<'a>(&mut self, config: &'a Config) -> &'a TriggerbotConfig {
+    fn triggerbot_config<'a>(&self, config: &'a Config) -> &'a TriggerbotConfig {
         if let Some(weapon_config) = config.aim.weapons.get(&self.weapon)
             && weapon_config.triggerbot.enable_override
         {

@@ -12,8 +12,8 @@ use crate::{
     bvh::{Aabb, Triangle},
     color::Colors,
     config::{
-        AimbotConfig, Config, DrawMode, GameStatus, VERSION, WeaponConfig, available_configs,
-        delete_config, exe_path, parse_config, write_config,
+        AimbotConfig, Config, DrawMode, GameStatus, TriggerbotMode, VERSION, WeaponConfig,
+        available_configs, delete_config, exe_path, parse_config, write_config,
     },
     constants::cs2,
     cs2::{bones::Bones, weapon::Weapon, weapon_class::WeaponClass},
@@ -307,6 +307,20 @@ impl App {
             }
             ui.label("Delay (ms)");
         });
+
+        egui::ComboBox::new("triggerbot_mode", "Mode")
+            .selected_text(format!("{:?}", self.weapon_config().triggerbot.mode))
+            .show_ui(ui, |ui| {
+                for mode in TriggerbotMode::iter() {
+                    let text = format!("{:?}", &mode);
+                    if ui
+                        .selectable_value(&mut self.weapon_config().triggerbot.mode, mode, text)
+                        .clicked()
+                    {
+                        self.send_config();
+                    }
+                }
+            });
 
         if ui
             .checkbox(&mut self.weapon_config().triggerbot.head_only, "Head Only")
@@ -940,7 +954,7 @@ impl App {
                         pos2(pos.x, pos.y + self.config.hud.font_size),
                         Align2::CENTER_CENTER,
                         "defusing",
-                        font,
+                        font.clone(),
                         self.config.hud.text_color,
                     );
                 }
@@ -1010,6 +1024,19 @@ impl App {
                     ),
                 ],
                 text_stroke,
+            );
+        }
+
+        if data.triggerbot_active {
+            painter.text(
+                pos2(
+                    data.window_size.x as f32 / 2.0 + 8.0,
+                    data.window_size.y as f32 / 2.0 + 8.0,
+                ),
+                Align2::LEFT_TOP,
+                "trigger active",
+                font,
+                self.config.hud.text_color,
             );
         }
     }

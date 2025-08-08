@@ -14,7 +14,7 @@ pub trait Game: std::fmt::Debug {
     fn is_valid(&self) -> bool;
     fn setup(&mut self);
     fn run(&mut self, config: &Config, mouse: &mut Mouse);
-    fn data(&self, data: &mut Data);
+    fn data(&self, config: &Config, data: &mut Data);
 }
 
 pub struct GameManager {
@@ -85,7 +85,7 @@ impl GameManager {
                 }
                 self.aimbot.run(&self.config, &mut self.mouse);
                 let mut data = self.data.lock().unwrap();
-                self.aimbot.data(&mut data);
+                self.aimbot.data(&self.config, &mut data);
             }
 
             if self.aimbot.is_valid() && mouse_valid {

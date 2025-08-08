@@ -120,11 +120,18 @@ impl Default for RcsConfig {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, EnumIter)]
+pub enum TriggerbotMode {
+    Hold,
+    Toggle,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TriggerbotConfig {
     pub enable_override: bool,
     pub enabled: bool,
     pub delay: RangeInclusive<u64>,
+    pub mode: TriggerbotMode,
     pub flash_check: bool,
     pub scope_check: bool,
     pub velocity_check: bool,
@@ -138,6 +145,7 @@ impl Default for TriggerbotConfig {
             enable_override: false,
             enabled: false,
             delay: 100..=200,
+            mode: TriggerbotMode::Hold,
             flash_check: true,
             scope_check: true,
             velocity_check: true,

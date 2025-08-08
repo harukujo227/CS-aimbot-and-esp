@@ -16,6 +16,7 @@ pub struct Data {
     pub view_matrix: Mat4,
     pub window_position: IVec2,
     pub window_size: IVec2,
+    pub triggerbot_active: bool,
 }
 
 #[derive(Debug, Default)]
