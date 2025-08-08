@@ -84,25 +84,23 @@ impl Mouse {
 
             let path = format!("/dev/input/{}", name);
             let file = OpenOptions::new().write(true).open(path);
-            match file {
-                Ok(file) => {
-                    return Self {
-                        file,
-                        status: DeviceStatus::Working(device_name),
-                    };
-                }
+            return match file {
+                Ok(file) => Self {
+                    file,
+                    status: DeviceStatus::Working(device_name),
+                },
                 Err(_) => {
                     warn!("please add your user to the input group or execute with sudo");
                     warn!(
                         "without this, mouse movements will be written to /dev/null and discarded"
                     );
                     let file = OpenOptions::new().write(true).open("/dev/null").unwrap();
-                    return Self {
+                    Self {
                         file,
                         status: DeviceStatus::PermissionsRequired,
-                    };
+                    }
                 }
-            }
+            };
         }
 
         let file = OpenOptions::new().write(true).open("/dev/null").unwrap();
@@ -183,7 +181,7 @@ impl Mouse {
         self.file.write_all(&syn.bytes()).unwrap();
     }
 
-    pub fn is_valid(&mut self) -> bool {
+    pub fn valid(&mut self) -> bool {
         self.file.write_all(&SYN.bytes()).is_ok()
     }
 }
@@ -209,7 +207,7 @@ fn hex_to_reversed_binary(hex_char: char) -> Vec<bool> {
 }
 
 pub fn decode_capabilities(filename: &str) -> Vec<bool> {
-    let Ok(content) = std::fs::read_to_string(filename) else {
+    let Ok(content) = fs::read_to_string(filename) else {
         return Vec::new();
     };
 

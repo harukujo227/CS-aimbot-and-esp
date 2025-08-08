@@ -789,7 +789,7 @@ impl App {
                     for (name, color) in Colors::ACCENT_COLORS {
                         if ui
                             .add(
-                                egui::Button::selectable(color == self.config.accent_color, name)
+                                Button::selectable(color == self.config.accent_color, name)
                                     .fill(color),
                             )
                             .clicked()
@@ -1116,9 +1116,9 @@ impl App {
     fn player_box(&self, painter: &Painter, player: &PlayerData, data: &Data) {
         let health_color = self.health_color(player.health);
         let color = match &self.config.player.draw_box {
-            crate::config::DrawMode::None => health_color,
-            crate::config::DrawMode::Health => health_color,
-            crate::config::DrawMode::Color => {
+            DrawMode::None => health_color,
+            DrawMode::Health => health_color,
+            DrawMode::Color => {
                 if player.visible {
                     self.config.player.box_visible_color
                 } else {
@@ -1127,7 +1127,7 @@ impl App {
             }
         };
         let stroke = Stroke::new(self.config.hud.line_width, color);
-        let font = egui::FontId::proportional(self.config.hud.font_size);
+        let font = FontId::proportional(self.config.hud.font_size);
 
         let midpoint = (player.position + player.head) / 2.0;
         let height = player.head.z - player.position.z + 24.0;
@@ -1273,9 +1273,9 @@ impl App {
 
     fn skeleton(&self, painter: &Painter, player: &PlayerData, data: &Data) {
         let color = match &self.config.player.draw_skeleton {
-            crate::config::DrawMode::None => return,
-            crate::config::DrawMode::Health => self.health_color(player.health),
-            crate::config::DrawMode::Color => self.config.player.skeleton_color,
+            DrawMode::None => return,
+            DrawMode::Health => self.health_color(player.health),
+            DrawMode::Color => self.config.player.skeleton_color,
         };
         let stroke = Stroke::new(self.config.hud.line_width, color);
 

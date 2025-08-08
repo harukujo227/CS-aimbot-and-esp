@@ -1,13 +1,22 @@
 use std::{
-    collections::HashMap, sync::{mpsc, Arc, Mutex}, thread::sleep, time::Instant
+    collections::HashMap,
+    sync::{Arc, Mutex, mpsc},
+    thread::sleep,
+    time::Instant,
 };
 
 use log::{debug, info};
 
 use crate::{
-    bvh::Bvh, config::{
-        exe_path, parse_config, Config, GameStatus, DEFAULT_CONFIG_NAME, LOOP_DURATION, SLEEP_DURATION
-    }, cs2::CS2, data::Data, message::Message, mouse::{DeviceStatus, Mouse}
+    bvh::Bvh,
+    config::{
+        Config, DEFAULT_CONFIG_NAME, GameStatus, LOOP_DURATION, SLEEP_DURATION, exe_path,
+        parse_config,
+    },
+    cs2::CS2,
+    data::Data,
+    message::Message,
+    mouse::{DeviceStatus, Mouse},
 };
 
 pub trait Game: std::fmt::Debug {
@@ -65,7 +74,7 @@ impl GameManager {
                 self.parse_message(message);
             }
 
-            let mut mouse_valid = self.mouse.is_valid();
+            let mut mouse_valid = self.mouse.valid();
             if !mouse_valid || self.mouse.status == DeviceStatus::NotFound {
                 mouse_valid = self.find_mouse();
             }

@@ -1,5 +1,8 @@
 use std::{
-    collections::HashMap, path::PathBuf, sync::{mpsc, Arc, Mutex}, time::{Duration, Instant}
+    collections::HashMap,
+    path::PathBuf,
+    sync::{Arc, Mutex, mpsc},
+    time::{Duration, Instant},
 };
 
 use egui::{FontData, FontDefinitions, Stroke, Style};
@@ -11,9 +14,18 @@ use winit::{
 };
 
 use crate::{
-    bvh::Bvh, color::Colors, config::{
-        available_configs, exe_path, parse_config, write_config, Config, GameStatus, DEFAULT_CONFIG_NAME
-    }, cs2::weapon::Weapon, data::Data, gui::{AimbotTab, Tab}, message::Message, mouse::DeviceStatus, window_context::WindowContext
+    bvh::Bvh,
+    color::Colors,
+    config::{
+        Config, DEFAULT_CONFIG_NAME, GameStatus, available_configs, exe_path, parse_config,
+        write_config,
+    },
+    cs2::weapon::Weapon,
+    data::Data,
+    gui::{AimbotTab, Tab},
+    message::Message,
+    mouse::DeviceStatus,
+    window_context::WindowContext,
 };
 
 const FRAME_RATE: u64 = 120;
@@ -52,7 +64,7 @@ impl App {
         tx: mpsc::Sender<Message>,
         rx: mpsc::Receiver<Message>,
         data: Arc<Mutex<Data>>,
-        bvh: Arc<Mutex<HashMap<String,Bvh>>>,
+        bvh: Arc<Mutex<HashMap<String, Bvh>>>,
     ) -> Self {
         // read config
         let config = parse_config(&exe_path().join(DEFAULT_CONFIG_NAME));
@@ -88,6 +100,18 @@ impl App {
 }
 
 impl ApplicationHandler for App {
+    fn new_events(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop, cause: StartCause) {
+        if let StartCause::ResumeTimeReached { .. } = cause {
+            if let Some(window) = &self.gui_window {
+                window.window().request_redraw();
+            }
+            if let Some(window) = &self.overlay_window {
+                window.window().request_redraw();
+            }
+            self.next_frame_time += FRAME_DURATION;
+        }
+    }
+
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         let (gui_window, gui_gl) = create_display(event_loop, false);
         let gui_gl = Arc::new(gui_gl);
@@ -118,27 +142,11 @@ impl ApplicationHandler for App {
         ));
     }
 
-    fn new_events(
-        &mut self,
-        _event_loop: &winit::event_loop::ActiveEventLoop,
-        cause: winit::event::StartCause,
-    ) {
-        if let StartCause::ResumeTimeReached { .. } = cause {
-            if let Some(window) = &self.gui_window {
-                window.window().request_redraw();
-            }
-            if let Some(window) = &self.overlay_window {
-                window.window().request_redraw();
-            }
-            self.next_frame_time += FRAME_DURATION;
-        }
-    }
-
     fn window_event(
         &mut self,
         event_loop: &winit::event_loop::ActiveEventLoop,
         window_id: winit::window::WindowId,
-        event: winit::event::WindowEvent,
+        event: WindowEvent,
     ) {
         let Some(gui_window) = &self.gui_window else {
             return;

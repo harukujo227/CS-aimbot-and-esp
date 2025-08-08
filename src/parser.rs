@@ -10,7 +10,6 @@ use std::{
 use bytemuck::AnyBitPattern;
 use glam::{Mat4, Quat, Vec2, Vec3, Vec4};
 use sha2::Digest;
-use ureq::Agent;
 
 use crate::{
     bvh::{Bvh, Triangle},
@@ -451,7 +450,7 @@ fn needs_updating(file_path: &Path, checksum: &str) -> bool {
     file_checksum != checksum
 }
 
-fn download_s2v(client: &Agent, url: &str, file_path: &Path) {
+fn download_s2v(client: &ureq::Agent, url: &str, file_path: &Path) {
     let mut res = client
         .get(url)
         .call()
@@ -471,7 +470,7 @@ fn unzip_s2v(file_path: &Path, dir: &Path) {
 }
 
 fn read<T: AnyBitPattern + Default>(reader: &mut impl Read) -> T {
-    let mut buffer = vec![0u8; std::mem::size_of::<T>()];
+    let mut buffer = vec![0u8; size_of::<T>()];
     reader.read_exact(&mut buffer).unwrap();
     *bytemuck::from_bytes(&buffer)
 }

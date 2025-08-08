@@ -86,7 +86,7 @@ impl Process {
         if (address < self.min || address > self.max) && self.is_setup {
             debug!("tried to read at address 0x{address:x}");
         }
-        let mut buffer = vec![0u8; std::mem::size_of::<T>()];
+        let mut buffer = vec![0u8; size_of::<T>()];
 
         let local_iov = iovec {
             iov_base: buffer.as_mut_ptr() as *mut libc::c_void,
