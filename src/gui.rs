@@ -12,7 +12,7 @@ use crate::{
     bvh::{Aabb, Triangle},
     color::Colors,
     config::{
-        AimbotConfig, Config, DrawMode, GameStatus, TriggerbotMode, VERSION, WeaponConfig,
+        AimbotConfig, BoxMode, Config, DrawMode, GameStatus, TriggerbotMode, VERSION, WeaponConfig,
         available_configs, delete_config, exe_path, parse_config, write_config,
     },
     constants::cs2,
@@ -465,6 +465,20 @@ impl App {
                     let text = format!("{:?}", &mode);
                     if ui
                         .selectable_value(&mut self.config.player.draw_box, mode, text)
+                        .clicked()
+                    {
+                        self.send_config();
+                    }
+                }
+            });
+
+        egui::ComboBox::new("box_mode", "Box Mode")
+            .selected_text(format!("{:?}", self.config.player.box_mode))
+            .show_ui(ui, |ui| {
+                for mode in BoxMode::iter() {
+                    let text = format!("{:?}", &mode);
+                    if ui
+                        .selectable_value(&mut self.config.player.box_mode, mode, text)
                         .clicked()
                     {
                         self.send_config();
@@ -1138,22 +1152,32 @@ impl App {
         let br = pos2(bottom.x + half_width, bottom.y);
 
         if self.config.player.draw_box != DrawMode::None {
-            painter.line(
-                vec![pos2(tl.x + ew, tl.y), tl, pos2(tl.x, tl.y + qw)],
-                stroke,
-            );
-            painter.line(
-                vec![pos2(tr.x - ew, tl.y), tr, pos2(tr.x, tr.y + qw)],
-                stroke,
-            );
-            painter.line(
-                vec![pos2(bl.x + ew, bl.y), bl, pos2(bl.x, bl.y - qw)],
-                stroke,
-            );
-            painter.line(
-                vec![pos2(br.x - ew, bl.y), br, pos2(br.x, br.y - qw)],
-                stroke,
-            );
+            if self.config.player.box_mode == BoxMode::Gap {
+                painter.line(
+                    vec![pos2(tl.x + ew, tl.y), tl, pos2(tl.x, tl.y + qw)],
+                    stroke,
+                );
+                painter.line(
+                    vec![pos2(tr.x - ew, tl.y), tr, pos2(tr.x, tr.y + qw)],
+                    stroke,
+                );
+                painter.line(
+                    vec![pos2(bl.x + ew, bl.y), bl, pos2(bl.x, bl.y - qw)],
+                    stroke,
+                );
+                painter.line(
+                    vec![pos2(br.x - ew, bl.y), br, pos2(br.x, br.y - qw)],
+                    stroke,
+                );
+            } else {
+                painter.rect(
+                    egui::Rect::from_min_max(tl, br),
+                    0,
+                    Color32::TRANSPARENT,
+                    stroke,
+                    egui::StrokeKind::Middle,
+                );
+            }
         }
 
         // health bar

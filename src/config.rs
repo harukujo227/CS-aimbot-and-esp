@@ -189,10 +189,17 @@ pub enum DrawMode {
     Color,
 }
 
+#[derive(Debug, Clone, PartialEq, EnumIter, Serialize, Deserialize)]
+pub enum BoxMode {
+    Gap,
+    Full,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlayerConfig {
     pub enabled: bool,
     pub draw_box: DrawMode,
+    pub box_mode: BoxMode,
     pub box_visible_color: Color32,
     pub box_invisible_color: Color32,
     pub draw_skeleton: DrawMode,
@@ -209,6 +216,7 @@ impl Default for PlayerConfig {
         Self {
             enabled: true,
             draw_box: DrawMode::Color,
+            box_mode: BoxMode::Gap,
             box_visible_color: Color32::WHITE,
             box_invisible_color: Color32::RED,
             draw_skeleton: DrawMode::Health,
