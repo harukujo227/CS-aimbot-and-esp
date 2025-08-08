@@ -319,8 +319,16 @@ impl Player {
         let bvh_map = cs2.bvh.lock().unwrap();
         if let Some(bvh) = bvh_map.get(&map_name) {
             let eye_pos = local_player.eye_position(cs2);
-            if !bvh.has_line_of_sight(eye_pos, self.eye_position(cs2))
-                && !bvh.has_line_of_sight(eye_pos, self.position(cs2))
+            const CHECKED_BONES: [Bones; 5] = [
+                Bones::Head,
+                Bones::LeftFoot,
+                Bones::RightFoot,
+                Bones::LeftHand,
+                Bones::RightHand,
+            ];
+            if !CHECKED_BONES
+                .iter()
+                .any(|bone| bvh.has_line_of_sight(eye_pos, self.bone_position(cs2, bone.u64())))
             {
                 return false;
             }

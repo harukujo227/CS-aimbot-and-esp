@@ -25,22 +25,8 @@ impl CS2 {
             return;
         }
 
-        if config.visibility_check {
-            let map_name = self.current_map();
-            let bvh_map = self.bvh.lock().unwrap();
-            if let Some(bvh) = bvh_map.get(&map_name) {
-                let eye_pos = local_player.eye_position(self);
-                if !bvh.has_line_of_sight(eye_pos, target.eye_position(self))
-                    && !bvh.has_line_of_sight(eye_pos, target.position(self))
-                {
-                    return;
-                }
-            } else {
-                let spotted_mask = target.spotted_mask(self);
-                if (spotted_mask & (1 << self.target.local_pawn_index)) == 0 {
-                    return;
-                }
-            }
+        if config.visibility_check && !target.visible(self, &local_player) {
+            return;
         }
 
         let target_angle = if config.multibone {
