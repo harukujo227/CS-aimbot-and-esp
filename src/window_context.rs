@@ -11,39 +11,27 @@ pub struct WindowContext {
 }
 
 impl WindowContext {
-    pub fn new(event_loop: &winit::event_loop::ActiveEventLoop, overlay: bool) -> Self {
+    pub fn new(event_loop: &winit::event_loop::ActiveEventLoop) -> Self {
         use glutin::context::NotCurrentGlContext as _;
         use glutin::display::GetGlDisplay as _;
         use glutin::display::GlDisplay as _;
         use glutin::prelude::GlSurface as _;
         use winit::raw_window_handle::HasWindowHandle as _;
 
-        let winit_window_builder = if overlay {
-            winit::window::WindowAttributes::default()
-                .with_decorations(false)
-                .with_inner_size(winit::dpi::PhysicalSize::new(1, 1))
-                .with_position(winit::dpi::PhysicalPosition::new(0, 0))
-                .with_resizable(true)
-                .with_transparent(true)
-                .with_window_level(winit::window::WindowLevel::AlwaysOnTop)
-                .with_override_redirect(true)
-                .with_x11_window_type(vec![WindowType::Tooltip])
-                .with_title("deadlocked")
-        } else {
-            winit::window::WindowAttributes::default()
-                .with_inner_size(winit::dpi::LogicalSize::new(600, 400))
-                .with_title("deadlocked")
-        };
+        let winit_window_builder = winit::window::WindowAttributes::default()
+            .with_decorations(false)
+            .with_inner_size(winit::dpi::PhysicalSize::new(1, 1))
+            .with_position(winit::dpi::PhysicalPosition::new(0, 0))
+            .with_resizable(true)
+            .with_transparent(true)
+            .with_window_level(winit::window::WindowLevel::AlwaysOnTop)
+            .with_override_redirect(true)
+            .with_x11_window_type(vec![WindowType::Tooltip])
+            .with_title("deadlocked");
 
-        let config_template_builder = if overlay {
-            glutin::config::ConfigTemplateBuilder::new()
-                .prefer_hardware_accelerated(Some(true))
-                .with_transparency(true)
-        } else {
-            glutin::config::ConfigTemplateBuilder::new()
-                .prefer_hardware_accelerated(Some(true))
-                .with_transparency(false)
-        };
+        let config_template_builder = glutin::config::ConfigTemplateBuilder::new()
+            .prefer_hardware_accelerated(Some(true))
+            .with_transparency(true);
 
         let (mut window, gl_config) =
             glutin_winit::DisplayBuilder::new() // let glutin-winit helper crate handle the complex parts of opengl context creation
@@ -111,10 +99,8 @@ impl WindowContext {
             .set_swap_interval(&gl_context, glutin::surface::SwapInterval::DontWait)
             .unwrap();
 
-        if overlay {
-            window.set_cursor_hittest(false).unwrap();
-            window.set_outer_position(winit::dpi::PhysicalPosition::new(0, 0));
-        }
+        window.set_cursor_hittest(false).unwrap();
+        window.set_outer_position(winit::dpi::PhysicalPosition::new(0, 0));
 
         Self {
             window,
@@ -147,6 +133,7 @@ impl WindowContext {
         self.gl_display.get_proc_address(addr)
     }
 
+    #[allow(unused)]
     pub fn make_current(&self) -> glutin::error::Result<()> {
         self.gl_context.make_current(&self.gl_surface)
     }

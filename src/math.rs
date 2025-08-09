@@ -79,18 +79,15 @@ pub fn world_to_screen(position: &Vec3, data: &Data) -> Option<Pos2> {
 
     screen_position /= w;
 
-    let half_size = Vec2::new(
-        data.window_size.x as f32 * 0.5,
-        data.window_size.y as f32 * 0.5,
-    );
+    let half_size = Vec2::new(data.window_size.x * 0.5, data.window_size.y * 0.5);
 
-    screen_position.x = half_size.x + 0.5 * screen_position.x * data.window_size.x as f32 + 0.5;
-    screen_position.y = half_size.y - 0.5 * screen_position.y * data.window_size.y as f32 + 0.5;
+    screen_position.x = half_size.x + 0.5 * screen_position.x * data.window_size.x + 0.5;
+    screen_position.y = half_size.y - 0.5 * screen_position.y * data.window_size.y + 0.5;
 
     if screen_position.x < 0.0
-        || screen_position.x > data.window_size.x as f32
+        || screen_position.x > data.window_size.x
         || screen_position.y < 0.0
-        || screen_position.y > data.window_size.y as f32
+        || screen_position.y > data.window_size.y
     {
         return None;
     }

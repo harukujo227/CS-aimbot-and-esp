@@ -119,6 +119,19 @@ impl Game for CS2 {
     fn data(&self, config: &Config, data: &mut Data) {
         data.players.clear();
         data.weapons.clear();
+
+        let sdl_window = self.process.read::<u64>(self.offsets.direct.sdl_window);
+        if sdl_window == 0 {
+            data.window_position = Vec2::ZERO;
+            data.window_size = Vec2::ZERO;
+        } else {
+            data.window_position = self.process.read::<IVec2>(sdl_window + 0x18).as_vec2();
+            data.window_size = self
+                .process
+                .read::<IVec2>(sdl_window + 0x18 + 0x08)
+                .as_vec2();
+        }
+
         let Some(local_player) = Player::local_player(self) else {
             data.weapon = Weapon::default();
             data.in_game = false;
@@ -181,14 +194,6 @@ impl Game for CS2 {
         };
 
         data.view_matrix = self.process.read::<Mat4>(self.offsets.direct.view_matrix);
-        let sdl_window = self.process.read::<u64>(self.offsets.direct.sdl_window);
-        if sdl_window == 0 {
-            data.window_position = IVec2::ZERO;
-            data.window_size = IVec2::ZERO;
-        } else {
-            data.window_position = self.process.read(sdl_window + 0x18);
-            data.window_size = self.process.read(sdl_window + 0x18 + 0x08);
-        }
 
         if let Some(bomb) = PlantedC4::get(self) {
             data.bomb.planted = bomb.is_planted(self);
@@ -474,7 +479,7 @@ impl CS2 {
     }
 
     // misc
-    fn is_button_down(&self, button: &KeyCode) -> bool {
+    pub fn is_button_down(&self, button: &KeyCode) -> bool {
         if *button == KeyCode::None {
             return true;
         }

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use glam::{IVec2, Mat4, Vec3};
+use glam::{Mat4, Vec2, Vec3};
 
 use crate::cs2::{bones::Bones, weapon::Weapon};
 
@@ -14,8 +14,8 @@ pub struct Data {
     pub weapons: Vec<(Weapon, Vec3)>,
     pub bomb: BombData,
     pub view_matrix: Mat4,
-    pub window_position: IVec2,
-    pub window_size: IVec2,
+    pub window_position: Vec2,
+    pub window_size: Vec2,
     pub triggerbot_active: bool,
 }
 

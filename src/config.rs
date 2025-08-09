@@ -19,7 +19,7 @@ use crate::{
 
 const REFRESH_RATE: u64 = 100;
 pub const LOOP_DURATION: Duration = Duration::from_millis(1000 / REFRESH_RATE);
-pub const SLEEP_DURATION: Duration = Duration::from_secs(1);
+pub const SLEEP_DURATION: Duration = Duration::from_secs(5);
 pub const DEFAULT_CONFIG_NAME: &str = "deadlocked.toml";
 pub const VERSION: &str = concat!("v", env!("CARGO_PKG_VERSION"));
 
@@ -44,6 +44,7 @@ pub struct Config {
     pub player: PlayerConfig,
     pub hud: HudConfig,
     pub misc: UnsafeConfig,
+    pub menu_hotkey: KeyCode,
     pub accent_color: Color32,
 }
 
@@ -54,6 +55,7 @@ impl Default for Config {
             player: PlayerConfig::default(),
             hud: HudConfig::default(),
             misc: UnsafeConfig::default(),
+            menu_hotkey: KeyCode::Delete,
             accent_color: Colors::BLUE,
         }
     }

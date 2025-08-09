@@ -142,89 +142,108 @@ pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, force_reparse: bool) {
             .unwrap();
     }
 
+    let mut threads = vec![];
     for map in &files {
-        let map_name = map.replace(".vpk", "");
-        let bvh_name = format!("{map_name}.bvh");
-        let bvh_path = maps_dir.join(bvh_name);
+        let map = map.clone();
+        let maps_dir = maps_dir.clone();
+        let bvh_thread = bvh.clone();
+        let thread = std::thread::spawn(move || {
+            parse_map(&map, &maps_dir, bvh_thread, force_reparse);
+        });
+        threads.push(thread);
+    }
+    threads
+        .into_iter()
+        .for_each(|thread| thread.join().unwrap_or(()));
+    log::info!("loaded map info");
+}
 
-        if bvh_path.exists() && !force_reparse {
-            let mut bvh_file = File::open(&bvh_path).unwrap();
-            if let Some(map_bvh) = Bvh::load(&mut bvh_file) {
-                log::debug!("loaded bvh for {map_name}");
-                bvh.lock().unwrap().insert(map_name, map_bvh);
-                continue;
-            }
+fn parse_map(
+    map: &str,
+    maps_dir: &Path,
+    bvh: Arc<Mutex<HashMap<String, Bvh>>>,
+    force_reparse: bool,
+) {
+    let map_name = map.replace(".vpk", "");
+    let bvh_name = format!("{map_name}.bvh");
+    let bvh_path = maps_dir.join(bvh_name);
+
+    if bvh_path.exists() && !force_reparse {
+        let mut bvh_file = File::open(&bvh_path).unwrap();
+        if let Some(map_bvh) = Bvh::load(&mut bvh_file) {
+            log::debug!("loaded bvh for {map_name}");
+            bvh.lock().unwrap().insert(map_name, map_bvh);
+            return;
         }
+    }
 
-        let geom_dir = maps_dir.join("geometry/maps").join(&map_name);
+    let geom_dir = maps_dir.join("geometry/maps").join(&map_name);
 
-        let mut map_bvh = Bvh::new();
-        for file in std::fs::read_dir(&geom_dir).unwrap() {
-            let Ok(file) = file else {
+    let mut map_bvh = Bvh::new();
+    for file in std::fs::read_dir(&geom_dir).unwrap() {
+        let Ok(file) = file else {
+            continue;
+        };
+        let file_name = file.file_name();
+        let file_name = file_name.to_str().unwrap();
+        let file_type = if file_name.contains("world_physics_hull") {
+            FileType::Hull
+        } else if file_name.contains("world_physics_phys") {
+            FileType::Phys
+        } else {
+            continue;
+        };
+        let file = File::open(file.path()).unwrap();
+        let mut reader = BufReader::new(file);
+        let elements = parse_dmx(&mut reader);
+        let vertex_element = elements.get("DmeVertexData_bind").unwrap();
+        let Some(Attribute::Vec3Array(vertices)) = vertex_element.attributes.get("position$0")
+        else {
+            continue;
+        };
+        let vertex_indices: Vec<&[i32]> = if file_type == FileType::Hull {
+            let Some(face_element) = elements.get("DmeFaceSet_hull faces") else {
                 continue;
             };
-            let file_name = file.file_name();
-            let file_name = file_name.to_str().unwrap();
-            let file_type = if file_name.contains("world_physics_hull") {
-                FileType::Hull
-            } else if file_name.contains("world_physics_phys") {
-                FileType::Phys
-            } else {
-                continue;
-            };
-            let file = File::open(file.path()).unwrap();
-            let mut reader = BufReader::new(file);
-            let elements = parse_dmx(&mut reader);
-            let vertex_element = elements.get("DmeVertexData_bind").unwrap();
-            let Some(Attribute::Vec3Array(vertices)) = vertex_element.attributes.get("position$0")
+            let Some(Attribute::IntegerArray(indices)) = face_element.attributes.get("faces")
             else {
                 continue;
             };
-            let vertex_indices: Vec<&[i32]> = if file_type == FileType::Hull {
-                let Some(face_element) = elements.get("DmeFaceSet_hull faces") else {
-                    continue;
-                };
-                let Some(Attribute::IntegerArray(indices)) = face_element.attributes.get("faces")
-                else {
-                    continue;
-                };
-                indices.split(|i| *i == -1).collect()
-            } else {
-                let Some(Attribute::IntegerArray(indices)) =
-                    vertex_element.attributes.get("position$0Indices")
-                else {
-                    continue;
-                };
-                indices.chunks_exact(3).collect()
+            indices.split(|i| *i == -1).collect()
+        } else {
+            let Some(Attribute::IntegerArray(indices)) =
+                vertex_element.attributes.get("position$0Indices")
+            else {
+                continue;
             };
+            indices.chunks_exact(3).collect()
+        };
 
-            for face in vertex_indices {
-                if face.len() < 3 || face.iter().any(|index| *index as usize >= vertices.len()) {
-                    continue;
-                } else if face.len() == 3 {
+        for face in vertex_indices {
+            if face.len() < 3 || face.iter().any(|index| *index as usize >= vertices.len()) {
+                continue;
+            } else if face.len() == 3 {
+                let v1 = vertices[face[0] as usize];
+                let v2 = vertices[face[1] as usize];
+                let v3 = vertices[face[2] as usize];
+                let triangle = Triangle::new(v1, v2, v3);
+                map_bvh.insert(triangle);
+            } else {
+                for i in 1..face.len() - 1 {
                     let v1 = vertices[face[0] as usize];
-                    let v2 = vertices[face[1] as usize];
-                    let v3 = vertices[face[2] as usize];
+                    let v2 = vertices[face[i] as usize];
+                    let v3 = vertices[face[i + 1] as usize];
                     let triangle = Triangle::new(v1, v2, v3);
                     map_bvh.insert(triangle);
-                } else {
-                    for i in 1..face.len() - 1 {
-                        let v1 = vertices[face[0] as usize];
-                        let v2 = vertices[face[i] as usize];
-                        let v3 = vertices[face[i + 1] as usize];
-                        let triangle = Triangle::new(v1, v2, v3);
-                        map_bvh.insert(triangle);
-                    }
                 }
             }
         }
-        map_bvh.build();
-        let mut bvh_file = File::create(&bvh_path).unwrap();
-        map_bvh.save(&mut bvh_file);
-        log::info!("parsed bvh for {map_name}");
-        bvh.lock().unwrap().insert(map_name, map_bvh);
     }
-    log::info!("loaded map info");
+    map_bvh.build();
+    let mut bvh_file = File::create(&bvh_path).unwrap();
+    map_bvh.save(&mut bvh_file);
+    log::info!("parsed bvh for {map_name}");
+    bvh.lock().unwrap().insert(map_name, map_bvh);
 }
 
 #[derive(PartialEq)]

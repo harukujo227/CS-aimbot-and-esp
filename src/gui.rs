@@ -47,42 +47,57 @@ impl App {
     }
 
     pub fn send_message(&self, message: Message) {
-        self.tx.send(message).expect("aimbot thread died");
+        self.tx.send(message).expect("game thread died");
     }
 
     fn gui(&mut self, ctx: &Context) {
-        egui::SidePanel::new(egui::containers::panel::Side::Left, "sidebar")
+        if !self.menu_open {
+            return;
+        }
+        egui::Window::new("deadlocked")
+            .collapsible(false)
             .resizable(false)
             .show(ctx, |ui| {
-                ui.selectable_value(&mut self.current_tab, Tab::Aimbot, "\u{f04fe} Aimbot");
-                ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
-                ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
-                ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
-                ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
+                ui.set_min_size(egui::vec2(600.0, 400.0));
+                ui.set_max_size(egui::vec2(600.0, 400.0));
+                egui::SidePanel::left("sidebar")
+                    .resizable(false)
+                    .show_inside(ui, |ui| {
+                        ui.selectable_value(&mut self.current_tab, Tab::Aimbot, "\u{f04fe} Aimbot");
+                        ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
+                        ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
+                        ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
+                        ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
 
-                ui.with_layout(egui::Layout::bottom_up(Align::Min), |ui| {
-                    ui.label(VERSION);
-                    if ui.button("Report Issue").clicked() {
-                        ctx.open_url(egui::OpenUrl {
-                            url: String::from("https://github.com/avitran0/deadlocked/issues"),
-                            new_tab: false,
+                        ui.with_layout(egui::Layout::bottom_up(Align::Min), |ui| {
+                            if ui.button("Exit").clicked() {
+                                self.should_close = true;
+                            }
+                            if ui.button("Report Issue").clicked() {
+                                ctx.open_url(egui::OpenUrl {
+                                    url: String::from(
+                                        "https://github.com/avitran0/deadlocked/issues",
+                                    ),
+                                    new_tab: false,
+                                });
+                            }
+                            ui.label(VERSION);
                         });
+                    });
+
+                egui::CentralPanel::default().show_inside(ui, |ui| {
+                    self.add_game_status(ui);
+                    ui.separator();
+
+                    match self.current_tab {
+                        Tab::Aimbot => self.aimbot_settings(ui),
+                        Tab::Player => self.player_settings(ui),
+                        Tab::Hud => self.hud_settings(ui),
+                        Tab::Unsafe => self.unsafe_settings(ui),
+                        Tab::Config => self.config_settings(ui, ctx),
                     }
                 });
             });
-
-        egui::CentralPanel::default().show(ctx, |ui| {
-            self.add_game_status(ui);
-            ui.separator();
-
-            match self.current_tab {
-                Tab::Aimbot => self.aimbot_settings(ui),
-                Tab::Player => self.player_settings(ui),
-                Tab::Hud => self.hud_settings(ui),
-                Tab::Unsafe => self.unsafe_settings(ui),
-                Tab::Config => self.config_settings(ui, ctx),
-            }
-        });
     }
 
     fn aimbot_config(&self, weapon: &Weapon) -> &AimbotConfig {
@@ -128,6 +143,7 @@ impl App {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
                 .id_salt("aimbot_left")
                 .show(left, |left| {
                     self.aimbot_left(left);
@@ -135,6 +151,7 @@ impl App {
 
             let right = &mut cols[1];
             egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
                 .id_salt("aimbot_right")
                 .show(right, |right| {
                     self.aimbot_right(right);
@@ -419,6 +436,7 @@ impl App {
 
     fn player_settings(&mut self, ui: &mut Ui) {
         egui::ScrollArea::vertical()
+            .auto_shrink([false, false])
             .id_salt("player")
             .show(ui, |ui| {
                 ui.columns(2, |cols| {
@@ -553,6 +571,7 @@ impl App {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
                 .id_salt("hud_left")
                 .show(left, |left| {
                     self.hud_left(left);
@@ -560,6 +579,7 @@ impl App {
 
             let right = &mut cols[1];
             egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
                 .id_salt("hud_right")
                 .show(right, |right| {
                     self.hud_right(right);
@@ -637,6 +657,7 @@ impl App {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
                 .id_salt("unsafe_left")
                 .show(left, |left| {
                     self.unsafe_left(left);
@@ -644,6 +665,7 @@ impl App {
 
             let right = &mut cols[1];
             egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
                 .id_salt("unsafe_right")
                 .show(right, |right| {
                     self.unsafe_right(right);
@@ -735,6 +757,7 @@ impl App {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
                 .id_salt("config_left")
                 .show(left, |left| {
                     self.config_left(left, ctx);
@@ -759,6 +782,7 @@ impl App {
                 });
 
                 egui::ScrollArea::vertical()
+                    .auto_shrink([false, false])
                     .id_salt("config_right")
                     .show(right, |right| {
                         self.config_right(right);
@@ -796,6 +820,22 @@ impl App {
                         {
                             self.config.accent_color = color;
                             ctx.style_mut(|style| style.visuals.selection.bg_fill = color);
+                        }
+                    }
+                });
+        });
+
+        collapsing_open(ui, "Menu Hotkey", |ui| {
+            egui::ComboBox::new("menu_hotkey", "Menu Hotkey")
+                .selected_text(format!("{:?}", self.config.menu_hotkey))
+                .show_ui(ui, |ui| {
+                    for key_code in KeyCode::iter() {
+                        let text = format!("{:?}", &key_code);
+                        if ui
+                            .selectable_value(&mut self.config.menu_hotkey, key_code, text)
+                            .clicked()
+                        {
+                            self.send_config();
                         }
                     }
                 });
@@ -898,39 +938,33 @@ impl App {
 
     fn overlay(&self, ctx: &Context) {
         ctx.set_pixels_per_point(1.0);
-        let painter = ctx.debug_painter();
+        let painter = ctx.layer_painter(egui::LayerId::background());
         let font = FontId::proportional(self.config.hud.font_size);
         let text_stroke = Stroke::new(self.config.hud.line_width, Color32::WHITE);
 
         let data = &self.data.lock().unwrap();
-        if let Some(overlay) = &self.overlay_window {
-            overlay
+        if let Some(window) = &self.window {
+            window
                 .window()
                 .set_outer_position(winit::dpi::PhysicalPosition::new(
                     data.window_position.x,
                     data.window_position.y,
                 ));
-            let _ = overlay
+            let _ = window
                 .window()
                 .request_inner_size(winit::dpi::PhysicalSize::new(
-                    data.window_size.x,
-                    data.window_size.y,
+                    data.window_size.x.max(1.0),
+                    data.window_size.y.max(1.0),
                 ));
         }
 
         if self.config.hud.debug {
             painter.line(
-                vec![
-                    pos2(0.0, 0.0),
-                    pos2(data.window_size.x as f32, data.window_size.y as f32),
-                ],
+                vec![pos2(0.0, 0.0), pos2(data.window_size.x, data.window_size.y)],
                 text_stroke,
             );
             painter.line(
-                vec![
-                    pos2(data.window_size.x as f32, 0.0),
-                    pos2(0.0, data.window_size.y as f32),
-                ],
+                vec![pos2(data.window_size.x, 0.0), pos2(0.0, data.window_size.y)],
                 text_stroke,
             );
         }
@@ -981,11 +1015,8 @@ impl App {
             let color = self.health_color((fraction * 100.0) as i32);
             painter.line(
                 vec![
-                    pos2(0.0, data.window_size.y as f32),
-                    pos2(
-                        data.window_size.x as f32 * fraction,
-                        data.window_size.y as f32,
-                    ),
+                    pos2(0.0, data.window_size.y),
+                    pos2(data.window_size.x * fraction, data.window_size.y),
                 ],
                 Stroke::new(self.config.hud.line_width * 3.0, color),
             );
@@ -1001,13 +1032,10 @@ impl App {
                 cs2::DEFAULT_FOV
             } as f32;
             let radius = (aim_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
-                * data.window_size.x as f32
+                * data.window_size.x
                 / 2.0;
             painter.circle_stroke(
-                pos2(
-                    data.window_size.x as f32 / 2.0,
-                    data.window_size.y as f32 / 2.0,
-                ),
+                pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
                 radius,
                 Stroke::new(self.config.hud.line_width, Color32::WHITE),
             );
@@ -1018,27 +1046,15 @@ impl App {
         {
             painter.line(
                 vec![
-                    pos2(
-                        data.window_size.x as f32 / 2.0,
-                        data.window_size.y as f32 / 2.0 - 50.0,
-                    ),
-                    pos2(
-                        data.window_size.x as f32 / 2.0,
-                        data.window_size.y as f32 / 2.0 + 50.0,
-                    ),
+                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 - 50.0),
+                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 + 50.0),
                 ],
                 text_stroke,
             );
             painter.line(
                 vec![
-                    pos2(
-                        data.window_size.x as f32 / 2.0 - 50.0,
-                        data.window_size.y as f32 / 2.0,
-                    ),
-                    pos2(
-                        data.window_size.x as f32 / 2.0 + 50.0,
-                        data.window_size.y as f32 / 2.0,
-                    ),
+                    pos2(data.window_size.x / 2.0 - 50.0, data.window_size.y / 2.0),
+                    pos2(data.window_size.x / 2.0 + 50.0, data.window_size.y / 2.0),
                 ],
                 text_stroke,
             );
@@ -1047,8 +1063,8 @@ impl App {
         if data.triggerbot_active {
             painter.text(
                 pos2(
-                    data.window_size.x as f32 / 2.0 + 8.0,
-                    data.window_size.y as f32 / 2.0 + 8.0,
+                    data.window_size.x / 2.0 + 8.0,
+                    data.window_size.y / 2.0 + 8.0,
                 ),
                 Align2::LEFT_TOP,
                 "trigger active",
@@ -1315,67 +1331,39 @@ impl App {
             match message {
                 Message::Status(status) => self.status = status,
                 Message::MouseStatus(status) => self.mouse_status = status,
+                Message::ToggleMenu => {
+                    if self.menu_open {
+                        self.menu_open = false;
+                        if let Some(window) = &self.window {
+                            window.window().set_cursor_hittest(false).unwrap();
+                        }
+                    } else {
+                        self.menu_open = true;
+                        if let Some(window) = &self.window {
+                            window.window().set_cursor_hittest(true).unwrap();
+                        }
+                    }
+                }
                 _ => {}
             }
         }
 
         let self_ptr = self as *mut Self;
-        self.gui_window.as_mut().unwrap().make_current().unwrap();
-        self.gui_glow
-            .as_mut()
-            .unwrap()
-            .run(self.gui_window.as_mut().unwrap().window(), |ctx| {
-                (unsafe { &mut *self_ptr }).gui(ctx)
-            });
+        let glow = self.glow.as_mut().unwrap();
+        let window = self.window.as_ref().unwrap().window();
+        glow.run(window, |ctx| {
+            (unsafe { &mut *self_ptr }).overlay(ctx);
+            (unsafe { &mut *self_ptr }).gui(ctx);
+        });
 
         unsafe {
-            self.gui_gl
-                .as_mut()
-                .unwrap()
-                .clear_color(0.0, 0.0, 0.0, 1.0);
-            self.gui_gl.as_mut().unwrap().clear(glow::COLOR_BUFFER_BIT);
+            self.gl.as_mut().unwrap().clear_color(0.0, 0.0, 0.0, 0.0);
+            self.gl.as_mut().unwrap().clear(glow::COLOR_BUFFER_BIT);
         }
 
-        self.gui_glow
-            .as_mut()
-            .unwrap()
-            .paint(self.gui_window.as_mut().unwrap().window());
+        glow.paint(window);
 
-        self.gui_window.as_mut().unwrap().swap_buffers().unwrap();
-
-        self.overlay_window
-            .as_mut()
-            .unwrap()
-            .make_current()
-            .unwrap();
-        self.overlay_glow.as_mut().unwrap().run(
-            self.overlay_window.as_mut().unwrap().window(),
-            move |egui_ctx| {
-                (unsafe { &mut *self_ptr }).overlay(egui_ctx);
-            },
-        );
-
-        unsafe {
-            self.overlay_gl
-                .as_mut()
-                .unwrap()
-                .clear_color(0.0, 0.0, 0.0, 0.0);
-            self.overlay_gl
-                .as_mut()
-                .unwrap()
-                .clear(glow::COLOR_BUFFER_BIT);
-        }
-
-        self.overlay_glow
-            .as_mut()
-            .unwrap()
-            .paint(self.overlay_window.as_mut().unwrap().window());
-
-        self.overlay_window
-            .as_mut()
-            .unwrap()
-            .swap_buffers()
-            .unwrap();
+        self.window.as_ref().unwrap().swap_buffers().unwrap();
     }
 }
 

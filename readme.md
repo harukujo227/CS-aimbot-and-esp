@@ -61,7 +61,8 @@ simple cs2 aimbot and esp, for linux only.
 
 ## running
 
-`cargo run --release`
+- `cargo run --release`
+- open the menu by pressing `delete` (changable in config)
 
 ## faq
 
@@ -75,6 +76,11 @@ if in doubt, use either GNOME or KDE.
 
 too bad, hyprland has bad support for the x11 shenanigans this cheat tries to do.
 this is nothing i can fix, and i doubt hyprland will improve its x11 support.
+
+### i'm using gamescope to stretch the window, and the overlay is too small
+
+this is because the game still thinks it's running in a 16/9 resolution.
+i can't really fix that, unfortunately.
 
 ### the overlay window/my screen is black
 

@@ -9,10 +9,7 @@ use log::{debug, info};
 
 use crate::{
     bvh::Bvh,
-    config::{
-        Config, DEFAULT_CONFIG_NAME, GameStatus, LOOP_DURATION, SLEEP_DURATION, exe_path,
-        parse_config,
-    },
+    config::{Config, GameStatus, LOOP_DURATION, SLEEP_DURATION},
     cs2::CS2,
     data::Data,
     message::Message,
@@ -33,6 +30,7 @@ pub struct GameManager {
     config: Config,
     mouse: Mouse,
     aimbot: CS2,
+    previous_menu_key_state: bool,
 }
 
 impl GameManager {
@@ -44,14 +42,14 @@ impl GameManager {
     ) -> Self {
         let mouse = Mouse::open();
 
-        let config = parse_config(&exe_path().join(DEFAULT_CONFIG_NAME));
         let mut aimbot = Self {
             tx,
             rx,
             data,
-            config,
+            config: Config::default(),
             mouse,
             aimbot: CS2::new(bvh),
+            previous_menu_key_state: false,
         };
 
         aimbot.send_message(Message::MouseStatus(aimbot.mouse.status.clone()));
@@ -95,6 +93,12 @@ impl GameManager {
                 self.aimbot.run(&self.config, &mut self.mouse);
                 let mut data = self.data.lock().unwrap();
                 self.aimbot.data(&self.config, &mut data);
+                drop(data);
+                let menu_key_state = self.aimbot.is_button_down(&self.config.menu_hotkey);
+                if menu_key_state && !self.previous_menu_key_state {
+                    self.send_message(Message::ToggleMenu);
+                }
+                self.previous_menu_key_state = menu_key_state;
             }
 
             if self.aimbot.is_valid() && mouse_valid {

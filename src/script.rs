@@ -38,7 +38,7 @@ impl Script {
         globals.set(
             "window_size",
             self.lua.create_function(move |_lua, ()| {
-                Ok(LuaVec2(ws_data.lock().unwrap().window_size.as_vec2()))
+                Ok(LuaVec2(ws_data.lock().unwrap().window_size))
             })?,
         )?;
 
