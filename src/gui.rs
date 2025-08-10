@@ -144,7 +144,7 @@ impl App {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
-                .auto_shrink([false, false])
+                .auto_shrink([false, true])
                 .id_salt("aimbot_left")
                 .show(left, |left| {
                     self.aimbot_left(left);
@@ -152,7 +152,7 @@ impl App {
 
             let right = &mut cols[1];
             egui::ScrollArea::vertical()
-                .auto_shrink([false, false])
+                .auto_shrink([false, true])
                 .id_salt("aimbot_right")
                 .show(right, |right| {
                     self.aimbot_right(right);
@@ -437,7 +437,7 @@ impl App {
 
     fn player_settings(&mut self, ui: &mut Ui) {
         egui::ScrollArea::vertical()
-            .auto_shrink([false, false])
+            .auto_shrink([false, true])
             .id_salt("player")
             .show(ui, |ui| {
                 ui.columns(2, |cols| {
@@ -572,7 +572,7 @@ impl App {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
-                .auto_shrink([false, false])
+                .auto_shrink([false, true])
                 .id_salt("hud_left")
                 .show(left, |left| {
                     self.hud_left(left);
@@ -580,7 +580,7 @@ impl App {
 
             let right = &mut cols[1];
             egui::ScrollArea::vertical()
-                .auto_shrink([false, false])
+                .auto_shrink([false, true])
                 .id_salt("hud_right")
                 .show(right, |right| {
                     self.hud_right(right);
@@ -658,7 +658,7 @@ impl App {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
-                .auto_shrink([false, false])
+                .auto_shrink([false, true])
                 .id_salt("unsafe_left")
                 .show(left, |left| {
                     self.unsafe_left(left);
@@ -666,7 +666,7 @@ impl App {
 
             let right = &mut cols[1];
             egui::ScrollArea::vertical()
-                .auto_shrink([false, false])
+                .auto_shrink([false, true])
                 .id_salt("unsafe_right")
                 .show(right, |right| {
                     self.unsafe_right(right);
@@ -759,7 +759,7 @@ impl App {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
-                .auto_shrink([false, false])
+                .auto_shrink([false, true])
                 .id_salt("config_left")
                 .show(left, |left| {
                     self.config_left(left, ctx);
@@ -784,7 +784,7 @@ impl App {
                 });
 
                 egui::ScrollArea::vertical()
-                    .auto_shrink([false, false])
+                    .auto_shrink([false, true])
                     .id_salt("config_right")
                     .show(right, |right| {
                         self.config_right(right);
