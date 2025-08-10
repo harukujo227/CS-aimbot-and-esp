@@ -34,16 +34,6 @@ impl CS2 {
         }
 
         let weapon_class = local_player.weapon_class(self);
-        if [
-            WeaponClass::Unknown,
-            WeaponClass::Knife,
-            WeaponClass::Grenade,
-        ]
-        .contains(&weapon_class)
-        {
-            self.target.reset();
-            return;
-        }
 
         let view_angles = local_player.view_angles(self);
         let ffa = self.is_ffa();
