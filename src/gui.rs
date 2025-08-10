@@ -54,12 +54,13 @@ impl App {
         if !self.menu_open {
             return;
         }
+        ctx.set_pixels_per_point(self.config.ui_scale);
         egui::Window::new("deadlocked")
             .collapsible(false)
             .resizable(false)
             .show(ctx, |ui| {
-                ui.set_min_size(egui::vec2(600.0, 400.0));
-                ui.set_max_size(egui::vec2(600.0, 400.0));
+                ui.set_min_size(egui::vec2(620.0, 400.0));
+                ui.set_max_size(egui::vec2(620.0, 400.0));
                 egui::SidePanel::left("sidebar")
                     .resizable(false)
                     .show_inside(ui, |ui| {
@@ -712,7 +713,8 @@ impl App {
                     .add(
                         DragValue::new(&mut self.config.misc.max_flash_alpha)
                             .range(0.0..=255.0)
-                            .speed(0.5),
+                            .speed(0.5)
+                            .max_decimals(0),
                     )
                     .changed()
                 {
@@ -833,6 +835,23 @@ impl App {
                         let text = format!("{:?}", &key_code);
                         if ui
                             .selectable_value(&mut self.config.menu_hotkey, key_code, text)
+                            .clicked()
+                        {
+                            self.send_config();
+                        }
+                    }
+                });
+        });
+
+        collapsing_open(ui, "UI Scale", |ui| {
+            const UI_SCALES: [f32; 6] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+            egui::ComboBox::new("ui_scale", "UI Scale")
+                .selected_text(format!("{:0}%", self.config.ui_scale * 100.0))
+                .show_ui(ui, |ui| {
+                    for scale in UI_SCALES {
+                        let text = format!("{:0}%", scale * 100.0);
+                        if ui
+                            .selectable_value(&mut self.config.ui_scale, scale, text)
                             .clicked()
                         {
                             self.send_config();
@@ -1349,11 +1368,14 @@ impl App {
         }
 
         let self_ptr = self as *mut Self;
-        let glow = self.glow.as_mut().unwrap();
+        let gui_glow = self.gui_glow.as_mut().unwrap();
+        let overlay_glow = self.overlay_glow.as_mut().unwrap();
         let window = self.window.as_ref().unwrap().window();
-        glow.run(window, |ctx| {
-            (unsafe { &mut *self_ptr }).overlay(ctx);
+        gui_glow.run(window, |ctx| {
             (unsafe { &mut *self_ptr }).gui(ctx);
+        });
+        overlay_glow.run(window, |ctx| {
+            (unsafe { &mut *self_ptr }).overlay(ctx);
         });
 
         unsafe {
@@ -1361,7 +1383,8 @@ impl App {
             self.gl.as_mut().unwrap().clear(glow::COLOR_BUFFER_BIT);
         }
 
-        glow.paint(window);
+        overlay_glow.paint(window);
+        gui_glow.paint(window);
 
         self.window.as_ref().unwrap().swap_buffers().unwrap();
     }

@@ -33,7 +33,8 @@ const FRAME_DURATION: Duration = Duration::from_micros(1_000_000 / FRAME_RATE);
 pub struct App {
     pub window: Option<WindowContext>,
     pub gl: Option<Arc<glow::Context>>,
-    pub glow: Option<egui_glow::EguiGlow>,
+    pub gui_glow: Option<egui_glow::EguiGlow>,
+    pub overlay_glow: Option<egui_glow::EguiGlow>,
     next_frame_time: Instant,
     pub should_close: bool,
 
@@ -72,7 +73,8 @@ impl App {
         let ret = Self {
             window: None,
             gl: None,
-            glow: None,
+            gui_glow: None,
+            overlay_glow: None,
             next_frame_time: Instant::now() + FRAME_DURATION,
             should_close: false,
 
@@ -111,13 +113,16 @@ impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         let (window, gl) = create_display(event_loop);
         let gl = Arc::new(gl);
-        let mut glow = egui_glow::EguiGlow::new(event_loop, gl.clone(), None, None, true);
-        prep_ctx(&mut glow.egui_ctx);
-        glow.egui_ctx.set_pixels_per_point(1.0);
+        let mut gui_glow = egui_glow::EguiGlow::new(event_loop, gl.clone(), None, None, true);
+        let overlay_glow = egui_glow::EguiGlow::new(event_loop, gl.clone(), None, None, true);
+        prep_ctx(&mut gui_glow.egui_ctx);
+        gui_glow.egui_ctx.set_pixels_per_point(1.2);
+        overlay_glow.egui_ctx.set_pixels_per_point(1.0);
 
         self.window = Some(window);
         self.gl = Some(gl);
-        self.glow = Some(glow);
+        self.gui_glow = Some(gui_glow);
+        self.overlay_glow = Some(overlay_glow);
 
         self.next_frame_time = Instant::now() + FRAME_DURATION;
         event_loop.set_control_flow(winit::event_loop::ControlFlow::WaitUntil(
@@ -151,14 +156,15 @@ impl ApplicationHandler for App {
                 self.render();
             }
             _ => {
-                let event_response = self
-                    .glow
+                let window = self.window.as_ref().unwrap().window();
+                let gui_response = self
+                    .gui_glow
                     .as_mut()
                     .unwrap()
-                    .on_window_event(self.window.as_mut().unwrap().window(), &event);
+                    .on_window_event(window, &event);
 
-                if event_response.repaint {
-                    self.window.as_mut().unwrap().window().request_redraw();
+                if gui_response.repaint {
+                    window.request_redraw();
                 }
             }
         }
