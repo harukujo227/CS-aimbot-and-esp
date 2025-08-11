@@ -7,7 +7,6 @@ use std::{
 };
 
 use egui::Color32;
-use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoEnumIterator};
 
@@ -310,9 +309,9 @@ pub fn parse_config(path: &Path) -> Config {
     let config_string = read_to_string(path).unwrap();
     let config = toml::from_str(&config_string);
     if config.is_err() {
-        warn!("config file invalid");
+        log::warn!("config file invalid");
     }
-    info!("loaded config {:?}", path.file_name().unwrap());
+    log::info!("loaded config {:?}", path.file_name().unwrap());
     config.unwrap_or_default()
 }
 
@@ -327,7 +326,7 @@ pub fn delete_config(path: &Path) {
     }
 
     std::fs::remove_file(path).unwrap();
-    info!("deleted config {:?}", path.file_name().unwrap());
+    log::info!("deleted config {:?}", path.file_name().unwrap());
 }
 
 pub fn available_configs() -> Vec<PathBuf> {

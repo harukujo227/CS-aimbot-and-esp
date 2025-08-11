@@ -4,7 +4,6 @@ use egui::{
 };
 use egui_glow::glow;
 use glam::{Vec3, vec3};
-use log::info;
 use strum::IntoEnumIterator;
 
 use crate::{
@@ -782,7 +781,7 @@ impl App {
             if ui.button("Reset").clicked() {
                 self.config = Config::default();
                 self.send_config();
-                info!("loaded default config");
+                log::info!("loaded default config");
             }
         });
 

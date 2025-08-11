@@ -8,7 +8,6 @@ use std::{
 };
 
 use bytemuck::{AnyBitPattern, NoUninit};
-use log::{debug, warn};
 use nix::libc::{self, iovec, process_vm_readv, process_vm_writev};
 
 use crate::constants::{cs2, elf};
@@ -84,7 +83,7 @@ impl Process {
 
     pub fn read<T: AnyBitPattern + Default>(&self, address: u64) -> T {
         if (address < self.min || address > self.max) && self.is_setup {
-            debug!("tried to read at address 0x{address:x}");
+            log::debug!("tried to read at address 0x{address:x}");
         }
         let mut buffer = vec![0u8; size_of::<T>()];
 
@@ -108,7 +107,7 @@ impl Process {
 
     pub fn write<T: NoUninit>(&self, address: u64, value: T) {
         if (address < self.min || address > self.max) && self.is_setup {
-            debug!("tried to write at address 0x{address:x}");
+            log::debug!("tried to write at address 0x{address:x}");
         }
         let mut buffer = bytemuck::bytes_of(&value).to_vec();
 
@@ -136,7 +135,7 @@ impl Process {
     pub fn read_string_uncached(&self, address: u64) -> String {
         let mut bytes = Vec::with_capacity(8);
         if (address < self.min || address > self.max) && self.is_setup {
-            debug!("tried to read at address 0x{address:x}");
+            log::debug!("tried to read at address 0x{address:x}");
         }
         let mut i = address;
         loop {
@@ -153,7 +152,7 @@ impl Process {
 
     pub fn read_bytes(&self, address: u64, count: u64) -> Vec<u8> {
         if (address < self.min || address > self.max) && self.is_setup {
-            debug!("tried to read at address 0x{address:x}");
+            log::debug!("tried to read at address 0x{address:x}");
         }
         let mut buffer = vec![0u8; count as usize];
         self.file.read_at(&mut buffer, address).unwrap_or(0);
@@ -177,10 +176,10 @@ impl Process {
             let Ok(address) = u64::from_str_radix(address, 16) else {
                 continue;
             };
-            debug!("found module {module_name} at {address:X}");
+            log::debug!("found module {module_name} at {address:X}");
             return Some(address);
         }
-        warn!("module {module_name} not found");
+        log::warn!("module {module_name} not found");
         None
     }
 
@@ -226,10 +225,10 @@ impl Process {
                 }
             }
             let address = base_address + i as u64;
-            debug!("found pattern {pattern} at {address}");
+            log::debug!("found pattern {pattern} at {address}");
             return Some(address);
         }
-        debug!("pattern {pattern} not found, might be outdated");
+        log::debug!("pattern {pattern} not found, might be outdated");
         None
     }
 
@@ -284,7 +283,7 @@ impl Process {
             }
             symbol_table += add;
         }
-        warn!("export {} could not be found", export_name);
+        log::warn!("export {} could not be found", export_name);
         None
     }
 
@@ -309,7 +308,7 @@ impl Process {
 
             address += register_size * 2;
         }
-        warn!("did not find tag {} in dynamic section", tag);
+        log::warn!("did not find tag {} in dynamic section", tag);
         None
     }
 
@@ -324,7 +323,7 @@ impl Process {
                 return Some(entry);
             }
         }
-        warn!("did not find dynamic section in program header table");
+        log::warn!("did not find dynamic section in program header table");
         None
     }
 
@@ -346,7 +345,7 @@ impl Process {
                 return Some(object);
             }
         }
-        warn!("did not find convar {convar_name}");
+        log::warn!("did not find convar {convar_name}");
         None
     }
 

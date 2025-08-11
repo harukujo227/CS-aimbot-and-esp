@@ -4,8 +4,6 @@ use std::{
     sync::{Arc, Mutex, mpsc},
 };
 
-use log::{error, info};
-
 use crate::{app::App, data::Data, parser::parse_maps};
 
 mod app;
@@ -49,7 +47,7 @@ fn main() {
     if let Ok(username) = std::env::var("USER")
         && username == "root"
     {
-        error!("start without sudo, and add your user to the input group.");
+        log::error!("start without sudo, and add your user to the input group.");
         return;
     }
 
@@ -58,6 +56,9 @@ fn main() {
     let bvh_gui = bvh.clone();
 
     let force_reparse = args.iter().any(|arg| arg == "--force-reparse");
+    if force_reparse {
+        log::info!("reparsing map data");
+    }
     std::thread::spawn(move || parse_maps(bvh, force_reparse));
 
     let (tx_game, rx_gui) = mpsc::channel();
@@ -68,11 +69,11 @@ fn main() {
     std::thread::spawn(move || {
         game::GameManager::new(tx_game, rx_game, data_game, bvh_game).run();
     });
-    info!("started game thread");
+    log::info!("started game thread");
 
     let event_loop = winit::event_loop::EventLoop::new().unwrap();
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
     let mut app = App::new(tx_gui, rx_gui, data, bvh_gui);
     event_loop.run_app(&mut app).unwrap();
-    info!("exiting");
+    log::info!("exiting");
 }

@@ -5,8 +5,6 @@ use std::{
     time::Instant,
 };
 
-use log::{debug, info};
-
 use crate::{
     bvh::Bvh,
     config::{Config, GameStatus, LOOP_DURATION, SLEEP_DURATION},
@@ -98,7 +96,7 @@ impl GameManager {
                 if elapsed < LOOP_DURATION {
                     sleep(LOOP_DURATION - elapsed);
                 } else {
-                    debug!("aimbot loop took {}ms", elapsed.as_millis());
+                    log::debug!("aimbot loop took {}ms", elapsed.as_millis());
                     sleep(LOOP_DURATION);
                 }
             } else {
@@ -116,11 +114,11 @@ impl GameManager {
     fn find_mouse(&mut self) -> bool {
         let mut mouse_valid = false;
         self.send_message(Message::MouseStatus(DeviceStatus::Disconnected));
-        info!("mouse disconnected");
+        log::info!("mouse disconnected");
         self.mouse.status = DeviceStatus::Disconnected;
         let mouse = Mouse::open();
         if let DeviceStatus::Working(_) = mouse.status {
-            info!("mouse reconnected");
+            log::info!("mouse reconnected");
             mouse_valid = true;
         }
         self.send_message(Message::MouseStatus(mouse.status.clone()));

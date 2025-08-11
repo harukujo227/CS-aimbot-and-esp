@@ -6,7 +6,6 @@ use std::{
 };
 
 use glam::{IVec2, Vec2};
-use log::warn;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum DeviceStatus {
@@ -90,8 +89,8 @@ impl Mouse {
                     status: DeviceStatus::Working(device_name),
                 },
                 Err(_) => {
-                    warn!("please add your user to the input group or execute with sudo");
-                    warn!(
+                    log::warn!("please add your user to the input group or execute with sudo");
+                    log::warn!(
                         "without this, mouse movements will be written to /dev/null and discarded"
                     );
                     let file = OpenOptions::new().write(true).open("/dev/null").unwrap();
@@ -104,7 +103,7 @@ impl Mouse {
         }
 
         let file = OpenOptions::new().write(true).open("/dev/null").unwrap();
-        warn!("no mouse found");
+        log::warn!("no mouse found");
         Self {
             file,
             status: DeviceStatus::NotFound,
