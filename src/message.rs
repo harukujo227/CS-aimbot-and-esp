@@ -8,5 +8,4 @@ pub enum Message {
     Config(Config),
     Status(GameStatus),
     MouseStatus(DeviceStatus),
-    ToggleMenu,
 }

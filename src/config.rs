@@ -44,8 +44,6 @@ pub struct Config {
     pub player: PlayerConfig,
     pub hud: HudConfig,
     pub misc: UnsafeConfig,
-    pub menu_hotkey: KeyCode,
-    pub ui_scale: f32,
     pub accent_color: Color32,
 }
 
@@ -56,8 +54,6 @@ impl Default for Config {
             player: PlayerConfig::default(),
             hud: HudConfig::default(),
             misc: UnsafeConfig::default(),
-            menu_hotkey: KeyCode::Delete,
-            ui_scale: 1.2,
             accent_color: Colors::BLUE,
         }
     }

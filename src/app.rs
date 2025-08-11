@@ -31,12 +31,13 @@ const FRAME_RATE: u64 = 120;
 const FRAME_DURATION: Duration = Duration::from_micros(1_000_000 / FRAME_RATE);
 
 pub struct App {
-    pub window: Option<WindowContext>,
-    pub gl: Option<Arc<glow::Context>>,
+    pub gui_window: Option<WindowContext>,
+    pub gui_gl: Option<Arc<glow::Context>>,
     pub gui_glow: Option<egui_glow::EguiGlow>,
+    pub overlay_window: Option<WindowContext>,
+    pub overlay_gl: Option<Arc<glow::Context>>,
     pub overlay_glow: Option<egui_glow::EguiGlow>,
     next_frame_time: Instant,
-    pub should_close: bool,
 
     pub tx: mpsc::Sender<Message>,
     pub rx: mpsc::Receiver<Message>,
@@ -46,7 +47,7 @@ pub struct App {
 
     pub status: GameStatus,
     pub mouse_status: DeviceStatus,
-    pub menu_open: bool,
+    pub display_scale: f32,
 
     pub config: Config,
     pub current_config: PathBuf,
@@ -71,12 +72,14 @@ impl App {
         write_config(&config, &exe_path().join(DEFAULT_CONFIG_NAME));
 
         let ret = Self {
-            window: None,
-            gl: None,
+            gui_window: None,
+            gui_gl: None,
             gui_glow: None,
+
+            overlay_window: None,
+            overlay_gl: None,
             overlay_glow: None,
             next_frame_time: Instant::now() + FRAME_DURATION,
-            should_close: false,
 
             tx,
             rx,
@@ -89,7 +92,7 @@ impl App {
 
             status: GameStatus::GameNotStarted,
             mouse_status: DeviceStatus::Disconnected,
-            menu_open: false,
+            display_scale: 1.0,
 
             current_tab: Tab::Aimbot,
             aimbot_tab: AimbotTab::Global,
@@ -100,37 +103,36 @@ impl App {
     }
 
     fn create_window(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        let (window, gl) = create_display(event_loop);
-        let gl = Arc::new(gl);
-        let mut gui_glow = egui_glow::EguiGlow::new(event_loop, gl.clone(), None, None, true);
-        let overlay_glow = egui_glow::EguiGlow::new(event_loop, gl.clone(), None, None, true);
+        let (gui_window, gui_gl) = create_display(event_loop, false);
+        let gui_gl = Arc::new(gui_gl);
+        let mut gui_glow = egui_glow::EguiGlow::new(event_loop, gui_gl.clone(), None, None, true);
         prep_ctx(&mut gui_glow.egui_ctx);
-        gui_glow.egui_ctx.set_pixels_per_point(1.2);
-        overlay_glow.egui_ctx.set_pixels_per_point(1.0);
+        self.display_scale = gui_window.window().scale_factor() as f32;
+        log::info!("detected display scale: {}", self.display_scale);
 
-        self.window = Some(window);
-        self.gl = Some(gl);
+        let (overlay_window, overlay_gl) = create_display(event_loop, true);
+        let overlay_gl = Arc::new(overlay_gl);
+        let mut overlay_glow =
+            egui_glow::EguiGlow::new(event_loop, overlay_gl.clone(), None, None, true);
+        prep_ctx(&mut overlay_glow.egui_ctx);
+
+        self.gui_window = Some(gui_window);
+        self.gui_gl = Some(gui_gl);
         self.gui_glow = Some(gui_glow);
+
+        self.overlay_window = Some(overlay_window);
+        self.overlay_gl = Some(overlay_gl);
         self.overlay_glow = Some(overlay_glow);
-    }
-
-    pub fn disable_cursor(&self) {
-        if let Some(window) = &self.window {
-            window.window().set_cursor_hittest(false).unwrap();
-        }
-    }
-
-    pub fn enable_cursor(&self) {
-        if let Some(window) = &self.window {
-            window.window().set_cursor_hittest(true).unwrap();
-        }
     }
 }
 
 impl ApplicationHandler for App {
     fn new_events(&mut self, _event_loop: &winit::event_loop::ActiveEventLoop, cause: StartCause) {
         if let StartCause::ResumeTimeReached { .. } = cause {
-            if let Some(window) = &self.window {
+            if let Some(window) = &self.gui_window {
+                window.window().request_redraw();
+            }
+            if let Some(window) = &self.overlay_window {
                 window.window().request_redraw();
             }
             self.next_frame_time += FRAME_DURATION;
@@ -149,31 +151,29 @@ impl ApplicationHandler for App {
     fn window_event(
         &mut self,
         event_loop: &winit::event_loop::ActiveEventLoop,
-        _window_id: winit::window::WindowId,
+        window_id: winit::window::WindowId,
         event: WindowEvent,
     ) {
-        if self.should_close {
-            event_loop.exit();
-        }
-
         while let Ok(message) = self.rx.try_recv() {
             match message {
                 Message::Status(status) => self.status = status,
                 Message::MouseStatus(status) => self.mouse_status = status,
-                Message::ToggleMenu => {
-                    if self.menu_open {
-                        self.menu_open = false;
-                        self.disable_cursor();
-                    } else {
-                        self.menu_open = true;
-                        self.enable_cursor();
-                    }
-                }
                 _ => {}
             }
         }
 
-        let Some(window) = &self.window else {
+        let Some(gui_window) = &self.gui_window else {
+            return;
+        };
+        let Some(overlay_window) = &self.overlay_window else {
+            return;
+        };
+
+        let window = if gui_window.window().id() == window_id {
+            gui_window
+        } else if overlay_window.window().id() == window_id {
+            overlay_window
+        } else {
             return;
         };
 
@@ -189,15 +189,19 @@ impl ApplicationHandler for App {
                 self.render();
             }
             _ => {
-                let window = self.window.as_ref().unwrap().window();
-                let gui_response = self
+                let event_response = self
                     .gui_glow
                     .as_mut()
                     .unwrap()
-                    .on_window_event(window, &event);
+                    .on_window_event(self.gui_window.as_mut().unwrap().window(), &event);
 
-                if gui_response.repaint {
-                    window.request_redraw();
+                if event_response.repaint {
+                    self.gui_window.as_mut().unwrap().window().request_redraw();
+                    self.overlay_window
+                        .as_mut()
+                        .unwrap()
+                        .window()
+                        .request_redraw();
                 }
             }
         }
@@ -206,8 +210,9 @@ impl ApplicationHandler for App {
 
 fn create_display(
     event_loop: &winit::event_loop::ActiveEventLoop,
+    overlay: bool,
 ) -> (WindowContext, glow::Context) {
-    let glutin_window_context = WindowContext::new(event_loop);
+    let glutin_window_context = WindowContext::new(event_loop, overlay);
     let gl = unsafe {
         glow::Context::from_loader_function(|s| {
             let s = std::ffi::CString::new(s)

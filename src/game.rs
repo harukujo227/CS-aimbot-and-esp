@@ -30,7 +30,6 @@ pub struct GameManager {
     config: Config,
     mouse: Mouse,
     aimbot: CS2,
-    previous_menu_key_state: bool,
 }
 
 impl GameManager {
@@ -49,7 +48,6 @@ impl GameManager {
             config: Config::default(),
             mouse,
             aimbot: CS2::new(bvh),
-            previous_menu_key_state: false,
         };
 
         game.send_message(Message::MouseStatus(game.mouse.status.clone()));
@@ -93,12 +91,6 @@ impl GameManager {
                 self.aimbot.run(&self.config, &mut self.mouse);
                 let mut data = self.data.lock().unwrap();
                 self.aimbot.data(&self.config, &mut data);
-                drop(data);
-                let menu_key_state = self.aimbot.is_button_down(&self.config.menu_hotkey);
-                if menu_key_state && !self.previous_menu_key_state {
-                    self.send_message(Message::ToggleMenu);
-                }
-                self.previous_menu_key_state = menu_key_state;
             }
 
             if self.aimbot.is_valid() && mouse_valid {

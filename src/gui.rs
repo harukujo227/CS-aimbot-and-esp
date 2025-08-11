@@ -51,54 +51,39 @@ impl App {
     }
 
     fn gui(&mut self, ctx: &Context) {
-        if !self.menu_open {
-            return;
-        }
-        ctx.set_pixels_per_point(self.config.ui_scale);
-        egui::Window::new("deadlocked")
-            .collapsible(false)
+        ctx.set_pixels_per_point(self.display_scale);
+        egui::SidePanel::left("sidebar")
             .resizable(false)
             .show(ctx, |ui| {
-                ui.set_min_size(egui::vec2(620.0, 400.0));
-                ui.set_max_size(egui::vec2(620.0, 400.0));
-                egui::SidePanel::left("sidebar")
-                    .resizable(false)
-                    .show_inside(ui, |ui| {
-                        ui.selectable_value(&mut self.current_tab, Tab::Aimbot, "\u{f04fe} Aimbot");
-                        ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
-                        ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
-                        ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
-                        ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
+                ui.selectable_value(&mut self.current_tab, Tab::Aimbot, "\u{f04fe} Aimbot");
+                ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
+                ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
+                ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
+                ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
 
-                        ui.with_layout(egui::Layout::bottom_up(Align::Min), |ui| {
-                            if ui.button("Exit").clicked() {
-                                self.should_close = true;
-                            }
-                            if ui.button("Report Issue").clicked() {
-                                ctx.open_url(egui::OpenUrl {
-                                    url: String::from(
-                                        "https://github.com/avitran0/deadlocked/issues",
-                                    ),
-                                    new_tab: false,
-                                });
-                            }
-                            ui.label(VERSION);
+                ui.with_layout(egui::Layout::bottom_up(Align::Min), |ui| {
+                    if ui.button("Report Issue").clicked() {
+                        ctx.open_url(egui::OpenUrl {
+                            url: String::from("https://github.com/avitran0/deadlocked/issues"),
+                            new_tab: false,
                         });
-                    });
-
-                egui::CentralPanel::default().show_inside(ui, |ui| {
-                    self.add_game_status(ui);
-                    ui.separator();
-
-                    match self.current_tab {
-                        Tab::Aimbot => self.aimbot_settings(ui),
-                        Tab::Player => self.player_settings(ui),
-                        Tab::Hud => self.hud_settings(ui),
-                        Tab::Unsafe => self.unsafe_settings(ui),
-                        Tab::Config => self.config_settings(ui, ctx),
                     }
+                    ui.label(VERSION);
                 });
             });
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            self.add_game_status(ui);
+            ui.separator();
+
+            match self.current_tab {
+                Tab::Aimbot => self.aimbot_settings(ui),
+                Tab::Player => self.player_settings(ui),
+                Tab::Hud => self.hud_settings(ui),
+                Tab::Unsafe => self.unsafe_settings(ui),
+                Tab::Config => self.config_settings(ui, ctx),
+            }
+        });
     }
 
     fn aimbot_config(&self, weapon: &Weapon) -> &AimbotConfig {
@@ -773,7 +758,6 @@ impl App {
                         if !self.new_config_name.ends_with(".toml") {
                             self.new_config_name.push_str(".toml");
                         }
-                        self.config = Config::default();
                         let path = exe_path().join(&self.new_config_name);
                         write_config(&self.config, &path);
                         self.new_config_name.clear();
@@ -822,39 +806,6 @@ impl App {
                         {
                             self.config.accent_color = color;
                             ctx.style_mut(|style| style.visuals.selection.bg_fill = color);
-                        }
-                    }
-                });
-        });
-
-        collapsing_open(ui, "Menu Hotkey", |ui| {
-            egui::ComboBox::new("menu_hotkey", "Menu Hotkey")
-                .selected_text(format!("{:?}", self.config.menu_hotkey))
-                .show_ui(ui, |ui| {
-                    for key_code in KeyCode::iter() {
-                        let text = format!("{:?}", &key_code);
-                        if ui
-                            .selectable_value(&mut self.config.menu_hotkey, key_code, text)
-                            .clicked()
-                        {
-                            self.send_config();
-                        }
-                    }
-                });
-        });
-
-        collapsing_open(ui, "UI Scale", |ui| {
-            const UI_SCALES: [f32; 6] = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
-            egui::ComboBox::new("ui_scale", "UI Scale")
-                .selected_text(format!("{:0}%", self.config.ui_scale * 100.0))
-                .show_ui(ui, |ui| {
-                    for scale in UI_SCALES {
-                        let text = format!("{:0}%", scale * 100.0);
-                        if ui
-                            .selectable_value(&mut self.config.ui_scale, scale, text)
-                            .clicked()
-                        {
-                            self.send_config();
                         }
                     }
                 });
@@ -962,7 +913,7 @@ impl App {
         let text_stroke = Stroke::new(self.config.hud.line_width, Color32::WHITE);
 
         let data = &self.data.lock().unwrap();
-        if let Some(window) = &self.window {
+        if let Some(window) = &self.overlay_window {
             window
                 .window()
                 .set_outer_position(winit::dpi::PhysicalPosition::new(
@@ -1347,25 +1298,62 @@ impl App {
         use glow::HasContext as _;
 
         let self_ptr = self as *mut Self;
-        let gui_glow = self.gui_glow.as_mut().unwrap();
-        let overlay_glow = self.overlay_glow.as_mut().unwrap();
-        let window = self.window.as_ref().unwrap().window();
-        gui_glow.run(window, |ctx| {
-            (unsafe { &mut *self_ptr }).gui(ctx);
-        });
-        overlay_glow.run(window, |ctx| {
-            (unsafe { &mut *self_ptr }).overlay(ctx);
-        });
+        self.gui_window.as_mut().unwrap().make_current().unwrap();
+        self.gui_glow
+            .as_mut()
+            .unwrap()
+            .run(self.gui_window.as_mut().unwrap().window(), |ctx| {
+                (unsafe { &mut *self_ptr }).gui(ctx)
+            });
 
         unsafe {
-            self.gl.as_mut().unwrap().clear_color(0.0, 0.0, 0.0, 0.0);
-            self.gl.as_mut().unwrap().clear(glow::COLOR_BUFFER_BIT);
+            self.gui_gl
+                .as_mut()
+                .unwrap()
+                .clear_color(0.0, 0.0, 0.0, 1.0);
+            self.gui_gl.as_mut().unwrap().clear(glow::COLOR_BUFFER_BIT);
         }
 
-        overlay_glow.paint(window);
-        gui_glow.paint(window);
+        self.gui_glow
+            .as_mut()
+            .unwrap()
+            .paint(self.gui_window.as_mut().unwrap().window());
 
-        self.window.as_ref().unwrap().swap_buffers().unwrap();
+        self.gui_window.as_mut().unwrap().swap_buffers().unwrap();
+
+        self.overlay_window
+            .as_mut()
+            .unwrap()
+            .make_current()
+            .unwrap();
+        self.overlay_glow.as_mut().unwrap().run(
+            self.overlay_window.as_mut().unwrap().window(),
+            move |egui_ctx| {
+                (unsafe { &mut *self_ptr }).overlay(egui_ctx);
+            },
+        );
+
+        unsafe {
+            self.overlay_gl
+                .as_mut()
+                .unwrap()
+                .clear_color(0.0, 0.0, 0.0, 0.0);
+            self.overlay_gl
+                .as_mut()
+                .unwrap()
+                .clear(glow::COLOR_BUFFER_BIT);
+        }
+
+        self.overlay_glow
+            .as_mut()
+            .unwrap()
+            .paint(self.overlay_window.as_mut().unwrap().window());
+
+        self.overlay_window
+            .as_mut()
+            .unwrap()
+            .swap_buffers()
+            .unwrap();
     }
 }
 
