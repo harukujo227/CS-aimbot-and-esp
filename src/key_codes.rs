@@ -1,11 +1,11 @@
 #![allow(unused)]
+use egui::Key;
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, EnumIter, Serialize, Deserialize)]
 pub enum KeyCode {
-    None,
-    Key0,
+    Key0 = 1,
     Key1,
     Key2,
     Key3,
@@ -123,7 +123,6 @@ pub enum KeyCode {
 impl KeyCode {
     fn from_string(input: &str) -> Option<KeyCode> {
         match input {
-            "None" => Some(KeyCode::None),
             "Key0" => Some(KeyCode::Key0),
             "Key1" => Some(KeyCode::Key1),
             "Key2" => Some(KeyCode::Key2),
@@ -187,19 +186,19 @@ impl KeyCode {
             "Backslash" => Some(KeyCode::Backslash),
             "Minus" => Some(KeyCode::Minus),
             "Equal" => Some(KeyCode::Equal),
-            "Enter" => Some(KeyCode::Enter),
+            "Enter" => Some(KeyCode::Enter),*/
             "Space" => Some(KeyCode::Space),
-            "Backspace" => Some(KeyCode::Backspace),*/
+            "Backspace" => Some(KeyCode::Backspace),
             "Tab" => Some(KeyCode::Tab),
             "CapsLock" => Some(KeyCode::CapsLock),
-            /*"NumLock" => Some(KeyCode::NumLock),
+            //"NumLock" => Some(KeyCode::NumLock),
             "Escape" => Some(KeyCode::Escape),
-            "ScrollLock" => Some(KeyCode::ScrollLock),
+            //"ScrollLock" => Some(KeyCode::ScrollLock),
             "Insert" => Some(KeyCode::Insert),
             "Delete" => Some(KeyCode::Delete),
             "Home" => Some(KeyCode::Home),
             "End" => Some(KeyCode::End),
-            "PageUp" => Some(KeyCode::PageUp),
+            /*"PageUp" => Some(KeyCode::PageUp),
             "PageDown" => Some(KeyCode::PageDown),
             "Break" => Some(KeyCode::Break),*/
             "LShift" => Some(KeyCode::LeftShift),
@@ -238,56 +237,6 @@ impl KeyCode {
             "MouseWheelUp" => Some(KeyCode::MouseWheelUp),
             "MouseWheelDown" => Some(KeyCode::MouseWheelDown),
             _ => None,
-        }
-    }
-
-    pub fn linux_keycode(&self) -> u16 {
-        match self {
-            KeyCode::None => 0,
-            KeyCode::Key1 => 2,
-            KeyCode::Key2 => 3,
-            KeyCode::Key3 => 4,
-            KeyCode::Key4 => 5,
-            KeyCode::Key5 => 6,
-            KeyCode::Key6 => 7,
-            KeyCode::Key7 => 8,
-            KeyCode::Key8 => 9,
-            KeyCode::Key9 => 10,
-            KeyCode::Key0 => 11,
-            KeyCode::KeyQ => 16,
-            KeyCode::KeyW => 17,
-            KeyCode::KeyE => 18,
-            KeyCode::KeyR => 19,
-            KeyCode::KeyT => 20,
-            KeyCode::KeyY => 21,
-            KeyCode::KeyU => 22,
-            KeyCode::KeyI => 23,
-            KeyCode::KeyO => 24,
-            KeyCode::KeyP => 25,
-            KeyCode::KeyA => 30,
-            KeyCode::KeyS => 31,
-            KeyCode::KeyD => 32,
-            KeyCode::KeyF => 33,
-            KeyCode::KeyG => 34,
-            KeyCode::KeyH => 35,
-            KeyCode::KeyJ => 36,
-            KeyCode::KeyK => 37,
-            KeyCode::KeyL => 38,
-            KeyCode::KeyZ => 44,
-            KeyCode::KeyX => 45,
-            KeyCode::KeyC => 46,
-            KeyCode::KeyV => 47,
-            KeyCode::KeyB => 48,
-            KeyCode::KeyN => 49,
-            KeyCode::KeyM => 50,
-            KeyCode::Space => 57,
-            KeyCode::Backspace => 14,
-            KeyCode::Tab => 15,
-            KeyCode::CapsLock => 58,
-            KeyCode::LeftShift => 42,
-            KeyCode::LeftAlt => 56,
-            KeyCode::LeftControl => 29,
-            _ => 0,
         }
     }
 

@@ -98,6 +98,33 @@ impl App {
         ret.send_config();
         ret
     }
+
+    fn create_window(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
+        let (window, gl) = create_display(event_loop);
+        let gl = Arc::new(gl);
+        let mut gui_glow = egui_glow::EguiGlow::new(event_loop, gl.clone(), None, None, true);
+        let overlay_glow = egui_glow::EguiGlow::new(event_loop, gl.clone(), None, None, true);
+        prep_ctx(&mut gui_glow.egui_ctx);
+        gui_glow.egui_ctx.set_pixels_per_point(1.2);
+        overlay_glow.egui_ctx.set_pixels_per_point(1.0);
+
+        self.window = Some(window);
+        self.gl = Some(gl);
+        self.gui_glow = Some(gui_glow);
+        self.overlay_glow = Some(overlay_glow);
+    }
+
+    pub fn disable_cursor(&self) {
+        if let Some(window) = &self.window {
+            window.window().set_cursor_hittest(false).unwrap();
+        }
+    }
+
+    pub fn enable_cursor(&self) {
+        if let Some(window) = &self.window {
+            window.window().set_cursor_hittest(true).unwrap();
+        }
+    }
 }
 
 impl ApplicationHandler for App {
@@ -111,18 +138,7 @@ impl ApplicationHandler for App {
     }
 
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        let (window, gl) = create_display(event_loop);
-        let gl = Arc::new(gl);
-        let mut gui_glow = egui_glow::EguiGlow::new(event_loop, gl.clone(), None, None, true);
-        let overlay_glow = egui_glow::EguiGlow::new(event_loop, gl.clone(), None, None, true);
-        prep_ctx(&mut gui_glow.egui_ctx);
-        gui_glow.egui_ctx.set_pixels_per_point(1.2);
-        overlay_glow.egui_ctx.set_pixels_per_point(1.0);
-
-        self.window = Some(window);
-        self.gl = Some(gl);
-        self.gui_glow = Some(gui_glow);
-        self.overlay_glow = Some(overlay_glow);
+        self.create_window(event_loop);
 
         self.next_frame_time = Instant::now() + FRAME_DURATION;
         event_loop.set_control_flow(winit::event_loop::ControlFlow::WaitUntil(
@@ -136,13 +152,30 @@ impl ApplicationHandler for App {
         _window_id: winit::window::WindowId,
         event: WindowEvent,
     ) {
-        let Some(window) = &self.window else {
-            return;
-        };
-
         if self.should_close {
             event_loop.exit();
         }
+
+        while let Ok(message) = self.rx.try_recv() {
+            match message {
+                Message::Status(status) => self.status = status,
+                Message::MouseStatus(status) => self.mouse_status = status,
+                Message::ToggleMenu => {
+                    if self.menu_open {
+                        self.menu_open = false;
+                        self.disable_cursor();
+                    } else {
+                        self.menu_open = true;
+                        self.enable_cursor();
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        let Some(window) = &self.window else {
+            return;
+        };
 
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),

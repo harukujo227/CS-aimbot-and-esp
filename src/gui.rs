@@ -1346,27 +1346,6 @@ impl App {
     pub fn render(&mut self) {
         use glow::HasContext as _;
 
-        while let Ok(message) = self.rx.try_recv() {
-            match message {
-                Message::Status(status) => self.status = status,
-                Message::MouseStatus(status) => self.mouse_status = status,
-                Message::ToggleMenu => {
-                    if self.menu_open {
-                        self.menu_open = false;
-                        if let Some(window) = &self.window {
-                            window.window().set_cursor_hittest(false).unwrap();
-                        }
-                    } else {
-                        self.menu_open = true;
-                        if let Some(window) = &self.window {
-                            window.window().set_cursor_hittest(true).unwrap();
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
-
         let self_ptr = self as *mut Self;
         let gui_glow = self.gui_glow.as_mut().unwrap();
         let overlay_glow = self.overlay_glow.as_mut().unwrap();

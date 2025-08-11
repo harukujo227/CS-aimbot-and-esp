@@ -1,5 +1,5 @@
 use crate::{
-    config::{GameStatus, Config},
+    config::{Config, GameStatus},
     mouse::DeviceStatus,
 };
 

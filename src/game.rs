@@ -42,7 +42,7 @@ impl GameManager {
     ) -> Self {
         let mouse = Mouse::open();
 
-        let mut aimbot = Self {
+        let game = Self {
             tx,
             rx,
             data,
@@ -52,12 +52,12 @@ impl GameManager {
             previous_menu_key_state: false,
         };
 
-        aimbot.send_message(Message::MouseStatus(aimbot.mouse.status.clone()));
+        game.send_message(Message::MouseStatus(game.mouse.status.clone()));
 
-        aimbot
+        game
     }
 
-    fn send_message(&mut self, message: Message) {
+    fn send_message(&self, message: Message) {
         if self.tx.send(message).is_err() {
             std::process::exit(0);
         }

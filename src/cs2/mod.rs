@@ -480,9 +480,6 @@ impl CS2 {
 
     // misc
     pub fn is_button_down(&self, button: &KeyCode) -> bool {
-        if *button == KeyCode::None {
-            return true;
-        }
         // what the actual fuck is happening here?
         let value = self.process.read::<u32>(
             self.offsets.interface.input
