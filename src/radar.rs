@@ -124,7 +124,8 @@ impl Radar {
         }
 
         self.websocket = Some(websocket);
-        self.send_message(Message::RadarStatus(RadarStatus::Connected));
+        let uuid = self.uuid.clone().unwrap();
+        self.send_message(Message::RadarStatus(RadarStatus::Connected(uuid)));
 
         true
     }

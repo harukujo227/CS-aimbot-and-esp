@@ -14,6 +14,7 @@ pub struct Data {
     pub local_player: PlayerData,
     pub weapons: Vec<(Weapon, Vec3)>,
     pub bomb: BombData,
+    pub map_name: String,
     pub view_matrix: Mat4,
     pub window_position: Vec2,
     pub window_size: Vec2,

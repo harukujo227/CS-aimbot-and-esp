@@ -186,6 +186,7 @@ impl Game for CS2 {
         data.weapon = local_player.weapon(self);
         data.in_game = true;
         data.is_ffa = self.is_ffa();
+        data.map_name = self.current_map();
         data.triggerbot_active = if self.triggerbot_config(config).mode == TriggerbotMode::Toggle {
             self.trigger.active
         } else {

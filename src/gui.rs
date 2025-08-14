@@ -85,7 +85,7 @@ impl App {
                 Tab::Aimbot => self.aimbot_settings(ui),
                 Tab::Player => self.player_settings(ui),
                 Tab::Hud => self.hud_settings(ui),
-                Tab::Radar => self.radar_settings(ui),
+                Tab::Radar => self.radar_settings(ui, ctx),
                 Tab::Unsafe => self.unsafe_settings(ui),
                 Tab::Config => self.config_settings(ui, ctx),
             }
@@ -645,20 +645,18 @@ impl App {
         });
     }
 
-    fn radar_settings(&mut self, ui: &mut Ui) {
+    fn radar_settings(&mut self, ui: &mut Ui, ctx: &Context) {
         egui::ScrollArea::vertical()
             .auto_shrink([false, true])
             .id_salt("hud_left")
             .show(ui, |ui| {
                 collapsing_open(ui, "Radar", |ui| {
-                    ui.label(
-                        egui::RichText::new(format!("{:?}", self.radar_status)).color(
-                            match self.radar_status {
-                                RadarStatus::Connected => Colors::GREEN,
-                                RadarStatus::Disconnected => Colors::YELLOW,
-                            },
-                        ),
-                    );
+                    ui.label(egui::RichText::new(format!("{}", self.radar_status)).color(
+                        match self.radar_status {
+                            RadarStatus::Connected(_) => Colors::GREEN,
+                            RadarStatus::Disconnected => Colors::YELLOW,
+                        },
+                    ));
 
                     if ui
                         .checkbox(&mut self.config.radar.enabled, "Enable Radar")
@@ -680,6 +678,21 @@ impl App {
                             Target::Radar,
                         );
                         self.save();
+                    }
+
+                    if let RadarStatus::Connected(uuid) = &self.radar_status {
+                        if ui.button("Open").clicked() {
+                            ctx.open_url(egui::OpenUrl {
+                                url: format!("http://{}/?uuid={}", self.config.radar.url, uuid),
+                                new_tab: false,
+                            });
+                        }
+
+                        if ui.button("Copy Link").clicked() {
+                            let link = format!("http://{}/?uuid={}", self.config.radar.url, uuid);
+                            log::info!("copied link ({link})");
+                            ctx.copy_text(link);
+                        }
                     }
                 });
             });

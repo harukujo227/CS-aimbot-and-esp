@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{config::Config, mouse::DeviceStatus};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum GameStatus {
     Working,
     GameNotStarted,
@@ -19,10 +19,19 @@ impl Display for GameStatus {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum RadarStatus {
     Disconnected,
-    Connected,
+    Connected(String),
+}
+
+impl Display for RadarStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RadarStatus::Connected(_) => write!(f, "Connected"),
+            RadarStatus::Disconnected => write!(f, "Disconnected"),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
