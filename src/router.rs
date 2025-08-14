@@ -1,0 +1,19 @@
+use crossbeam::channel::{Receiver, Sender};
+
+use crate::message::{Envelope, Message, Target};
+
+pub fn router(
+    rx: Receiver<Envelope>,
+    tx_gui: Sender<Message>,
+    tx_game: Sender<Message>,
+    tx_radar: Sender<Message>,
+) {
+    while let Ok(envelope) = rx.recv() {
+        match envelope.target {
+            Target::Gui => tx_gui.send(envelope.message),
+            Target::Game => tx_game.send(envelope.message),
+            Target::Radar => tx_radar.send(envelope.message),
+        }
+        .unwrap();
+    }
+}

@@ -1,16 +1,18 @@
 use std::{
     collections::HashMap,
-    sync::{Arc, Mutex, mpsc},
+    sync::{Arc, Mutex},
     thread::sleep,
     time::Instant,
 };
 
+use crossbeam::channel::{Receiver, Sender};
+
 use crate::{
     bvh::Bvh,
-    config::{Config, GameStatus, LOOP_DURATION, SLEEP_DURATION},
+    config::{Config, LOOP_DURATION, SLEEP_DURATION},
     cs2::CS2,
     data::Data,
-    message::Message,
+    message::{Envelope, GameStatus, Message, Target},
     mouse::{DeviceStatus, Mouse},
 };
 
@@ -22,8 +24,8 @@ pub trait Game: std::fmt::Debug {
 }
 
 pub struct GameManager {
-    tx: mpsc::Sender<Message>,
-    rx: mpsc::Receiver<Message>,
+    tx: Sender<Envelope>,
+    rx: Receiver<Message>,
     data: Arc<Mutex<Data>>,
     config: Config,
     mouse: Mouse,
@@ -32,8 +34,8 @@ pub struct GameManager {
 
 impl GameManager {
     pub fn new(
-        tx: mpsc::Sender<Message>,
-        rx: mpsc::Receiver<Message>,
+        tx: Sender<Envelope>,
+        rx: Receiver<Message>,
         data: Arc<Mutex<Data>>,
         bvh: Arc<Mutex<HashMap<String, Bvh>>>,
     ) -> Self {
@@ -48,19 +50,23 @@ impl GameManager {
             aimbot: CS2::new(bvh),
         };
 
-        game.send_message(Message::MouseStatus(game.mouse.status.clone()));
+        game.send_game_message(Message::MouseStatus(game.mouse.status.clone()));
 
         game
     }
 
-    fn send_message(&self, message: Message) {
-        if self.tx.send(message).is_err() {
+    fn send_game_message(&self, message: Message) {
+        let envelope = Envelope {
+            target: Target::Gui,
+            message,
+        };
+        if self.tx.send(envelope).is_err() {
             std::process::exit(0);
         }
     }
 
     pub fn run(&mut self) {
-        self.send_message(Message::Status(GameStatus::GameNotStarted));
+        self.send_game_message(Message::GameStatus(GameStatus::GameNotStarted));
         let mut previous_status = GameStatus::GameNotStarted;
         loop {
             let start = Instant::now();
@@ -75,7 +81,7 @@ impl GameManager {
 
             if !self.aimbot.is_valid() {
                 if previous_status == GameStatus::Working {
-                    self.send_message(Message::Status(GameStatus::GameNotStarted));
+                    self.send_game_message(Message::GameStatus(GameStatus::GameNotStarted));
                     previous_status = GameStatus::GameNotStarted;
                 }
                 self.aimbot.setup();
@@ -83,7 +89,7 @@ impl GameManager {
 
             if mouse_valid && self.aimbot.is_valid() {
                 if previous_status == GameStatus::GameNotStarted {
-                    self.send_message(Message::Status(GameStatus::Working));
+                    self.send_game_message(Message::GameStatus(GameStatus::Working));
                     previous_status = GameStatus::Working;
                 }
                 self.aimbot.run(&self.config, &mut self.mouse);
@@ -107,13 +113,13 @@ impl GameManager {
 
     fn parse_message(&mut self, message: Message) {
         if let Message::Config(config) = message {
-            self.config = config
+            self.config = *config
         }
     }
 
     fn find_mouse(&mut self) -> bool {
         let mut mouse_valid = false;
-        self.send_message(Message::MouseStatus(DeviceStatus::Disconnected));
+        self.send_game_message(Message::MouseStatus(DeviceStatus::Disconnected));
         log::info!("mouse disconnected");
         self.mouse.status = DeviceStatus::Disconnected;
         let mouse = Mouse::open();
@@ -121,7 +127,7 @@ impl GameManager {
             log::info!("mouse reconnected");
             mouse_valid = true;
         }
-        self.send_message(Message::MouseStatus(mouse.status.clone()));
+        self.send_game_message(Message::MouseStatus(mouse.status.clone()));
         self.mouse = mouse;
         mouse_valid
     }

@@ -20,28 +20,15 @@ const REFRESH_RATE: u64 = 100;
 pub const LOOP_DURATION: Duration = Duration::from_millis(1000 / REFRESH_RATE);
 pub const SLEEP_DURATION: Duration = Duration::from_secs(5);
 pub const DEFAULT_CONFIG_NAME: &str = "deadlocked.toml";
+pub const DEFAULT_URL: &str = "localhost:6346";
 pub const VERSION: &str = concat!("v", env!("CARGO_PKG_VERSION"));
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
-pub enum GameStatus {
-    Working,
-    GameNotStarted,
-}
-
-impl GameStatus {
-    pub fn string(&self) -> &str {
-        match self {
-            GameStatus::Working => "Working",
-            GameStatus::GameNotStarted => "Game Not Started",
-        }
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub aim: AimConfig,
     pub player: PlayerConfig,
     pub hud: HudConfig,
+    pub radar: RadarConfig,
     pub misc: UnsafeConfig,
     pub accent_color: Color32,
 }
@@ -52,6 +39,7 @@ impl Default for Config {
             aim: AimConfig::default(),
             player: PlayerConfig::default(),
             hud: HudConfig::default(),
+            radar: RadarConfig::default(),
             misc: UnsafeConfig::default(),
             accent_color: Colors::BLUE,
         }
@@ -264,6 +252,21 @@ impl Default for HudConfig {
             line_width: 2.0,
             font_size: 16.0,
             debug: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RadarConfig {
+    pub enabled: bool,
+    pub url: String,
+}
+
+impl Default for RadarConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            url: DEFAULT_URL.to_string(),
         }
     }
 }

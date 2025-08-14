@@ -11,7 +11,7 @@ use crate::{
     bvh::{Aabb, Triangle},
     color::Colors,
     config::{
-        AimbotConfig, BoxMode, Config, DrawMode, GameStatus, TriggerbotMode, VERSION, WeaponConfig,
+        AimbotConfig, BoxMode, Config, DrawMode, TriggerbotMode, VERSION, WeaponConfig,
         available_configs, delete_config, exe_path, parse_config, write_config,
     },
     constants::cs2,
@@ -20,7 +20,7 @@ use crate::{
     drag_range::DragRange,
     key_codes::KeyCode,
     math::world_to_screen,
-    message::Message,
+    message::{Envelope, GameStatus, Message, RadarStatus, Target},
     mouse::DeviceStatus,
 };
 
@@ -29,6 +29,7 @@ pub enum Tab {
     Aimbot,
     Player,
     Hud,
+    Radar,
     Unsafe,
     Config,
 }
@@ -41,12 +42,16 @@ pub enum AimbotTab {
 
 impl App {
     pub fn send_config(&self) {
-        self.send_message(Message::Config(self.config.clone()));
-        write_config(&self.config, &self.current_config);
+        self.send_message(Message::Config(Box::new(self.config.clone())), Target::Game);
+        self.save();
     }
 
-    pub fn send_message(&self, message: Message) {
-        self.tx.send(message).expect("game thread died");
+    pub fn send_message(&self, message: Message, target: Target) {
+        self.tx.send(Envelope { target, message }).unwrap();
+    }
+
+    fn save(&self) {
+        write_config(&self.config, &self.current_config);
     }
 
     fn gui(&mut self, ctx: &Context) {
@@ -57,6 +62,7 @@ impl App {
                 ui.selectable_value(&mut self.current_tab, Tab::Aimbot, "\u{f04fe} Aimbot");
                 ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
                 ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
+                ui.selectable_value(&mut self.current_tab, Tab::Radar, "\u{f0437} Radar");
                 ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
                 ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
 
@@ -79,6 +85,7 @@ impl App {
                 Tab::Aimbot => self.aimbot_settings(ui),
                 Tab::Player => self.player_settings(ui),
                 Tab::Hud => self.hud_settings(ui),
+                Tab::Radar => self.radar_settings(ui),
                 Tab::Unsafe => self.unsafe_settings(ui),
                 Tab::Config => self.config_settings(ui, ctx),
             }
@@ -638,6 +645,46 @@ impl App {
         });
     }
 
+    fn radar_settings(&mut self, ui: &mut Ui) {
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, true])
+            .id_salt("hud_left")
+            .show(ui, |ui| {
+                collapsing_open(ui, "Radar", |ui| {
+                    ui.label(
+                        egui::RichText::new(format!("{:?}", self.radar_status)).color(
+                            match self.radar_status {
+                                RadarStatus::Connected => Colors::GREEN,
+                                RadarStatus::Disconnected => Colors::YELLOW,
+                            },
+                        ),
+                    );
+
+                    if ui
+                        .checkbox(&mut self.config.radar.enabled, "Enable Radar")
+                        .changed()
+                    {
+                        self.send_message(
+                            Message::RadarSetEnabled(self.config.radar.enabled),
+                            Target::Radar,
+                        );
+                        self.save();
+                    }
+
+                    if ui
+                        .text_edit_singleline(&mut self.config.radar.url)
+                        .changed()
+                    {
+                        self.send_message(
+                            Message::ChangeRadarUrl(self.config.radar.url.clone()),
+                            Target::Radar,
+                        );
+                        self.save();
+                    }
+                });
+            });
+    }
+
     fn unsafe_settings(&mut self, ui: &mut Ui) {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
@@ -851,9 +898,9 @@ impl App {
     fn add_game_status(&self, ui: &mut Ui) {
         ui.horizontal_top(|ui| {
             ui.label(
-                egui::RichText::new(self.status.string())
+                egui::RichText::new(format!("{}", self.game_status))
                     .line_height(Some(8.0))
-                    .color(match self.status {
+                    .color(match self.game_status {
                         GameStatus::Working => Colors::GREEN,
                         GameStatus::GameNotStarted => Colors::YELLOW,
                     }),

@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 
 use glam::{Mat4, Vec2, Vec3};
+use serde::Serialize;
 
 use crate::cs2::{bones::Bones, weapon::Weapon};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct Data {
     pub in_game: bool,
     pub is_ffa: bool,
@@ -19,7 +20,7 @@ pub struct Data {
     pub triggerbot_active: bool,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct PlayerData {
     pub health: i32,
     pub armor: i32,
@@ -34,7 +35,7 @@ pub struct PlayerData {
     pub visible: bool,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct BombData {
     pub planted: bool,
     pub timer: f32,

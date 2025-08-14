@@ -2,5 +2,6 @@
 .vscode
 
 /target
+/radar/node_modules
 
 config.toml

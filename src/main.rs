@@ -1,8 +1,10 @@
 use std::{
     collections::HashMap,
     io::Write,
-    sync::{Arc, Mutex, mpsc},
+    sync::{Arc, Mutex},
 };
+
+use crossbeam::channel::{bounded, unbounded};
 
 use crate::{app::App, data::Data, parser::parse_maps};
 
@@ -22,8 +24,9 @@ mod message;
 mod mouse;
 mod parser;
 mod process;
+mod radar;
+mod router;
 mod schema;
-mod script;
 mod window_context;
 
 #[cfg(not(target_os = "linux"))]
@@ -61,19 +64,30 @@ fn main() {
     }
     std::thread::spawn(move || parse_maps(bvh, force_reparse));
 
-    let (tx_game, rx_gui) = mpsc::channel();
-    let (tx_gui, rx_game) = mpsc::channel();
+    let (tx, rx) = unbounded();
+    let (tx_gui, rx_gui) = bounded(16);
+    let (tx_game, rx_game) = bounded(16);
+    let (tx_radar, rx_radar) = bounded(16);
     let data = Arc::new(Mutex::new(Data::default()));
     let data_game = data.clone();
+    let data_radar = data.clone();
 
+    std::thread::spawn(move || router::router(rx, tx_gui, tx_game, tx_radar));
+
+    let tx_game = tx.clone();
     std::thread::spawn(move || {
         game::GameManager::new(tx_game, rx_game, data_game, bvh_game).run();
     });
     log::info!("started game thread");
 
+    let tx_radar = tx.clone();
+    std::thread::spawn(move || {
+        radar::Radar::new(tx_radar, rx_radar, data_radar).run();
+    });
+
     let event_loop = winit::event_loop::EventLoop::new().unwrap();
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
-    let mut app = App::new(tx_gui, rx_gui, data, bvh_gui);
+    let mut app = App::new(tx, rx_gui, data, bvh_gui);
     event_loop.run_app(&mut app).unwrap();
     log::info!("exiting");
 }

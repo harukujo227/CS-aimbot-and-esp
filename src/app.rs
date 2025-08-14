@@ -1,10 +1,11 @@
 use std::{
     collections::HashMap,
     path::PathBuf,
-    sync::{Arc, Mutex, mpsc},
+    sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
 
+use crossbeam::channel::{Receiver, Sender};
 use egui::{FontData, FontDefinitions, Stroke, Style};
 use egui_glow::glow;
 use winit::{
@@ -16,13 +17,12 @@ use crate::{
     bvh::Bvh,
     color::Colors,
     config::{
-        Config, DEFAULT_CONFIG_NAME, GameStatus, available_configs, exe_path, parse_config,
-        write_config,
+        Config, DEFAULT_CONFIG_NAME, available_configs, exe_path, parse_config, write_config,
     },
     cs2::weapon::Weapon,
     data::Data,
     gui::{AimbotTab, Tab},
-    message::Message,
+    message::{Envelope, GameStatus, Message, RadarStatus, Target},
     mouse::DeviceStatus,
     window_context::WindowContext,
 };
@@ -39,14 +39,15 @@ pub struct App {
     pub overlay_glow: Option<egui_glow::EguiGlow>,
     next_frame_time: Instant,
 
-    pub tx: mpsc::Sender<Message>,
-    pub rx: mpsc::Receiver<Message>,
+    pub tx: Sender<Envelope>,
+    pub rx: Receiver<Message>,
     pub data: Arc<Mutex<Data>>,
     #[allow(unused)]
     pub bvh: Arc<Mutex<HashMap<String, Bvh>>>,
 
-    pub status: GameStatus,
+    pub game_status: GameStatus,
     pub mouse_status: DeviceStatus,
+    pub radar_status: RadarStatus,
     pub display_scale: f32,
 
     pub config: Config,
@@ -61,8 +62,8 @@ pub struct App {
 
 impl App {
     pub fn new(
-        tx: mpsc::Sender<Message>,
-        rx: mpsc::Receiver<Message>,
+        tx: Sender<Envelope>,
+        rx: Receiver<Message>,
         data: Arc<Mutex<Data>>,
         bvh: Arc<Mutex<HashMap<String, Bvh>>>,
     ) -> Self {
@@ -90,8 +91,9 @@ impl App {
             available_configs: available_configs(),
             new_config_name: String::new(),
 
-            status: GameStatus::GameNotStarted,
+            game_status: GameStatus::GameNotStarted,
             mouse_status: DeviceStatus::Disconnected,
+            radar_status: RadarStatus::Disconnected,
             display_scale: 1.0,
 
             current_tab: Tab::Aimbot,
@@ -99,6 +101,14 @@ impl App {
             aimbot_weapon: Weapon::Ak47,
         };
         ret.send_config();
+        ret.send_message(
+            Message::RadarSetEnabled(ret.config.radar.enabled),
+            Target::Radar,
+        );
+        ret.send_message(
+            Message::ChangeRadarUrl(ret.config.radar.url.clone()),
+            Target::Radar,
+        );
         ret
     }
 
@@ -156,8 +166,9 @@ impl ApplicationHandler for App {
     ) {
         while let Ok(message) = self.rx.try_recv() {
             match message {
-                Message::Status(status) => self.status = status,
+                Message::GameStatus(status) => self.game_status = status,
                 Message::MouseStatus(status) => self.mouse_status = status,
+                Message::RadarStatus(status) => self.radar_status = status,
                 _ => {}
             }
         }
