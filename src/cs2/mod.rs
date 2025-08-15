@@ -344,6 +344,7 @@ impl CS2 {
         };
         offsets.direct.planted_c4 = self.process.get_relative_address(planted_c4, 0x03, 0x0F);
 
+        // xref "Unknown image format in gameinfo.gi WorldRenderer/EnvironmentMapFormat."
         let Some(global_vars) = self.process.scan(
             "48 8D 05 ? ? ? ? 48 8B 00 8B 50 ? 31 C0 E8 ? ? ? ? 48 8D 95",
             offsets.library.client,

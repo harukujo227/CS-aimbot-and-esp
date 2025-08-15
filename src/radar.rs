@@ -93,18 +93,18 @@ impl Radar {
             }
         };
         let Ok(mut address) = url.to_socket_addrs() else {
-            log::warn!("{url} is not a valid address");
+            log::debug!("{url} is not a valid address");
             return false;
         };
         let Ok(stream) =
             TcpStream::connect_timeout(&address.next().unwrap(), Duration::from_secs(5))
         else {
-            log::warn!("could not connect to {url}");
+            log::debug!("could not connect to {url}");
             self.websocket = None;
             return false;
         };
         let Ok((mut websocket, _)) = client(&url_full, stream) else {
-            log::warn!("could not connect to {url}");
+            log::debug!("could not connect to {url}");
             return false;
         };
 
