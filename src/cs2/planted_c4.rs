@@ -8,7 +8,10 @@ pub struct PlantedC4 {
 }
 
 impl PlantedC4 {
+    #[allow(unused)]
     pub fn get(cs2: &CS2) -> Option<Self> {
+        // todo: fix this
+        return None;
         let handle = cs2.process.read(cs2.offsets.direct.planted_c4);
         if handle == 0 {
             return None;

@@ -335,14 +335,14 @@ impl CS2 {
         let sdl_window = self.process.read(sdl_window);
         offsets.direct.sdl_window = self.process.get_relative_address(sdl_window, 0x03, 0x07);
 
-        let Some(planted_c4) = self
-            .process
-            .scan("48 8D 05 ? ? ? ? 8B 10 85 D2 7E", offsets.library.client)
-        else {
+        let Some(planted_c4) = self.process.scan(
+            "48 8D 35 ? ? ? ? 66 0F EF C0 C6 05 ? ? ? ? 01 48 8D 3D",
+            offsets.library.client,
+        ) else {
             log::warn!("could not find planted c4 offset");
             return None;
         };
-        offsets.direct.planted_c4 = self.process.get_relative_address(planted_c4, 0x03, 0x0F);
+        offsets.direct.planted_c4 = self.process.get_relative_address(planted_c4, 0x03, 0x0E);
 
         // xref "lobby_mapveto"
         let Some(global_vars) = self.process.scan(
