@@ -176,20 +176,6 @@ function getHealthColor(health) {
     return "#ff4444";
 }
 
-function getHealthClass(health) {
-    const clampedHealth = Math.max(0, Math.min(100, health));
-
-    if (clampedHealth >= 75) {
-        return "health-high";
-    } else if (clampedHealth >= 50) {
-        return "health-medium-high";
-    } else if (clampedHealth >= 25) {
-        return "health-medium";
-    } else {
-        return "health-low";
-    }
-}
-
 // Update round timer
 function updateRoundTimer() {
     const timerElement = document.getElementById("roundTime");
