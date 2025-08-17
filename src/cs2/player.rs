@@ -268,6 +268,16 @@ impl Player {
             != 0
     }
 
+    pub fn color(&self, cs2: &CS2) -> i32 {
+        cs2.process
+            .read(self.controller + cs2.offsets.controller.color)
+    }
+
+    pub fn rotation(&self, cs2: &CS2) -> f32 {
+        cs2.process
+            .read(self.pawn + cs2.offsets.pawn.eye_angles + 0x04)
+    }
+
     pub fn view_angles(&self, cs2: &CS2) -> Vec2 {
         cs2.process.read(self.pawn + cs2.offsets.pawn.view_angles)
     }

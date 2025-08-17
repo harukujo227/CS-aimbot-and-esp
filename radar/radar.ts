@@ -47,7 +47,6 @@ function update_data(data: any) {
     if (uuid in games) {
         games[uuid].data = data["data"];
         games[uuid].last_update = Date.now();
-        console.info(games[uuid]);
     }
 }
 

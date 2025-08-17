@@ -117,6 +117,7 @@ impl Game for CS2 {
 
     fn data(&self, config: &Config, data: &mut Data) {
         data.players.clear();
+        data.friendlies.clear();
         data.weapons.clear();
 
         let sdl_window = self.process.read::<u64>(self.offsets.direct.sdl_window);
@@ -143,9 +144,6 @@ impl Game for CS2 {
             return;
         }
         for player in &self.players {
-            if !self.is_ffa() && player.team(self) == local_team {
-                continue;
-            }
             let player_data = PlayerData {
                 health: player.health(self),
                 armor: player.armor(self),
@@ -158,11 +156,17 @@ impl Game for CS2 {
                 has_helmet: player.has_helmet(self),
                 has_bomb: player.has_bomb(self),
                 visible: player.visible(self, &local_player),
+                color: player.color(self),
+                rotation: player.rotation(self),
             };
-            data.players.push(player_data);
+            if !self.is_ffa() && player.team(self) == local_team {
+                data.friendlies.push(player_data);
+            } else {
+                data.players.push(player_data);
+            }
         }
 
-        data.local_player = PlayerData {
+        let local_player_data = PlayerData {
             health: local_player.health(self),
             armor: local_player.armor(self),
             position: local_player.position(self),
@@ -174,7 +178,11 @@ impl Game for CS2 {
             has_helmet: local_player.has_helmet(self),
             has_bomb: local_player.has_bomb(self),
             visible: true,
+            color: local_player.color(self),
+            rotation: local_player.rotation(self),
         };
+        data.local_player = local_player_data.clone();
+        data.friendlies.push(local_player_data);
 
         data.weapons.clear();
         for entity in &self.entities {
@@ -378,6 +386,7 @@ impl CS2 {
         offsets.controller.pawn = client.get("CBasePlayerController", "m_hPawn")?;
         offsets.controller.desired_fov = client.get("CBasePlayerController", "m_iDesiredFOV")?;
         offsets.controller.owner_entity = client.get("C_BaseEntity", "m_hOwnerEntity")?;
+        offsets.controller.color = client.get("CCSPlayerController", "m_iCompTeammateColor")?;
 
         offsets.pawn.health = client.get("C_BaseEntity", "m_iHealth")?;
         offsets.pawn.armor = client.get("C_CSPlayerPawn", "m_ArmorValue")?;
@@ -387,6 +396,7 @@ impl CS2 {
         offsets.pawn.fov_multiplier = client.get("C_BasePlayerPawn", "m_flFOVSensitivityAdjust")?;
         offsets.pawn.game_scene_node = client.get("C_BaseEntity", "m_pGameSceneNode")?;
         offsets.pawn.eye_offset = client.get("C_BaseModelEntity", "m_vecViewOffset")?;
+        offsets.pawn.eye_angles = client.get("C_CSPlayerPawnBase", "m_angEyeAngles")?;
         offsets.pawn.velocity = client.get("C_BaseEntity", "m_vecAbsVelocity")?;
         offsets.pawn.aim_punch_cache = client.get("C_CSPlayerPawn", "m_aimPunchCache")?;
         offsets.pawn.shots_fired = client.get("C_CSPlayerPawn", "m_iShotsFired")?;

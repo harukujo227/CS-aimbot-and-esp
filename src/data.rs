@@ -11,6 +11,7 @@ pub struct Data {
     pub is_ffa: bool,
     pub weapon: Weapon,
     pub players: Vec<PlayerData>,
+    pub friendlies: Vec<PlayerData>,
     pub local_player: PlayerData,
     pub weapons: Vec<(Weapon, Vec3)>,
     pub bomb: BombData,
@@ -21,7 +22,7 @@ pub struct Data {
     pub triggerbot_active: bool,
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct PlayerData {
     pub health: i32,
     pub armor: i32,
@@ -34,6 +35,8 @@ pub struct PlayerData {
     pub has_helmet: bool,
     pub has_bomb: bool,
     pub visible: bool,
+    pub color: i32,
+    pub rotation: f32,
 }
 
 #[derive(Debug, Default, Serialize)]
