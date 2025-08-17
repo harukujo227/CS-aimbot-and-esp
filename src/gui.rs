@@ -463,6 +463,21 @@ impl App {
                         self.config.player.skeleton_color = color;
                         self.send_config();
                     }
+
+                    ui.horizontal(|ui| {
+                        if ui
+                            .add(
+                                DragValue::new(&mut self.config.player.alpha)
+                                    .range(0.0..=1.0)
+                                    .speed(0.01)
+                                    .max_decimals(2),
+                            )
+                            .changed()
+                        {
+                            self.send_config();
+                        }
+                        ui.label("Alpha (0=transparent, 1=opaque)");
+                    });
                 });
             });
     }
@@ -965,11 +980,16 @@ impl App {
         }
     }
 
+    fn apply_alpha(&self, color: Color32) -> Color32 {
+        let [r, g, b, _] = color.to_array();
+        let alpha = (255.0 * self.config.player.alpha) as u8;
+        Color32::from_rgba_unmultiplied(r, g, b, alpha)
+    }
+
     fn overlay(&self, ctx: &Context) {
         ctx.set_pixels_per_point(1.0);
         let painter = ctx.layer_painter(egui::LayerId::background());
         let font = FontId::proportional(self.config.hud.font_size);
-        let text_stroke = Stroke::new(self.config.hud.line_width, Color32::WHITE);
 
         let data = &self.data.lock().unwrap();
         if let Some(window) = &self.overlay_window {
@@ -990,11 +1010,11 @@ impl App {
         if self.config.hud.debug {
             painter.line(
                 vec![pos2(0.0, 0.0), pos2(data.window_size.x, data.window_size.y)],
-                text_stroke,
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
             painter.line(
                 vec![pos2(data.window_size.x, 0.0), pos2(0.0, data.window_size.y)],
-                text_stroke,
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
         }
 
@@ -1015,7 +1035,7 @@ impl App {
                     Align2::CENTER_CENTER,
                     weapon.0.as_ref(),
                     font.clone(),
-                    self.config.hud.text_color,
+                    self.apply_alpha(self.config.hud.text_color),
                 );
             }
         }
@@ -1027,7 +1047,7 @@ impl App {
                     Align2::CENTER_CENTER,
                     format!("{:.1}", data.bomb.timer),
                     font.clone(),
-                    self.config.hud.text_color,
+                    self.apply_alpha(self.config.hud.text_color),
                 );
                 if data.bomb.being_defused {
                     painter.text(
@@ -1035,13 +1055,13 @@ impl App {
                         Align2::CENTER_CENTER,
                         "defusing",
                         font.clone(),
-                        self.config.hud.text_color,
+                        self.apply_alpha(self.config.hud.text_color),
                     );
                 }
             }
 
             let fraction = (data.bomb.timer / 40.0).clamp(0.0, 1.0);
-            let color = self.health_color((fraction * 100.0) as i32);
+            let color = self.apply_alpha(self.health_color((fraction * 100.0) as i32));
             painter.line(
                 vec![
                     pos2(0.0, data.window_size.y),
@@ -1066,7 +1086,7 @@ impl App {
             painter.circle_stroke(
                 pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
                 radius,
-                Stroke::new(self.config.hud.line_width, Color32::WHITE),
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
         }
 
@@ -1078,14 +1098,14 @@ impl App {
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 - 50.0),
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 + 50.0),
                 ],
-                text_stroke,
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
             painter.line(
                 vec![
                     pos2(data.window_size.x / 2.0 - 50.0, data.window_size.y / 2.0),
                     pos2(data.window_size.x / 2.0 + 50.0, data.window_size.y / 2.0),
                 ],
-                text_stroke,
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
         }
 
@@ -1098,7 +1118,7 @@ impl App {
                 Align2::LEFT_TOP,
                 "trigger active",
                 font,
-                self.config.hud.text_color,
+                self.apply_alpha(self.config.hud.text_color),
             );
         }
     }
@@ -1159,15 +1179,15 @@ impl App {
     }
 
     fn player_box(&self, painter: &Painter, player: &PlayerData, data: &Data) {
-        let health_color = self.health_color(player.health);
+        let health_color = self.apply_alpha(self.health_color(player.health));
         let color = match &self.config.player.draw_box {
             DrawMode::None => health_color,
             DrawMode::Health => health_color,
             DrawMode::Color => {
                 if player.visible {
-                    self.config.player.box_visible_color
+                    self.apply_alpha(self.config.player.box_visible_color)
                 } else {
-                    self.config.player.box_invisible_color
+                    self.apply_alpha(self.config.player.box_invisible_color)
                 }
             }
         };
@@ -1255,19 +1275,20 @@ impl App {
                     pos2(x, bl.y),
                     pos2(x, bl.y - (delta * player.armor as f32 / 100.0)),
                 ],
-                Stroke::new(self.config.hud.line_width, Color32::BLUE),
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::BLUE)),
             );
         }
 
         let mut offset = 0.0;
         let font_size = self.config.hud.font_size;
+        let text_color = self.apply_alpha(self.config.hud.text_color);
         if self.config.player.player_name {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
                 &player.name,
                 font.clone(),
-                self.config.hud.text_color,
+                text_color,
             );
             offset += font_size;
         }
@@ -1278,7 +1299,7 @@ impl App {
                 Align2::LEFT_TOP,
                 player.weapon.as_ref(),
                 font.clone(),
-                self.config.hud.text_color,
+                text_color,
             );
             offset += font_size;
         }
@@ -1289,7 +1310,7 @@ impl App {
                 Align2::LEFT_TOP,
                 "defuser",
                 font.clone(),
-                self.config.hud.text_color,
+                text_color,
             );
             offset += font_size;
         }
@@ -1300,7 +1321,7 @@ impl App {
                 Align2::LEFT_TOP,
                 "helmet",
                 font.clone(),
-                self.config.hud.text_color,
+                text_color,
             );
             offset += font_size;
         }
@@ -1311,7 +1332,7 @@ impl App {
                 Align2::LEFT_TOP,
                 "bomb",
                 font.clone(),
-                self.config.hud.text_color,
+                text_color,
             );
         }
     }
@@ -1319,8 +1340,8 @@ impl App {
     fn skeleton(&self, painter: &Painter, player: &PlayerData, data: &Data) {
         let color = match &self.config.player.draw_skeleton {
             DrawMode::None => return,
-            DrawMode::Health => self.health_color(player.health),
-            DrawMode::Color => self.config.player.skeleton_color,
+            DrawMode::Health => self.apply_alpha(self.health_color(player.health)),
+            DrawMode::Color => self.apply_alpha(self.config.player.skeleton_color),
         };
         let stroke = Stroke::new(self.config.hud.line_width, color);
 
