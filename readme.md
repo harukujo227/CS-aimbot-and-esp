@@ -66,6 +66,10 @@ simple cs2 aimbot and esp, for linux only.
 
 ## faq
 
+### radar
+
+see [radar.md](radar.md)
+
 ### what desktop environments and window managers are supported?
 
 it is tested on GNOME with Mutter, KDE with KWin, and SwayWM.
