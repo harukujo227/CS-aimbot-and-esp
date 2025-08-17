@@ -1,14 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" type="image/x-icon" href="favicon.ico" />
-        <link rel="stylesheet" href="style.css">
-        <title>Radar</title>
-    </head>
-    <body>
-        <div id="radar"></div>
-        <script src="index.js"></script>
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <title>CS2 Radar</title>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Left player list -->
+        <div class="player-list left" id="leftPlayerList">
+            <!-- players will be added here dynamically -->
+        </div>
+
+        <!-- Center radar -->
+        <div class="radar-container">
+            <div id="radar" class="radar">
+                <!-- Map background will be set via JS -->
+                <div class="radar-overlay"></div>
+            </div>
+            <div class="radar-info">
+                <div class="map-name" id="mapName">de_mirage</div>
+                <div class="round-info">
+                    <span class="round-number">Round 1</span>
+                    <span class="round-time" id="roundTime">1:55</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right player list -->
+        <div class="player-list right" id="rightPlayerList">
+            <!-- players will be added here dynamically -->
+        </div>
+    </div>
+    <script src="index.js"></script>
+</body>
 </html>
