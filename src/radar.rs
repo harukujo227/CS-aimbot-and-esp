@@ -73,8 +73,9 @@ impl Radar {
         {
             let data = self.data.lock().unwrap();
             let message = tungstenite::Message::text(message(&data, uuid));
-            if websocket.send(message).is_err() {
-                log::warn!("could not send radar message");
+            let res = websocket.send(message);
+            if let Err(error) = res {
+                log::warn!("could not send radar message: {error}");
             }
         } else if !self.connect() {
             std::thread::sleep(Duration::from_secs(1));
