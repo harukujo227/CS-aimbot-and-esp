@@ -262,6 +262,10 @@ impl Default for HudConfig {
 pub struct RadarConfig {
     pub enabled: bool,
     pub url: String,
+    pub enemy_dot_health_based: bool,
+    pub enemy_dot_color: Color32,
+    pub show_teammates: bool,
+    pub teammate_dot_color: Color32,
 }
 
 impl Default for RadarConfig {
@@ -269,6 +273,10 @@ impl Default for RadarConfig {
         Self {
             enabled: false,
             url: DEFAULT_URL.to_string(),
+            enemy_dot_health_based: true,
+            enemy_dot_color: Color32::from_rgb(255, 68, 68), // Red
+            show_teammates: true,
+            teammate_dot_color: Color32::from_rgb(93, 156, 236), // Blue
         }
     }
 }

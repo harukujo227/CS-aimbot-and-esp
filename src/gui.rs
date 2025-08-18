@@ -662,20 +662,20 @@ impl App {
 
     fn radar_settings(&mut self, ui: &mut Ui, ctx: &Context) {
         egui::ScrollArea::vertical()
-            .auto_shrink([false, true])
-            .id_salt("hud_left")
-            .show(ui, |ui| {
-                collapsing_open(ui, "Radar", |ui| {
-                    ui.label(egui::RichText::new(format!("{}", self.radar_status)).color(
-                        match self.radar_status {
-                            RadarStatus::Connected(_) => Colors::GREEN,
-                            RadarStatus::Disconnected => Colors::YELLOW,
-                        },
-                    ));
+        .auto_shrink([false, true])
+        .id_salt("hud_left")
+        .show(ui, |ui| {
+            collapsing_open(ui, "Radar", |ui| {
+                ui.label(egui::RichText::new(format!("{}", self.radar_status)).color(
+                    match self.radar_status {
+                        RadarStatus::Connected(_) => Colors::GREEN,
+                        RadarStatus::Disconnected => Colors::YELLOW,
+                    },
+                ));
 
-                    if ui
-                        .checkbox(&mut self.config.radar.enabled, "Enable Radar")
-                        .changed()
+                if ui
+                    .checkbox(&mut self.config.radar.enabled, "Enable Radar")
+                    .changed()
                     {
                         self.send_message(
                             Message::RadarSetEnabled(self.config.radar.enabled),
@@ -684,9 +684,9 @@ impl App {
                         self.save();
                     }
 
-                    if ui
-                        .text_edit_singleline(&mut self.config.radar.url)
-                        .changed()
+                if ui
+                    .text_edit_singleline(&mut self.config.radar.url)
+                    .changed()
                     {
                         self.send_message(
                             Message::ChangeRadarUrl(self.config.radar.url.clone()),
@@ -695,22 +695,65 @@ impl App {
                         self.save();
                     }
 
-                    if let RadarStatus::Connected(uuid) = &self.radar_status {
-                        if ui.button("Open").clicked() {
-                            ctx.open_url(egui::OpenUrl {
-                                url: format!("http://{}/?uuid={}", self.config.radar.url, uuid),
-                                new_tab: false,
-                            });
-                        }
-
-                        if ui.button("Copy Link").clicked() {
-                            let link = format!("http://{}/?uuid={}", self.config.radar.url, uuid);
-                            log::info!("copied link ({link})");
-                            ctx.copy_text(link);
-                        }
+                if let RadarStatus::Connected(uuid) = &self.radar_status {
+                    if ui.button("Open").clicked() {
+                        ctx.open_url(egui::OpenUrl {
+                            url: format!("http://{}/?uuid={}", self.config.radar.url, uuid),
+                            new_tab: false,
+                        });
                     }
-                });
+
+                    if ui.button("Copy Link").clicked() {
+                        let link = format!("http://{}/?uuid={}", self.config.radar.url, uuid);
+                        log::info!("copied link ({link})");
+                        ctx.copy_text(link);
+                    }
+                }
             });
+
+            collapsing_open(ui, "Enemy Settings", |ui| {
+                if ui
+                    .checkbox(
+                        &mut self.config.radar.enemy_dot_health_based,
+                        "Health-based Enemy Colors"
+                    )
+                    .changed()
+                    {
+                        self.send_config();
+                    }
+
+                    ui.add_enabled_ui(!self.config.radar.enemy_dot_health_based, |ui| {
+                        if let Some(color) = self.color_picker(
+                            ui,
+                            &self.config.radar.enemy_dot_color,
+                            "Enemy Dot Color",
+                        ) {
+                            self.config.radar.enemy_dot_color = color;
+                            self.send_config();
+                        }
+                    });
+            });
+
+            collapsing_open(ui, "Teammate Settings", |ui| {
+                if ui
+                    .checkbox(&mut self.config.radar.show_teammates, "Show Teammates")
+                    .changed()
+                    {
+                        self.send_config();
+                    }
+
+                    ui.add_enabled_ui(self.config.radar.show_teammates, |ui| {
+                        if let Some(color) = self.color_picker(
+                            ui,
+                            &self.config.radar.teammate_dot_color,
+                            "Teammate Dot Color",
+                        ) {
+                            self.config.radar.teammate_dot_color = color;
+                            self.send_config();
+                        }
+                    });
+            });
+        });
     }
 
     fn unsafe_settings(&mut self, ui: &mut Ui) {

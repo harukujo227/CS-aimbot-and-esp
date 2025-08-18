@@ -20,6 +20,15 @@ pub struct Data {
     pub window_position: Vec2,
     pub window_size: Vec2,
     pub triggerbot_active: bool,
+    pub radar_config: Option<RadarConfigData>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct RadarConfigData {
+    pub enemy_dot_health_based: bool,
+    pub enemy_dot_color: [u8; 3],
+    pub show_teammates: bool,
+    pub teammate_dot_color: [u8; 3],
 }
 
 #[derive(Debug, Clone, Default, Serialize)]

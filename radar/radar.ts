@@ -45,7 +45,11 @@ function connect_server(ws: WebSocket) {
 function update_data(data: any) {
     const uuid = data["uuid"];
     if (uuid in games) {
-        games[uuid].data = data["data"];
+        const gameData = { ...data };
+        delete gameData.kind;
+        delete gameData.uuid;
+
+        games[uuid].data = gameData;
         games[uuid].last_update = Date.now();
     }
 }
@@ -55,6 +59,9 @@ function get_data(ws: WebSocket, data: any) {
     if (uuid in games) {
         const message = JSON.stringify(games[uuid].data);
         ws.send(message);
+    } else {
+        console.log(`UUID ${uuid} not found in games`);
+        ws.send(JSON.stringify({}));
     }
 }
 
