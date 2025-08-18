@@ -1,7 +1,7 @@
 let ws = null;
 
 const MapData = {
-    de_ancient_night: { x: -2953, y: 2164, scale: 4.4, rotate: false, zoom: 1 },
+    de_ancient_night: { x: -2953, y: 2164, scale: 5.1, rotate: false, zoom: 1 },
     de_dust2: { x: -2476, y: 3239, scale: 4.4, rotate: true, zoom: 1.1 },
     de_inferno: { x: -2087, y: 3870, scale: 4.9, rotate: false, zoom: 1 },
     de_mirage: { x: -3230, y: 1713, scale: 5, rotate: false, zoom: 1 },
