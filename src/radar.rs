@@ -70,16 +70,25 @@ impl Radar {
         if let Some(websocket) = &mut self.websocket
             && let Some(uuid) = &self.uuid
             && !should_reconnect
-        {
-            let data = self.data.lock().unwrap();
-            let message = tungstenite::Message::text(message(&data, uuid));
-            let res = websocket.send(message);
-            if let Err(error) = res {
-                log::warn!("could not send radar message: {error}");
+            {
+                let data = self.data.lock().unwrap();
+
+                if data.in_game {
+                    let message_string = message(&data, uuid);
+
+                    if !message_string.is_empty() && message_string.len() > 50 {
+                        let ws_message = tungstenite::Message::text(message_string);
+                        let res = websocket.send(ws_message);
+                        if let Err(error) = res {
+                            log::warn!("could not send radar message: {error}");
+                        }
+                    } else {
+                        println!("[ERROR] Message too short or empty, not sending");
+                    }
+                }
+            } else if !self.connect() {
+                std::thread::sleep(Duration::from_secs(1));
             }
-        } else if !self.connect() {
-            std::thread::sleep(Duration::from_secs(1));
-        }
 
         std::thread::sleep(Duration::from_millis(50));
     }
@@ -97,8 +106,7 @@ impl Radar {
             log::debug!("{url} is not a valid address");
             return false;
         };
-        let Ok(stream) =
-            TcpStream::connect_timeout(&address.next().unwrap(), Duration::from_secs(5))
+        let Ok(stream) = TcpStream::connect_timeout(&address.next().unwrap(), Duration::from_secs(5))
         else {
             log::debug!("could not connect to {url}");
             self.websocket = None;
@@ -110,15 +118,13 @@ impl Radar {
         };
 
         // send handshake, get uuid
-        let message =
-            tungstenite::Message::text(serde_json::json!({"kind":"connect_server"}).to_string());
+        let message = tungstenite::Message::text(serde_json::json!({"kind":"connect_server"}).to_string());
         websocket.send(message).unwrap();
 
         loop {
             if websocket.can_read() {
                 let reply = websocket.read().unwrap();
-                let json: UuidReply =
-                    serde_json::from_str(reply.into_text().unwrap().as_str()).unwrap();
+                let json: UuidReply = serde_json::from_str(reply.into_text().unwrap().as_str()).unwrap();
                 self.uuid = Some(json.uuid);
                 break;
             }
@@ -143,7 +149,22 @@ impl Radar {
 }
 
 fn message(data: &Data, uuid: &str) -> String {
-    serde_json::json!({"kind":"update_data","uuid":uuid,"data":data}).to_string()
+    let json_obj = serde_json::json!({
+        "kind": "update_data",
+        "uuid": uuid,
+        "players": data.players,
+        "friendlies": data.friendlies,
+        "bomb": data.bomb,
+        "map_name": data.map_name,
+        "in_game": data.in_game,
+    });
+
+    let result = json_obj.to_string();
+
+    if result.len() < 100 {
+        println!("[WARN] Very short message: {}", result);
+    }
+    result
 }
 
 #[allow(unused)]
