@@ -21,6 +21,12 @@ const loc = window.location;
 const uuid = new URLSearchParams(loc.search).get("uuid");
 const url = `ws://${loc.hostname}:${loc.port}`;
 
+let clientId = localStorage.getItem('radarClientId');
+if (!clientId) {
+    clientId = 'client_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    localStorage.setItem('radarClientId', clientId);
+}
+
 let players = [];
 let friendlies = [];
 let bombData = null;
@@ -48,6 +54,9 @@ let initialScale = 1;
 let initialTouchX = 0;
 let initialTouchY = 0;
 
+let viewerCount = 0;
+let isRegisteredViewer = false;
+
 const radar = document.querySelector('.radar');
 const radarContent = document.querySelector('.radar-content');
 const radarBackground = document.getElementById("radar-background");
@@ -58,31 +67,37 @@ if (radarBackground) {
 
 function startWebSocket() {
     stopWebSocket();
+
+    console.log("Opening WebSocket connection...");
+
     ws = new WebSocket(url);
     ws.onmessage = wsMessage;
-    ws.onopen = () => updateConnectionStatus(true);
-    ws.onerror = () => updateConnectionStatus(false);
-    ws.onclose = () => updateConnectionStatus(false);
+    ws.onopen = () => {
+        console.log('WebSocket connected successfully');
+        updateConnectionStatus(true);
+
+        if (uuid && !isRegisteredViewer) {
+            setTimeout(registerViewer, 100);
+        }
+    };
+    ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        updateConnectionStatus(false);
+    };
+    ws.onclose = (event) => {
+        console.log('WebSocket closed:', event.code, event.reason);
+        updateConnectionStatus(false);
+        isRegisteredViewer = false;
+    };
 }
+
 
 function stopWebSocket() {
-    ws?.close();
-    ws = null;
-}
-
-function updateConnectionStatus(connected) {
-    const indicator = document.getElementById('connectionIndicator');
-    const text = document.getElementById('connectionText');
-
-    if (connected) {
-        indicator?.classList.add('online');
-        indicator?.classList.remove('offline');
-        if (text) text.textContent = 'Connected';
-    } else {
-        indicator?.classList.add('offline');
-        indicator?.classList.remove('online');
-        if (text) text.textContent = 'Disconnected';
+    if (ws) {
+        ws.close(1000, 'Manual close');
+        ws = null;
     }
+    isRegisteredViewer = false;
 }
 
 function wsMessage(event) {
@@ -97,6 +112,12 @@ function wsMessage(event) {
 
         try {
             const json = JSON.parse(jsonData);
+
+            if (json.kind === "viewer_count") {
+                updateViewerCount(json.count);
+                return;
+            }
+
             processRadarData(json);
         } catch (error) {
             console.error('Error parsing text JSON:', error);
@@ -121,6 +142,12 @@ function wsMessage(event) {
 
             try {
                 const json = JSON.parse(text);
+
+                if (json.kind === "viewer_count") {
+                    updateViewerCount(json.count);
+                    return;
+                }
+
                 processRadarData(json);
             } catch (error) {
                 console.error('Error parsing blob JSON:', error);
@@ -137,22 +164,53 @@ function wsMessage(event) {
     }
 }
 
+function registerViewer() {
+    if (ws && ws.readyState === WebSocket.OPEN && uuid && !isRegisteredViewer) {
+        const message = JSON.stringify({
+            kind: "register_viewer",
+            uuid: uuid,
+            client_id: clientId
+        });
+
+        try {
+            ws.send(message);
+            isRegisteredViewer = true;
+            console.log('Registered as viewer for game:', uuid, 'with client ID:', clientId);
+        } catch (error) {
+            console.error('Error registering as viewer:', error);
+        }
+    }
+}
+
+function updateConnectionStatus(connected) {
+    const indicator = document.getElementById('connectionIndicator');
+    const text = document.getElementById('connectionText');
+
+    if (connected) {
+        indicator?.classList.add('online');
+        indicator?.classList.remove('offline');
+        if (text) text.textContent = 'Connected';
+    } else {
+        indicator?.classList.add('offline');
+        indicator?.classList.remove('online');
+        if (text) text.textContent = 'Disconnected';
+    }
+}
+
+function updateViewerCount(count) {
+    viewerCount = count;
+    const viewerCountElement = document.getElementById('viewerCount');
+    if (viewerCountElement) {
+        viewerCountElement.textContent = count;
+    }
+}
+
 function processRadarData(json) {
     players = json.players;
     friendlies = json.friendlies;
     bombData = json.bomb;
 
-    if (json.radar_config) {
-        window.radarConfig = json.radar_config;
-    }
-
-    if (json.type === "config_update" && json.radar_config) {
-        console.log('Received config update:', json.radar_config);
-        window.radarConfig = json.radar_config;
-        addPlayers();
-        return;
-    }
-
+    //WILL WORK IN THE FUTURE
     if (json.round_number) {
         currentRound = json.round_number;
         const roundElement = document.getElementById("roundNumber");
@@ -201,7 +259,106 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMouseEvents();
     setupTouchEvents();
     setupKeyboardShortcuts();
+
+    const settingsPanel = document.getElementById("settingsPanel");
+    const settingsToggle = document.getElementById("settingsToggle");
+    const closeSettings = document.getElementById("closeSettings");
+
+    settingsToggle.addEventListener("click", () => {
+        settingsPanel.classList.toggle("hidden");
+    });
+    closeSettings.addEventListener("click", () => {
+        settingsPanel.classList.add("hidden");
+    });
+
+    let isDragging = false;
+    let offsetX = 0, offsetY = 0;
+
+    settingsPanel.addEventListener("mousedown", (e) => {
+        if (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON" || e.target.tagName === "LABEL") return;
+        isDragging = true;
+        offsetX = e.clientX - settingsPanel.offsetLeft;
+        offsetY = e.clientY - settingsPanel.offsetTop;
+        settingsPanel.style.transition = "none";
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (isDragging) {
+            settingsPanel.style.left = `${e.clientX - offsetX}px`;
+            settingsPanel.style.top = `${e.clientY - offsetY}px`;
+            settingsPanel.style.bottom = "auto";
+        }
+    });
+
+    document.addEventListener("mouseup", () => {
+        isDragging = false;
+        settingsPanel.style.transition = "";
+    });
+
+    loadSettings();
+
+    ["showTeammates", "enemyHpColor", "enemyColor", "teammateColor"].forEach(id => {
+        document.getElementById(id).addEventListener("change", saveSettings);
+    });
 });
+
+
+function loadSettings() {
+    const saved = JSON.parse(localStorage.getItem("radarSettings")) || {};
+
+    const defaults = {
+        showTeammates: true,
+        enemyHpColor: true,
+        enemyColor: "#ff4444",
+        teammateColor: "#5d9cec",
+    };
+
+    const merged = { ...defaults, ...saved };
+
+    document.getElementById("showTeammates").checked = merged.showTeammates;
+    document.getElementById("enemyHpColor").checked = merged.enemyHpColor;
+    document.getElementById("enemyColor").value = merged.enemyColor;
+    document.getElementById("teammateColor").value = merged.teammateColor;
+
+    applySettings(merged);
+}
+
+function saveSettings() {
+    const settings = {
+        showTeammates: document.getElementById("showTeammates")?.checked ?? true,
+        enemyHpColor: document.getElementById("enemyHpColor")?.checked ?? true,
+        enemyColor: document.getElementById("enemyColor")?.value ?? "#ff4444",
+        teammateColor: document.getElementById("teammateColor")?.value ?? "#5d9cec",
+    };
+    localStorage.setItem("radarSettings", JSON.stringify(settings));
+    applySettings(settings);
+}
+
+function applySettings(settings) {
+    if (!window.radarConfig) window.radarConfig = {};
+
+    window.radarConfig.show_teammates = settings.showTeammates;
+    window.radarConfig.enemy_dot_health_based = settings.enemyHpColor;
+    window.radarConfig.enemy_dot_color = hexToRgb(settings.enemyColor, [255, 68, 68]);
+    window.radarConfig.teammate_dot_color = hexToRgb(settings.teammateColor, [93, 156, 236]);
+
+    addPlayers();
+    updatePlayerLists();
+}
+
+function hexToRgb(hex, fallback = [255, 255, 255]) {
+    if (!hex || typeof hex !== "string") return fallback;
+
+    hex = hex.replace("#", "");
+    if (hex.length !== 6) return fallback;
+
+    const bigint = parseInt(hex, 16);
+    return [
+        (bigint >> 16) & 255,
+        (bigint >> 8) & 255,
+        bigint & 255,
+    ];
+}
 
 function setupZoomControls() {
     const zoomInBtn = document.getElementById('zoomIn');

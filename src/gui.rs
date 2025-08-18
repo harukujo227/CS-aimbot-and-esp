@@ -710,49 +710,6 @@ impl App {
                     }
                 }
             });
-
-            collapsing_open(ui, "Enemy Settings", |ui| {
-                if ui
-                    .checkbox(
-                        &mut self.config.radar.enemy_dot_health_based,
-                        "Health-based Enemy Colors"
-                    )
-                    .changed()
-                    {
-                        self.send_config();
-                    }
-
-                    ui.add_enabled_ui(!self.config.radar.enemy_dot_health_based, |ui| {
-                        if let Some(color) = self.color_picker(
-                            ui,
-                            &self.config.radar.enemy_dot_color,
-                            "Enemy Dot Color",
-                        ) {
-                            self.config.radar.enemy_dot_color = color;
-                            self.send_config();
-                        }
-                    });
-            });
-
-            collapsing_open(ui, "Teammate Settings", |ui| {
-                if ui
-                    .checkbox(&mut self.config.radar.show_teammates, "Show Teammates")
-                    .changed()
-                    {
-                        self.send_config();
-                    }
-
-                    ui.add_enabled_ui(self.config.radar.show_teammates, |ui| {
-                        if let Some(color) = self.color_picker(
-                            ui,
-                            &self.config.radar.teammate_dot_color,
-                            "Teammate Dot Color",
-                        ) {
-                            self.config.radar.teammate_dot_color = color;
-                            self.send_config();
-                        }
-                    });
-            });
         });
     }
 

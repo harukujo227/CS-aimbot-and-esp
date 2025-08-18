@@ -50,6 +50,64 @@ body {
     align-items: center;
 }
 
+.settings-toggle {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-light);
+    z-index: 1100;
+    font-size: 18px;
+}
+
+.settings-panel {
+    position: fixed;
+    bottom: 80px;
+    left: 20px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-heavy);
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 220px;
+    cursor: move; /* draggable hint */
+}
+
+.settings-panel.hidden {
+    display: none;
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.settings-header button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+}
+
 /* Team Panels */
 .team-panel {
     display: flex;
@@ -670,6 +728,96 @@ pointer-events: none !important;
     box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
 }
 
+/* Viewer Count */
+.viewer-count {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    z-index: 1000;
+    box-shadow: var(--shadow-light);
+    transition: all 0.2s ease;
+}
+
+.viewer-count:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-heavy);
+    border-color: var(--accent-blue);
+}
+
+.viewer-icon {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+#viewerCount {
+color: var(--accent-blue);
+font-weight: 600;
+font-family: 'Courier New', monospace;
+min-width: 16px;
+text-align: center;
+}
+
+.viewer-label {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+/* Viewer Count */
+.viewer-count {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--bg-glass);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    z-index: 1000;
+    box-shadow: var(--shadow-light);
+    transition: all 0.2s ease;
+}
+
+.viewer-count:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-heavy);
+    border-color: var(--accent-blue);
+}
+
+.viewer-icon {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+#viewerCount {
+color: var(--accent-blue);
+font-weight: 600;
+font-family: 'Courier New', monospace;
+min-width: 16px;
+text-align: center;
+}
+
+.viewer-label {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
 /* Health-based colors for player dots */
 .health-high {
     --player-color: var(--accent-green);
@@ -721,6 +869,11 @@ pointer-events: none !important;
     .game-info {
         gap: 24px;
     }
+
+    .viewer-count {
+        right: 16px;
+        top: 16px;
+    }
 }
 
 @media (max-width: 1200px) {
@@ -741,6 +894,11 @@ pointer-events: none !important;
     :root {
         --radar-size: min(85vw, 85vh);
     }
+
+    .viewer-count {
+        right: 16px;
+        top: 16px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -760,6 +918,25 @@ pointer-events: none !important;
 
     :root {
         --radar-size: min(95vw, 70vh);
+    }
+
+    .viewer-count {
+        right: 12px;
+        top: 12px;
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+    .viewer-icon {
+        font-size: 12px;
+    }
+
+    #viewerCount {
+    font-size: 11px;
+    }
+
+    .viewer-label {
+        font-size: 10px;
     }
 }
 

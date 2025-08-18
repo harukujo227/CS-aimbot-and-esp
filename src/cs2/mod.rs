@@ -16,7 +16,7 @@ use crate::{
         bones::Bones, offsets::Offsets, planted_c4::PlantedC4, smoke::Smoke, target::Target,
         triggerbot::Triggerbot, weapon::Weapon,
     },
-    data::{Data, PlayerData, RadarConfigData},
+    data::{Data, PlayerData},
     game::Game,
     key_codes::KeyCode,
     math::{angles_from_vector, vec2_clamp},
@@ -211,21 +211,6 @@ impl Game for CS2 {
         } else {
             data.bomb.planted = false;
         }
-
-        data.radar_config = Some(RadarConfigData {
-            enemy_dot_health_based: config.radar.enemy_dot_health_based,
-            enemy_dot_color: [
-                config.radar.enemy_dot_color.r(),
-                config.radar.enemy_dot_color.g(),
-                config.radar.enemy_dot_color.b(),
-            ],
-            show_teammates: config.radar.show_teammates,
-            teammate_dot_color: [
-                config.radar.teammate_dot_color.r(),
-                config.radar.teammate_dot_color.g(),
-                config.radar.teammate_dot_color.b(),
-            ],
-        });
     }
 }
 

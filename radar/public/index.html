@@ -8,10 +8,43 @@
     <title>CS2 Radar</title>
 </head>
 <body>
+    <!-- Settings Panel -->
+    <div class="settings-toggle" id="settingsToggle">⚙️</div>
+
+    <div class="settings-panel hidden" id="settingsPanel">
+    <div class="settings-header">
+        <span>Settings</span>
+        <button id="closeSettings">✖</button>
+    </div>
+    <label>
+        <input type="checkbox" id="showTeammates">
+        Show Teammates on Radar
+    </label>
+    <label>
+        <input type="checkbox" id="enemyHpColor">
+        Show Enemy Color as HP
+    </label>
+    <label>
+        Enemy Dot Color:
+        <input type="color" id="enemyColor" value="#ff4444">
+    </label>
+    <label>
+        Teammate Dot Color:
+        <input type="color" id="teammateColor" value="#5d9cec">
+    </label>
+</div>
+
     <!-- Connection Status Indicator -->
     <div class="connection-status">
         <div class="status-indicator" id="connectionIndicator"></div>
         <span id="connectionText">Connecting...</span>
+    </div>
+
+    <!-- Viewer Count -->
+    <div class="viewer-count">
+        <div class="viewer-icon">👁️</div>
+        <span id="viewerCount">0</span>
+        <span class="viewer-label">viewers</span>
     </div>
 
     <div class="main-container">

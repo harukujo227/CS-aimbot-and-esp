@@ -80,7 +80,7 @@ impl Radar {
                         let ws_message = tungstenite::Message::text(message_string);
                         let res = websocket.send(ws_message);
                         if let Err(error) = res {
-                            log::warn!("[WARN] could not send radar message: {error}");
+                            log::warn!("could not send radar message: {error}");
                         }
                     } else {
                         println!("[ERROR] Message too short or empty, not sending");
@@ -157,7 +157,6 @@ fn message(data: &Data, uuid: &str) -> String {
         "bomb": data.bomb,
         "map_name": data.map_name,
         "in_game": data.in_game,
-        "radar_config": data.radar_config
     });
 
     let result = json_obj.to_string();
