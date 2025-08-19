@@ -392,11 +392,11 @@ impl CS2 {
         offsets.pawn.armor = client.get("C_CSPlayerPawn", "m_ArmorValue")?;
         offsets.pawn.team = client.get("C_BaseEntity", "m_iTeamNum")?;
         offsets.pawn.life_state = client.get("C_BaseEntity", "m_lifeState")?;
-        offsets.pawn.weapon = client.get("C_CSPlayerPawnBase", "m_pClippingWeapon")?;
+        offsets.pawn.weapon = client.get("C_CSPlayerPawn", "m_pClippingWeapon")?;
         offsets.pawn.fov_multiplier = client.get("C_BasePlayerPawn", "m_flFOVSensitivityAdjust")?;
         offsets.pawn.game_scene_node = client.get("C_BaseEntity", "m_pGameSceneNode")?;
         offsets.pawn.eye_offset = client.get("C_BaseModelEntity", "m_vecViewOffset")?;
-        offsets.pawn.eye_angles = client.get("C_CSPlayerPawnBase", "m_angEyeAngles")?;
+        offsets.pawn.eye_angles = client.get("C_CSPlayerPawn", "m_angEyeAngles")?;
         offsets.pawn.velocity = client.get("C_BaseEntity", "m_vecAbsVelocity")?;
         offsets.pawn.aim_punch_cache = client.get("C_CSPlayerPawn", "m_aimPunchCache")?;
         offsets.pawn.shots_fired = client.get("C_CSPlayerPawn", "m_iShotsFired")?;

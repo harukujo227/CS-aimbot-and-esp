@@ -183,6 +183,41 @@ impl Mouse {
     }
 }
 
+fn is_mouse_device(event_name: &str) -> bool {
+    let capabilities_path = format!("/sys/class/input/{}/device/capabilities/rel", event_name);
+    if let Ok(rel_caps) = fs::read_to_string(&capabilities_path) {
+        if let Ok(caps) = u64::from_str_radix(rel_caps.trim().trim_start_matches("0x"), 16) {
+            const REL_X_BIT: u64 = 1 << 0;
+            const REL_Y_BIT: u64 = 1 << 1;
+            return (caps & REL_X_BIT) != 0 && (caps & REL_Y_BIT) != 0;
+        }
+    }
+
+    let device_name_path = format!("/sys/class/input/{}/device/name", event_name);
+    if let Ok(device_name) = fs::read_to_string(&device_name_path) {
+        let name_lower = device_name.to_lowercase();
+        
+        if name_lower.contains("mouse") {
+            return true;
+        }
+        
+        if name_lower.contains("keyboard") || 
+           name_lower.contains("power") ||
+           name_lower.contains("sleep") ||
+           name_lower.contains("lid") ||
+           name_lower.contains("video") ||
+           name_lower.contains("audio") ||
+           name_lower.contains("consumer control") ||
+           name_lower.contains("system control") ||
+           name_lower.contains("wireless") ||
+           name_lower.contains("rfkill") {
+            return false;
+        }
+    }
+    
+    false
+}
+
 pub fn discover_mice() -> Vec<MouseDevice> {
     let mut devices = Vec::new();
 
@@ -198,6 +233,10 @@ pub fn discover_mice() -> Vec<MouseDevice> {
         
         let name = entry.file_name().into_string().unwrap();
         if !name.starts_with("event") {
+            continue;
+        }
+
+        if !is_mouse_device(&name) {
             continue;
         }
 
