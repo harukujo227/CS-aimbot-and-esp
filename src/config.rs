@@ -31,6 +31,7 @@ pub struct Config {
     pub radar: RadarConfig,
     pub misc: UnsafeConfig,
     pub accent_color: Color32,
+    pub preferred_mouse: Option<String>, // <-- NEW
 }
 
 impl Default for Config {
@@ -42,9 +43,11 @@ impl Default for Config {
             radar: RadarConfig::default(),
             misc: UnsafeConfig::default(),
             accent_color: Colors::BLUE,
+            preferred_mouse: None, // <-- NEW
         }
     }
 }
+
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct WeaponConfig {
@@ -203,6 +206,7 @@ pub struct PlayerConfig {
     pub box_invisible_color: Color32,
     pub draw_skeleton: DrawMode,
     pub skeleton_color: Color32,
+    pub alpha: f32,
     pub health_bar: bool,
     pub armor_bar: bool,
     pub player_name: bool,
@@ -220,6 +224,7 @@ impl Default for PlayerConfig {
             box_invisible_color: Color32::RED,
             draw_skeleton: DrawMode::Health,
             skeleton_color: Color32::WHITE,
+            alpha: 1.0,
             health_bar: true,
             armor_bar: true,
             player_name: true,

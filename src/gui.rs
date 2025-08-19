@@ -21,7 +21,7 @@ use crate::{
     key_codes::KeyCode,
     math::world_to_screen,
     message::{Envelope, GameStatus, Message, RadarStatus, Target},
-    mouse::DeviceStatus,
+    mouse::{DeviceStatus, discover_mice}
 };
 
 #[derive(PartialEq)]
@@ -463,6 +463,21 @@ impl App {
                         self.config.player.skeleton_color = color;
                         self.send_config();
                     }
+
+                    ui.horizontal(|ui| {
+                        if ui
+                            .add(
+                                DragValue::new(&mut self.config.player.alpha)
+                                    .range(0.0..=1.0)
+                                    .speed(0.01)
+                                    .max_decimals(2),
+                            )
+                            .changed()
+                        {
+                            self.send_config();
+                        }
+                        ui.label("Alpha (0=transparent, 1=opaque)");
+                    });
                 });
             });
     }
@@ -647,20 +662,20 @@ impl App {
 
     fn radar_settings(&mut self, ui: &mut Ui, ctx: &Context) {
         egui::ScrollArea::vertical()
-            .auto_shrink([false, true])
-            .id_salt("hud_left")
-            .show(ui, |ui| {
-                collapsing_open(ui, "Radar", |ui| {
-                    ui.label(egui::RichText::new(format!("{}", self.radar_status)).color(
-                        match self.radar_status {
-                            RadarStatus::Connected(_) => Colors::GREEN,
-                            RadarStatus::Disconnected => Colors::YELLOW,
-                        },
-                    ));
+        .auto_shrink([false, true])
+        .id_salt("hud_left")
+        .show(ui, |ui| {
+            collapsing_open(ui, "Radar", |ui| {
+                ui.label(egui::RichText::new(format!("{}", self.radar_status)).color(
+                    match self.radar_status {
+                        RadarStatus::Connected(_) => Colors::GREEN,
+                        RadarStatus::Disconnected => Colors::YELLOW,
+                    },
+                ));
 
-                    if ui
-                        .checkbox(&mut self.config.radar.enabled, "Enable Radar")
-                        .changed()
+                if ui
+                    .checkbox(&mut self.config.radar.enabled, "Enable Radar")
+                    .changed()
                     {
                         self.send_message(
                             Message::RadarSetEnabled(self.config.radar.enabled),
@@ -669,9 +684,9 @@ impl App {
                         self.save();
                     }
 
-                    if ui
-                        .text_edit_singleline(&mut self.config.radar.url)
-                        .changed()
+                if ui
+                    .text_edit_singleline(&mut self.config.radar.url)
+                    .changed()
                     {
                         self.send_message(
                             Message::ChangeRadarUrl(self.config.radar.url.clone()),
@@ -680,22 +695,22 @@ impl App {
                         self.save();
                     }
 
-                    if let RadarStatus::Connected(uuid) = &self.radar_status {
-                        if ui.button("Open").clicked() {
-                            ctx.open_url(egui::OpenUrl {
-                                url: format!("http://{}/?uuid={}", self.config.radar.url, uuid),
-                                new_tab: false,
-                            });
-                        }
-
-                        if ui.button("Copy Link").clicked() {
-                            let link = format!("http://{}/?uuid={}", self.config.radar.url, uuid);
-                            log::info!("copied link ({link})");
-                            ctx.copy_text(link);
-                        }
+                if let RadarStatus::Connected(uuid) = &self.radar_status {
+                    if ui.button("Open").clicked() {
+                        ctx.open_url(egui::OpenUrl {
+                            url: format!("http://{}/?uuid={}", self.config.radar.url, uuid),
+                            new_tab: false,
+                        });
                     }
-                });
+
+                    if ui.button("Copy Link").clicked() {
+                        let link = format!("http://{}/?uuid={}", self.config.radar.url, uuid);
+                        log::info!("copied link ({link})");
+                        ctx.copy_text(link);
+                    }
+                }
             });
+        });
     }
 
     fn unsafe_settings(&mut self, ui: &mut Ui) {
@@ -908,7 +923,7 @@ impl App {
         }
     }
 
-    fn add_game_status(&self, ui: &mut Ui) {
+    fn add_game_status(&mut self, ui: &mut Ui) {
         ui.horizontal_top(|ui| {
             ui.label(
                 egui::RichText::new(format!("{}", self.game_status))
@@ -927,6 +942,7 @@ impl App {
                 DeviceStatus::Disconnected => "mouse was disconnected",
                 DeviceStatus::NotFound => "no mouse was found",
             };
+
             let color = match &self.mouse_status {
                 DeviceStatus::Working(_) => Colors::SUBTEXT,
                 _ => Colors::YELLOW,
@@ -936,6 +952,34 @@ impl App {
                     .line_height(Some(8.0))
                     .color(color),
             );
+
+            egui::ComboBox::from_label("")
+            .selected_text(
+                self.selected_mouse
+                    .as_deref()
+                    .unwrap_or("No device selected"),
+            )
+            .show_ui(ui, |ui| {
+                for device in discover_mice() {
+                    let label = format!("{} ({})", device.name, device.event_name);
+                    if ui
+                        .selectable_label(
+                            self.selected_mouse.as_deref() == Some(&device.event_name),
+                            &label,
+                        )
+                        .clicked()
+                    {
+                        self.selected_mouse = Some(device.event_name.clone());
+
+                        if let Err(err) = self.tx.send(Envelope {
+                            target: Target::Game,
+                            message: Message::SelectMouse(device.event_name.clone()),
+                        }) {
+                            log::error!("Failed to send SelectMouse: {}", err);
+                        }
+                    }
+                }
+            });
         });
     }
 
@@ -965,11 +1009,16 @@ impl App {
         }
     }
 
+    fn apply_alpha(&self, color: Color32) -> Color32 {
+        let [r, g, b, _] = color.to_array();
+        let alpha = (255.0 * self.config.player.alpha) as u8;
+        Color32::from_rgba_unmultiplied(r, g, b, alpha)
+    }
+
     fn overlay(&self, ctx: &Context) {
         ctx.set_pixels_per_point(1.0);
         let painter = ctx.layer_painter(egui::LayerId::background());
         let font = FontId::proportional(self.config.hud.font_size);
-        let text_stroke = Stroke::new(self.config.hud.line_width, Color32::WHITE);
 
         let data = &self.data.lock().unwrap();
         if let Some(window) = &self.overlay_window {
@@ -990,11 +1039,11 @@ impl App {
         if self.config.hud.debug {
             painter.line(
                 vec![pos2(0.0, 0.0), pos2(data.window_size.x, data.window_size.y)],
-                text_stroke,
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
             painter.line(
                 vec![pos2(data.window_size.x, 0.0), pos2(0.0, data.window_size.y)],
-                text_stroke,
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
         }
 
@@ -1015,7 +1064,7 @@ impl App {
                     Align2::CENTER_CENTER,
                     weapon.0.as_ref(),
                     font.clone(),
-                    self.config.hud.text_color,
+                    self.apply_alpha(self.config.hud.text_color),
                 );
             }
         }
@@ -1027,7 +1076,7 @@ impl App {
                     Align2::CENTER_CENTER,
                     format!("{:.1}", data.bomb.timer),
                     font.clone(),
-                    self.config.hud.text_color,
+                    self.apply_alpha(self.config.hud.text_color),
                 );
                 if data.bomb.being_defused {
                     painter.text(
@@ -1035,13 +1084,13 @@ impl App {
                         Align2::CENTER_CENTER,
                         "defusing",
                         font.clone(),
-                        self.config.hud.text_color,
+                        self.apply_alpha(self.config.hud.text_color),
                     );
                 }
             }
 
             let fraction = (data.bomb.timer / 40.0).clamp(0.0, 1.0);
-            let color = self.health_color((fraction * 100.0) as i32);
+            let color = self.apply_alpha(self.health_color((fraction * 100.0) as i32));
             painter.line(
                 vec![
                     pos2(0.0, data.window_size.y),
@@ -1066,7 +1115,7 @@ impl App {
             painter.circle_stroke(
                 pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
                 radius,
-                Stroke::new(self.config.hud.line_width, Color32::WHITE),
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
         }
 
@@ -1078,14 +1127,14 @@ impl App {
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 - 50.0),
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 + 50.0),
                 ],
-                text_stroke,
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
             painter.line(
                 vec![
                     pos2(data.window_size.x / 2.0 - 50.0, data.window_size.y / 2.0),
                     pos2(data.window_size.x / 2.0 + 50.0, data.window_size.y / 2.0),
                 ],
-                text_stroke,
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
         }
 
@@ -1098,7 +1147,7 @@ impl App {
                 Align2::LEFT_TOP,
                 "trigger active",
                 font,
-                self.config.hud.text_color,
+                self.apply_alpha(self.config.hud.text_color),
             );
         }
     }
@@ -1159,15 +1208,15 @@ impl App {
     }
 
     fn player_box(&self, painter: &Painter, player: &PlayerData, data: &Data) {
-        let health_color = self.health_color(player.health);
+        let health_color = self.apply_alpha(self.health_color(player.health));
         let color = match &self.config.player.draw_box {
             DrawMode::None => health_color,
             DrawMode::Health => health_color,
             DrawMode::Color => {
                 if player.visible {
-                    self.config.player.box_visible_color
+                    self.apply_alpha(self.config.player.box_visible_color)
                 } else {
-                    self.config.player.box_invisible_color
+                    self.apply_alpha(self.config.player.box_invisible_color)
                 }
             }
         };
@@ -1255,19 +1304,20 @@ impl App {
                     pos2(x, bl.y),
                     pos2(x, bl.y - (delta * player.armor as f32 / 100.0)),
                 ],
-                Stroke::new(self.config.hud.line_width, Color32::BLUE),
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::BLUE)),
             );
         }
 
         let mut offset = 0.0;
         let font_size = self.config.hud.font_size;
+        let text_color = self.apply_alpha(self.config.hud.text_color);
         if self.config.player.player_name {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
                 &player.name,
                 font.clone(),
-                self.config.hud.text_color,
+                text_color,
             );
             offset += font_size;
         }
@@ -1278,7 +1328,7 @@ impl App {
                 Align2::LEFT_TOP,
                 player.weapon.as_ref(),
                 font.clone(),
-                self.config.hud.text_color,
+                text_color,
             );
             offset += font_size;
         }
@@ -1289,7 +1339,7 @@ impl App {
                 Align2::LEFT_TOP,
                 "defuser",
                 font.clone(),
-                self.config.hud.text_color,
+                text_color,
             );
             offset += font_size;
         }
@@ -1300,7 +1350,7 @@ impl App {
                 Align2::LEFT_TOP,
                 "helmet",
                 font.clone(),
-                self.config.hud.text_color,
+                text_color,
             );
             offset += font_size;
         }
@@ -1311,7 +1361,7 @@ impl App {
                 Align2::LEFT_TOP,
                 "bomb",
                 font.clone(),
-                self.config.hud.text_color,
+                text_color,
             );
         }
     }
@@ -1319,8 +1369,8 @@ impl App {
     fn skeleton(&self, painter: &Painter, player: &PlayerData, data: &Data) {
         let color = match &self.config.player.draw_skeleton {
             DrawMode::None => return,
-            DrawMode::Health => self.health_color(player.health),
-            DrawMode::Color => self.config.player.skeleton_color,
+            DrawMode::Health => self.apply_alpha(self.health_color(player.health)),
+            DrawMode::Color => self.apply_alpha(self.config.player.skeleton_color),
         };
         let stroke = Stroke::new(self.config.hud.line_width, color);
 

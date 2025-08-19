@@ -42,6 +42,7 @@ pub enum Message {
     RadarStatus(RadarStatus),
     ChangeRadarUrl(String),
     RadarSetEnabled(bool),
+    SelectMouse(String),
 }
 
 #[derive(Clone, Debug)]
