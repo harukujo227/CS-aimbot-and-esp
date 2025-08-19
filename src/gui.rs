@@ -21,7 +21,7 @@ use crate::{
     key_codes::KeyCode,
     math::world_to_screen,
     message::{Envelope, GameStatus, Message, RadarStatus, Target},
-    mouse::DeviceStatus,
+    mouse::{DeviceStatus, discover_mice}
 };
 
 #[derive(PartialEq)]
@@ -923,7 +923,7 @@ impl App {
         }
     }
 
-    fn add_game_status(&self, ui: &mut Ui) {
+    fn add_game_status(&mut self, ui: &mut Ui) {
         ui.horizontal_top(|ui| {
             ui.label(
                 egui::RichText::new(format!("{}", self.game_status))
@@ -942,6 +942,7 @@ impl App {
                 DeviceStatus::Disconnected => "mouse was disconnected",
                 DeviceStatus::NotFound => "no mouse was found",
             };
+
             let color = match &self.mouse_status {
                 DeviceStatus::Working(_) => Colors::SUBTEXT,
                 _ => Colors::YELLOW,
@@ -951,6 +952,34 @@ impl App {
                     .line_height(Some(8.0))
                     .color(color),
             );
+
+            egui::ComboBox::from_label("")
+            .selected_text(
+                self.selected_mouse
+                    .as_deref()
+                    .unwrap_or("No device selected"),
+            )
+            .show_ui(ui, |ui| {
+                for device in discover_mice() {
+                    let label = format!("{} ({})", device.name, device.event_name);
+                    if ui
+                        .selectable_label(
+                            self.selected_mouse.as_deref() == Some(&device.event_name),
+                            &label,
+                        )
+                        .clicked()
+                    {
+                        self.selected_mouse = Some(device.event_name.clone());
+
+                        if let Err(err) = self.tx.send(Envelope {
+                            target: Target::Game,
+                            message: Message::SelectMouse(device.event_name.clone()),
+                        }) {
+                            log::error!("Failed to send SelectMouse: {}", err);
+                        }
+                    }
+                }
+            });
         });
     }
 

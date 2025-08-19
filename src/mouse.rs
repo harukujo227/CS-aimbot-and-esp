@@ -52,6 +52,41 @@ const AXIS_X: u16 = 0x00;
 const AXIS_Y: u16 = 0x01;
 const BTN_LEFT: u16 = 0x110;
 
+#[derive(Debug, Clone)]
+pub struct MouseDevice {
+    pub path: String,
+    pub name: String,
+    pub event_name: String,
+}
+
+impl MouseDevice {
+    pub fn open(&self) -> Result<Mouse, std::io::Error> {
+        let file = OpenOptions::new().write(true).open(&self.path)?;
+        Ok(Mouse {
+            file,
+            status: DeviceStatus::Working(self.name.clone()),
+        })
+    }
+
+    pub fn try_open(&self) -> Mouse {
+        match self.open() {
+            Ok(mouse) => mouse,
+            Err(_) => {
+                log::warn!("please add your user to the input group or execute with sudo");
+                log::warn!(
+                    "without this, mouse movements will be written to /dev/null and discarded"
+                );
+                let file = OpenOptions::new().write(true).open("/dev/null").unwrap();
+                Mouse {
+                    file,
+                    status: DeviceStatus::PermissionsRequired,
+                }
+            }
+        }
+    }
+
+}
+
 pub struct Mouse {
     file: File,
     pub status: DeviceStatus,
@@ -59,56 +94,19 @@ pub struct Mouse {
 
 impl Mouse {
     pub fn open() -> Self {
-        for file in read_dir("/dev/input").unwrap() {
-            let entry = file.unwrap();
-            if !entry.file_type().unwrap().is_char_device() {
-                continue;
+        let devices = discover_mice();
+        if let Some(device) = devices.first() {
+            device.try_open()
+        } else {
+            let file = OpenOptions::new().write(true).open("/dev/null").unwrap();
+            log::warn!("no mouse found");
+            Mouse {
+                file,
+                status: DeviceStatus::NotFound,
             }
-            let name = entry.file_name().into_string().unwrap();
-            if !name.starts_with("event") {
-                continue;
-            }
-            // get device info from /sys/class/input
-            let rel = decode_capabilities(&format!(
-                "/sys/class/input/{}/device/capabilities/rel",
-                name
-            ));
-
-            if !rel[AXIS_X as usize] || !rel[AXIS_Y as usize] {
-                continue;
-            }
-
-            let device_name =
-                fs::read_to_string(format!("/sys/class/input/{}/device/name", name)).unwrap();
-
-            let path = format!("/dev/input/{}", name);
-            let file = OpenOptions::new().write(true).open(path);
-            return match file {
-                Ok(file) => Self {
-                    file,
-                    status: DeviceStatus::Working(device_name),
-                },
-                Err(_) => {
-                    log::warn!("please add your user to the input group or execute with sudo");
-                    log::warn!(
-                        "without this, mouse movements will be written to /dev/null and discarded"
-                    );
-                    let file = OpenOptions::new().write(true).open("/dev/null").unwrap();
-                    Self {
-                        file,
-                        status: DeviceStatus::PermissionsRequired,
-                    }
-                }
-            };
-        }
-
-        let file = OpenOptions::new().write(true).open("/dev/null").unwrap();
-        log::warn!("no mouse found");
-        Self {
-            file,
-            status: DeviceStatus::NotFound,
         }
     }
+
 
     pub fn move_rel(&mut self, coords: &Vec2) {
         let coords = IVec2::new(coords.x as i32, coords.y as i32);
@@ -185,6 +183,86 @@ impl Mouse {
     }
 }
 
+fn is_mouse_device(event_name: &str) -> bool {
+    let capabilities_path = format!("/sys/class/input/{}/device/capabilities/rel", event_name);
+    if let Ok(rel_caps) = fs::read_to_string(&capabilities_path) {
+        if let Ok(caps) = u64::from_str_radix(rel_caps.trim().trim_start_matches("0x"), 16) {
+            const REL_X_BIT: u64 = 1 << 0;
+            const REL_Y_BIT: u64 = 1 << 1;
+            return (caps & REL_X_BIT) != 0 && (caps & REL_Y_BIT) != 0;
+        }
+    }
+
+    let device_name_path = format!("/sys/class/input/{}/device/name", event_name);
+    if let Ok(device_name) = fs::read_to_string(&device_name_path) {
+        let name_lower = device_name.to_lowercase();
+        
+        if name_lower.contains("mouse") {
+            return true;
+        }
+        
+        if name_lower.contains("keyboard") || 
+           name_lower.contains("power") ||
+           name_lower.contains("sleep") ||
+           name_lower.contains("lid") ||
+           name_lower.contains("video") ||
+           name_lower.contains("audio") ||
+           name_lower.contains("consumer control") ||
+           name_lower.contains("system control") ||
+           name_lower.contains("wireless") ||
+           name_lower.contains("rfkill") {
+            return false;
+        }
+    }
+    
+    false
+}
+
+pub fn discover_mice() -> Vec<MouseDevice> {
+    let mut devices = Vec::new();
+
+    let Ok(entries) = read_dir("/dev/input") else {
+        return devices;
+    };
+
+    for file in entries {
+        let Ok(entry) = file else { continue; };
+        if !entry.file_type().unwrap().is_char_device() {
+            continue;
+        }
+        
+        let name = entry.file_name().into_string().unwrap();
+        if !name.starts_with("event") {
+            continue;
+        }
+
+        if !is_mouse_device(&name) {
+            continue;
+        }
+
+        let device_name = fs::read_to_string(format!("/sys/class/input/{}/device/name", name))
+            .unwrap_or_else(|_| "Unknown Device".to_string())
+            .trim()
+            .to_string();
+
+        let path = format!("/dev/input/{}", name);
+        
+        devices.push(MouseDevice {
+            path,
+            name: device_name,
+            event_name: name,
+        });
+    }
+
+    devices
+}
+
+pub fn get_mouse_by_name(name: &str) -> Option<MouseDevice> {
+    discover_mice()
+        .into_iter()
+        .find(|device| device.name.to_lowercase().contains(&name.to_lowercase()))
+}
+
 const SYN: InputEvent = InputEvent {
     time: Timeval {
         seconds: 0,
@@ -194,40 +272,3 @@ const SYN: InputEvent = InputEvent {
     code: SYN_REPORT,
     value: 0,
 };
-
-fn hex_to_reversed_binary(hex_char: char) -> Vec<bool> {
-    let value = match hex_char {
-        '0'..='9' => hex_char as u8 - b'0',
-        'a'..='f' => hex_char as u8 - b'a' + 10,
-        'A'..='F' => hex_char as u8 - b'A' + 10,
-        _ => 0,
-    };
-    (0..4).map(|i| (value >> i) & 1 == 1).collect()
-}
-
-pub fn decode_capabilities(filename: &str) -> Vec<bool> {
-    let Ok(content) = fs::read_to_string(filename) else {
-        return Vec::new();
-    };
-
-    let mut binary_out = Vec::new();
-    let mut hex_count = 0;
-
-    // line has to be processed in reverse (why?)
-    for c in content.chars().rev().filter(|&c| c != '\n') {
-        if c == ' ' {
-            binary_out.extend(std::iter::repeat_n(false, 4 * (16 - hex_count)));
-            hex_count = 0;
-        } else if c.is_ascii_hexdigit() {
-            binary_out.extend(hex_to_reversed_binary(c));
-            hex_count += 1;
-        }
-    }
-
-    // pad final group if incomplete
-    if (1..16).contains(&hex_count) {
-        binary_out.extend(std::iter::repeat_n(false, 4 * (16 - hex_count)));
-    }
-
-    binary_out
-}

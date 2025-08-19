@@ -31,6 +31,7 @@ pub struct Config {
     pub radar: RadarConfig,
     pub misc: UnsafeConfig,
     pub accent_color: Color32,
+    pub preferred_mouse: Option<String>, // <-- NEW
 }
 
 impl Default for Config {
@@ -42,9 +43,11 @@ impl Default for Config {
             radar: RadarConfig::default(),
             misc: UnsafeConfig::default(),
             accent_color: Colors::BLUE,
+            preferred_mouse: None, // <-- NEW
         }
     }
 }
+
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct WeaponConfig {

@@ -47,6 +47,7 @@ pub struct App {
 
     pub game_status: GameStatus,
     pub mouse_status: DeviceStatus,
+    pub selected_mouse: Option<String>,
     pub radar_status: RadarStatus,
     pub display_scale: f32,
 
@@ -95,6 +96,8 @@ impl App {
             mouse_status: DeviceStatus::Disconnected,
             radar_status: RadarStatus::Disconnected,
             display_scale: 1.0,
+
+            selected_mouse: None,
 
             current_tab: Tab::Aimbot,
             aimbot_tab: AimbotTab::Global,
