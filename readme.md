@@ -62,7 +62,6 @@ simple cs2 aimbot and esp, for linux only.
 ## running
 
 - `cargo run --release`
-- open the menu by pressing `delete` (changable in config)
 
 ## faq
 
