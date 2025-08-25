@@ -21,7 +21,7 @@ use crate::{
     key_codes::KeyCode,
     math::world_to_screen,
     message::{Envelope, GameStatus, Message, RadarStatus, Target},
-    mouse::{DeviceStatus, discover_mice}
+    mouse::{DeviceStatus, discover_mice},
 };
 
 #[derive(PartialEq)]
@@ -68,10 +68,10 @@ impl App {
 
                 ui.with_layout(egui::Layout::bottom_up(Align::Min), |ui| {
                     if ui.button("Report Issue").clicked() {
-                        ctx.open_url(egui::OpenUrl {
-                            url: String::from("https://github.com/avitran0/deadlocked/issues"),
-                            new_tab: false,
-                        });
+                        std::process::Command::new("xdg-open")
+                            .arg("https://github.com/avitran0/deadlocked/issues")
+                            .status()
+                            .unwrap();
                     }
                     ui.label(VERSION);
                 });
@@ -662,20 +662,20 @@ impl App {
 
     fn radar_settings(&mut self, ui: &mut Ui, ctx: &Context) {
         egui::ScrollArea::vertical()
-        .auto_shrink([false, true])
-        .id_salt("hud_left")
-        .show(ui, |ui| {
-            collapsing_open(ui, "Radar", |ui| {
-                ui.label(egui::RichText::new(format!("{}", self.radar_status)).color(
-                    match self.radar_status {
-                        RadarStatus::Connected(_) => Colors::GREEN,
-                        RadarStatus::Disconnected => Colors::YELLOW,
-                    },
-                ));
+            .auto_shrink([false, true])
+            .id_salt("hud_left")
+            .show(ui, |ui| {
+                collapsing_open(ui, "Radar", |ui| {
+                    ui.label(egui::RichText::new(format!("{}", self.radar_status)).color(
+                        match self.radar_status {
+                            RadarStatus::Connected(_) => Colors::GREEN,
+                            RadarStatus::Disconnected => Colors::YELLOW,
+                        },
+                    ));
 
-                if ui
-                    .checkbox(&mut self.config.radar.enabled, "Enable Radar")
-                    .changed()
+                    if ui
+                        .checkbox(&mut self.config.radar.enabled, "Enable Radar")
+                        .changed()
                     {
                         self.send_message(
                             Message::RadarSetEnabled(self.config.radar.enabled),
@@ -684,9 +684,9 @@ impl App {
                         self.save();
                     }
 
-                if ui
-                    .text_edit_singleline(&mut self.config.radar.url)
-                    .changed()
+                    if ui
+                        .text_edit_singleline(&mut self.config.radar.url)
+                        .changed()
                     {
                         self.send_message(
                             Message::ChangeRadarUrl(self.config.radar.url.clone()),
@@ -695,22 +695,24 @@ impl App {
                         self.save();
                     }
 
-                if let RadarStatus::Connected(uuid) = &self.radar_status {
-                    if ui.button("Open").clicked() {
-                        ctx.open_url(egui::OpenUrl {
-                            url: format!("http://{}/?uuid={}", self.config.radar.url, uuid),
-                            new_tab: false,
-                        });
-                    }
+                    if let RadarStatus::Connected(uuid) = &self.radar_status {
+                        if ui.button("Open").clicked() {
+                            let link = format!("http://{}/?uuid={}", self.config.radar.url, uuid);
+                            std::process::Command::new("xdg-open")
+                                .arg(&link)
+                                .status()
+                                .unwrap();
+                            log::info!("opened link ({link})");
+                        }
 
-                    if ui.button("Copy Link").clicked() {
-                        let link = format!("http://{}/?uuid={}", self.config.radar.url, uuid);
-                        log::info!("copied link ({link})");
-                        ctx.copy_text(link);
+                        if ui.button("Copy Link").clicked() {
+                            let link = format!("http://{}/?uuid={}", self.config.radar.url, uuid);
+                            log::info!("copied link ({link})");
+                            ctx.copy_text(link);
+                        }
                     }
-                }
+                });
             });
-        });
     }
 
     fn unsafe_settings(&mut self, ui: &mut Ui) {
@@ -954,32 +956,32 @@ impl App {
             );
 
             egui::ComboBox::from_label("")
-            .selected_text(
-                self.selected_mouse
-                    .as_deref()
-                    .unwrap_or("No device selected"),
-            )
-            .show_ui(ui, |ui| {
-                for device in discover_mice() {
-                    let label = format!("{} ({})", device.name, device.event_name);
-                    if ui
-                        .selectable_label(
-                            self.selected_mouse.as_deref() == Some(&device.event_name),
-                            &label,
-                        )
-                        .clicked()
-                    {
-                        self.selected_mouse = Some(device.event_name.clone());
+                .selected_text(
+                    self.selected_mouse
+                        .as_deref()
+                        .unwrap_or("No device selected"),
+                )
+                .show_ui(ui, |ui| {
+                    for device in discover_mice() {
+                        let label = format!("{} ({})", device.name, device.event_name);
+                        if ui
+                            .selectable_label(
+                                self.selected_mouse.as_deref() == Some(&device.event_name),
+                                &label,
+                            )
+                            .clicked()
+                        {
+                            self.selected_mouse = Some(device.event_name.clone());
 
-                        if let Err(err) = self.tx.send(Envelope {
-                            target: Target::Game,
-                            message: Message::SelectMouse(device.event_name.clone()),
-                        }) {
-                            log::error!("Failed to send SelectMouse: {}", err);
+                            if let Err(err) = self.tx.send(Envelope {
+                                target: Target::Game,
+                                message: Message::SelectMouse(device.event_name.clone()),
+                            }) {
+                                log::error!("Failed to send SelectMouse: {}", err);
+                            }
                         }
                     }
-                }
-            });
+                });
         });
     }
 
