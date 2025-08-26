@@ -617,10 +617,8 @@ impl App {
                 self.send_config();
             }
         });
-    }
 
-    fn hud_right(&mut self, ui: &mut Ui) {
-        collapsing_open(ui, "Advanced", |ui| {
+        collapsing_open(ui, "Appearance", |ui| {
             ui.horizontal(|ui| {
                 if ui
                     .add(
@@ -651,6 +649,15 @@ impl App {
                 ui.label("Font Size");
             });
 
+            if let Some(color) = self.color_picker(ui, &self.config.hud.text_color, "Text Color") {
+                self.config.hud.text_color = color;
+                self.send_config();
+            }
+        });
+    }
+
+    fn hud_right(&mut self, ui: &mut Ui) {
+        collapsing_open(ui, "Advanced", |ui| {
             if ui
                 .checkbox(&mut self.config.hud.debug, "Debug Overlay")
                 .changed()

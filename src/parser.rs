@@ -142,19 +142,26 @@ pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, force_reparse: bool) {
             .unwrap();
     }
 
-    let mut threads = vec![];
-    for map in &files {
-        let map = map.clone();
-        let maps_dir = maps_dir.clone();
-        let bvh_thread = bvh.clone();
-        let thread = std::thread::spawn(move || {
-            parse_map(&map, &maps_dir, bvh_thread, force_reparse);
-        });
-        threads.push(thread);
+    let cpus = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1);
+    let batch_size = (cpus / 2).max(1);
+    for chunk in files.chunks(batch_size) {
+        let mut threads = Vec::with_capacity(batch_size);
+        for map in chunk {
+            let map = map.clone();
+            let maps_dir = maps_dir.clone();
+            let bvh_thread = bvh.clone();
+            let thread = std::thread::spawn(move || {
+                parse_map(&map, &maps_dir, bvh_thread, force_reparse);
+            });
+            threads.push(thread);
+        }
+
+        for thread in threads {
+            let _ = thread.join();
+        }
     }
-    threads
-        .into_iter()
-        .for_each(|thread| thread.join().unwrap_or(()));
     log::info!("loaded map info");
 }
 
