@@ -402,7 +402,7 @@ impl CS2 {
         offsets.pawn.shots_fired = client.get("C_CSPlayerPawn", "m_iShotsFired")?;
         offsets.pawn.view_angles = client.get("C_BasePlayerPawn", "v_angle")?;
         offsets.pawn.spotted_state = client.get("C_CSPlayerPawn", "m_entitySpottedState")?;
-        offsets.pawn.crosshair_entity = client.get("C_CSPlayerPawnBase", "m_iIDEntIndex")?;
+        offsets.pawn.crosshair_entity = client.get("C_CSPlayerPawn", "m_iIDEntIndex")?;
         offsets.pawn.is_scoped = client.get("C_CSPlayerPawn", "m_bIsScoped")?;
         offsets.pawn.flash_alpha = client.get("C_CSPlayerPawnBase", "m_flFlashMaxAlpha")?;
         offsets.pawn.flash_duration = client.get("C_CSPlayerPawnBase", "m_flFlashDuration")?;
