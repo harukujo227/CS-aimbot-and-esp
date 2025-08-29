@@ -1335,7 +1335,7 @@ impl App {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                player.weapon.as_ref(),
+                player.weapon.to_string(),
                 font.clone(),
                 text_color,
             );

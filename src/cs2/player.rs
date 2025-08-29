@@ -4,7 +4,7 @@ use glam::{Vec2, Vec3};
 
 use crate::{
     constants::cs2,
-    cs2::{bones::Bones, weapon::Weapon},
+    cs2::{bones::Bones, weapon::Weapon, weapon_indexes::index_to_weapon},
 };
 
 use super::{CS2, weapon_class::WeaponClass};
@@ -131,7 +131,15 @@ impl Player {
     }
 
     pub fn weapon(&self, cs2: &CS2) -> Weapon {
-        Weapon::from_str(&self.weapon_name(cs2))
+        let current_weapon: u64 = cs2.process.read(self.pawn + cs2.offsets.pawn.weapon);
+        let weapon_index: u16 = cs2.process.read(
+            current_weapon
+                + cs2.offsets.pawn.attrib_manager
+                + cs2.offsets.pawn.item
+                + cs2.offsets.pawn.item_def_index,
+        );
+
+        index_to_weapon(weapon_index)
     }
 
     pub fn all_weapons(&self, cs2: &CS2) -> Vec<Weapon> {

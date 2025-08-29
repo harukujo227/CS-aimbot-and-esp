@@ -38,6 +38,7 @@ mod target;
 mod triggerbot;
 pub mod weapon;
 pub mod weapon_class;
+pub mod weapon_indexes;
 
 #[derive(Debug)]
 pub struct CS2 {
@@ -393,6 +394,9 @@ impl CS2 {
         offsets.pawn.team = client.get("C_BaseEntity", "m_iTeamNum")?;
         offsets.pawn.life_state = client.get("C_BaseEntity", "m_lifeState")?;
         offsets.pawn.weapon = client.get("C_CSPlayerPawn", "m_pClippingWeapon")?;
+        offsets.pawn.attrib_manager = client.get("C_EconEntity", "m_AttributeManager")?;
+        offsets.pawn.item = client.get("C_AttributeContainer", "m_Item")?;
+        offsets.pawn.item_def_index = client.get("C_EconItemView", "m_iItemDefinitionIndex")?;
         offsets.pawn.fov_multiplier = client.get("C_BasePlayerPawn", "m_flFOVSensitivityAdjust")?;
         offsets.pawn.game_scene_node = client.get("C_BaseEntity", "m_pGameSceneNode")?;
         offsets.pawn.eye_offset = client.get("C_BaseModelEntity", "m_vecViewOffset")?;
