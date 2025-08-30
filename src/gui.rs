@@ -566,6 +566,13 @@ impl App {
             }
 
             if ui
+                .checkbox(&mut self.config.player.weapon_icon, "Weapon Icon")
+                .changed()
+            {
+                self.send_config();
+            }
+
+            if ui
                 .checkbox(&mut self.config.player.tags, "Show Tags")
                 .changed()
             {
@@ -1374,7 +1381,7 @@ impl App {
             offset += font_size;
         }
 
-        if self.config.player.weapon_name {
+        if self.config.player.weapon_icon {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,

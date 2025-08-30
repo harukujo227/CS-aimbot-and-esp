@@ -48,7 +48,6 @@ impl Default for Config {
     }
 }
 
-
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct WeaponConfig {
     pub aimbot: AimbotConfig,
@@ -211,6 +210,7 @@ pub struct PlayerConfig {
     pub armor_bar: bool,
     pub player_name: bool,
     pub weapon_name: bool,
+    pub weapon_icon: bool,
     pub tags: bool,
 }
 
@@ -229,6 +229,7 @@ impl Default for PlayerConfig {
             armor_bar: true,
             player_name: true,
             weapon_name: true,
+            weapon_icon: true,
             tags: true,
         }
     }
