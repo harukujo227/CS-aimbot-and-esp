@@ -1,7 +1,3 @@
-pub trait Offset {
-    fn all_found(&self) -> bool;
-}
-
 #[derive(Debug, Default)]
 pub struct LibraryOffsets {
     pub client: u64,
@@ -46,16 +42,6 @@ pub struct PlayerControllerOffsets {
     pub color: u64,        // i32 (m_iCompTeammateColor)
 }
 
-impl Offset for PlayerControllerOffsets {
-    fn all_found(&self) -> bool {
-        self.name != 0
-            && self.pawn != 0
-            && self.desired_fov != 0
-            && self.owner_entity != 0
-            && self.color != 0
-    }
-}
-
 #[derive(Debug, Default)]
 pub struct PawnOffsets {
     pub health: u64,           // i32 (m_iHealth)
@@ -63,9 +49,6 @@ pub struct PawnOffsets {
     pub team: u64,             // i32 (m_iTeamNum)
     pub life_state: u64,       // i32 (m_lifeState)
     pub weapon: u64,           // Pointer -> WeaponBase (m_pClippingWeapon)
-    pub attrib_manager: u64,   // offset (m_hAttributeManager)
-    pub item: u64,             // offset (m_Item)
-    pub item_def_index: u64,   // offset (m_iItemDefinitionIndex)
     pub fov_multiplier: u64,   // f32 (m_flFOVSensitivityAdjust)
     pub game_scene_node: u64,  // Pointer -> GameSceneNode (m_pGameSceneNode)
     pub eye_offset: u64,       // Vec3 (m_vecViewOffset)
@@ -84,41 +67,11 @@ pub struct PawnOffsets {
     pub weapon_services: u64,  // Pointer -> WeaponSercies (m_pWeaponServices)
 }
 
-impl Offset for PawnOffsets {
-    fn all_found(&self) -> bool {
-        self.health != 0
-            && self.armor != 0
-            && self.team != 0
-            && self.life_state != 0
-            && self.weapon != 0
-            && self.fov_multiplier != 0
-            && self.game_scene_node != 0
-            && self.eye_offset != 0
-            && self.aim_punch_cache != 0
-            && self.shots_fired != 0
-            && self.view_angles != 0
-            && self.spotted_state != 0
-            && self.crosshair_entity != 0
-            && self.is_scoped != 0
-            && self.flash_alpha != 0
-            && self.flash_duration != 0
-            && self.camera_services != 0
-            && self.item_services != 0
-            && self.weapon_services != 0
-    }
-}
-
 #[derive(Debug, Default)]
 pub struct GameSceneNodeOffsets {
     pub dormant: u64,     // bool (m_bDormant)
     pub origin: u64,      // Vec3 (m_vecAbsOrigin)
     pub model_state: u64, // Pointer -> ModelState (m_modelState)
-}
-
-impl Offset for GameSceneNodeOffsets {
-    fn all_found(&self) -> bool {
-        self.dormant != 0 && self.origin != 0 && self.model_state != 0
-    }
 }
 
 #[derive(Debug, Default)]
@@ -127,33 +80,15 @@ pub struct SmokeOffsets {
     pub smoke_color: u64,      // Vec3 (m_vSmokeColor)
 }
 
-impl Offset for SmokeOffsets {
-    fn all_found(&self) -> bool {
-        self.did_smoke_effect != 0 && self.smoke_color != 0
-    }
-}
-
 #[derive(Debug, Default)]
 pub struct SpottedStateOffsets {
     pub spotted: u64, // bool (m_bSpotted)
     pub mask: u64,    // i32[2] or u64? (m_bSpottedByMask)
 }
 
-impl Offset for SpottedStateOffsets {
-    fn all_found(&self) -> bool {
-        self.spotted != 0 && self.mask != 0
-    }
-}
-
 #[derive(Debug, Default)]
 pub struct CameraServicesOffsets {
     pub fov: u64, // u32 (m_iFOV)
-}
-
-impl Offset for CameraServicesOffsets {
-    fn all_found(&self) -> bool {
-        self.fov != 0
-    }
 }
 
 #[derive(Debug, Default)]
@@ -162,21 +97,16 @@ pub struct ItemServicesOffsets {
     pub has_helmet: u64,  // bool (m_bHasHelmet)
 }
 
-impl Offset for ItemServicesOffsets {
-    fn all_found(&self) -> bool {
-        self.has_defuser != 0 && self.has_helmet != 0
-    }
-}
-
 #[derive(Debug, Default)]
 pub struct WeaponServicesOffsets {
     pub weapons: u64, // Pointer -> Vec<Pointer -> Weapon> (m_hMyWeapons)
 }
 
-impl Offset for WeaponServicesOffsets {
-    fn all_found(&self) -> bool {
-        self.weapons != 0
-    }
+#[derive(Debug, Default)]
+pub struct WeaponOffsets {
+    pub attribute_manager: u64,     // AttributeContainer (m_AttributeManager)
+    pub item: u64,                  // EIconItemView (m_Item)
+    pub item_definition_index: u64, // u16 (m_iItemDefinitionIndex)
 }
 
 #[derive(Debug, Default)]
@@ -185,15 +115,6 @@ pub struct PlantedC4Offsets {
     pub is_ticking: u64,    // bool (m_bBombTicking)
     pub blow_time: u64,     // f32 (m_flC4Blow)
     pub being_defused: u64, // bool (m_bBeingDefused)
-}
-
-impl Offset for PlantedC4Offsets {
-    fn all_found(&self) -> bool {
-        self.is_activated != 0
-            && self.is_ticking != 0
-            && self.blow_time != 0
-            && self.being_defused != 0
-    }
 }
 
 #[derive(Debug, Default)]
@@ -210,19 +131,6 @@ pub struct Offsets {
     pub camera_services: CameraServicesOffsets,
     pub item_services: ItemServicesOffsets,
     pub weapon_services: WeaponServicesOffsets,
+    pub weapon: WeaponOffsets,
     pub planted_c4: PlantedC4Offsets,
-}
-
-impl Offset for Offsets {
-    fn all_found(&self) -> bool {
-        self.controller.all_found()
-            && self.pawn.all_found()
-            && self.game_scene_node.all_found()
-            && self.smoke.all_found()
-            && self.spotted_state.all_found()
-            && self.camera_services.all_found()
-            && self.item_services.all_found()
-            && self.weapon_services.all_found()
-            && self.planted_c4.all_found()
-    }
 }
