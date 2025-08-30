@@ -40,6 +40,21 @@ pub enum AimbotTab {
     Weapon,
 }
 
+fn outline(
+    pos: Pos2,
+    width: f32,
+    color_content: Color32,
+    color_outline: Color32,
+) -> [(Pos2, Color32); 5] {
+    [
+        (pos2(pos.x - width, pos.y - width), color_outline),
+        (pos2(pos.x + width, pos.y - width), color_outline),
+        (pos2(pos.x - width, pos.y + width), color_outline),
+        (pos2(pos.x + width, pos.y + width), color_outline),
+        (pos, color_content),
+    ]
+}
+
 impl App {
     pub fn send_config(&self) {
         self.send_message(Message::Config(Box::new(self.config.clone())), Target::Game);
@@ -1068,13 +1083,22 @@ impl App {
                 let Some(pos) = world_to_screen(&weapon.1, data) else {
                     continue;
                 };
-                painter.text(
+                outline(
                     pos,
-                    Align2::CENTER_CENTER,
-                    weapon.0.to_string(),
-                    font.clone(),
+                    1.0,
                     self.apply_alpha(self.config.hud.text_color),
-                );
+                    self.apply_alpha(Color32::BLACK),
+                )
+                .iter()
+                .for_each(|&(pos, color)| {
+                    painter.text(
+                        pos,
+                        Align2::CENTER_CENTER,
+                        weapon.0.to_string(),
+                        font.clone(),
+                        color,
+                    );
+                });
             }
         }
 
@@ -1335,7 +1359,7 @@ impl App {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                player.weapon.to_string(),
+                format!("color: {}", player.color),
                 font.clone(),
                 text_color,
             );
