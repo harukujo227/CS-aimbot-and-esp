@@ -14,7 +14,7 @@ use crate::{
     constants::cs2::{self, TEAM_CT, TEAM_T},
     cs2::{
         bones::Bones, offsets::Offsets, planted_c4::PlantedC4, smoke::Smoke, target::Target,
-        triggerbot::Triggerbot, weapon::Weapon,
+        triggerbot::Triggerbot, weapon::Weapon, weapon_indexes::index_to_weapon,
     },
     data::{Data, PlayerData},
     game::Game,
@@ -466,11 +466,16 @@ impl CS2 {
             if self.entity_has_owner(entity) {
                 return None;
             }
+
+            let weapon_index: u16 = self.process.read(
+                entity
+                    + self.offsets.pawn.attrib_manager
+                    + self.offsets.pawn.item
+                    + self.offsets.pawn.item_def_index,
+            );
+
             let position = Player::entity(entity).position(self);
-            Some(Entity::Weapon(
-                Weapon::from_str(&name.replace("weapon_", "")),
-                position,
-            ))
+            Some(Entity::Weapon(index_to_weapon(weapon_index), position))
         } else if name.starts_with("smoke") {
             Some(Entity::Smoke(Smoke::new(entity)))
         } else {
