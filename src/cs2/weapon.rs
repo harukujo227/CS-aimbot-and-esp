@@ -3,6 +3,8 @@ use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, EnumIter};
 
+use crate::cs2::CS2;
+
 #[derive(
     Debug, Default, Clone, PartialEq, Eq, Hash, AsRefStr, EnumIter, Serialize, Deserialize,
 )]
@@ -76,87 +78,79 @@ pub enum Weapon {
 }
 
 impl Weapon {
-    pub fn from_str(name: &str) -> Self {
+    pub fn from_handle(handle: u64, cs2: &CS2) -> Self {
+        let weapon_index: u16 = cs2.process.read(
+            handle
+                + cs2.offsets.weapon.attribute_manager
+                + cs2.offsets.weapon.item
+                + cs2.offsets.weapon.item_definition_index,
+        );
+        Self::from_index(weapon_index)
+    }
+
+    pub fn from_index(index: u16) -> Self {
         use Weapon::*;
-        match name {
-            "bayonet" => Knife,
-            "knife" => Knife,
-            "knife_bowie" => Knife,
-            "knife_butterfly" => Knife,
-            "knife_canis" => Knife,
-            "knife_cord" => Knife,
-            "knife_css" => Knife,
-            "knife_falchion" => Knife,
-            "knife_flip" => Knife,
-            "knife_gut" => Knife,
-            "knife_gypsy_jackknife" => Knife,
-            "knife_karambit" => Knife,
-            "knife_kukri" => Knife,
-            "knife_m9_bayonet" => Knife,
-            "knife_outdoor" => Knife,
-            "knife_push" => Knife,
-            "knife_skeleton" => Knife,
-            "knife_stiletto" => Knife,
-            "knife_survival_bowie" => Knife,
-            "knife_t" => Knife,
-            "knife_tactical" => Knife,
-            "knife_twinblade" => Knife,
-            "knife_ursus" => Knife,
-            "knife_widowmaker" => Knife,
-
-            "cz75a" => Cz75A,
-            "deagle" => Deagle,
-            "elite" => DualBerettas,
-            "fiveseven" => FiveSeven,
-            "glock" => Glock,
-            "hkp2000" => P2000,
-            "p250" => P250,
-            "revolver" => Revolver,
-            "tec9" => Tec9,
-            "usp_silencer" => Usp,
-            "usp_silencer_off" => Usp,
-
-            "bizon" => Bizon,
-            "mac10" => Mac10,
-            "mp5sd" => Mp5Sd,
-            "mp7" => Mp7,
-            "mp9" => Mp9,
-            "p90" => P90,
-            "ump45" => Ump45,
-
-            "m249" => M249,
-            "negev" => Negev,
-
-            "mag7" => Mag7,
-            "nova" => Nova,
-            "sawedoff" => Sawedoff,
-            "xm1014" => Xm1014,
-
-            "ak47" => Ak47,
-            "aug" => Aug,
-            "famas" => Famas,
-            "galilar" => Galilar,
-            "m4a1_silencer" => M4A1,
-            "m4a1_silencer_off" => M4A1,
-            "m4a1" => M4A4,
-            "sg556" => Sg556,
-
-            "awp" => Awp,
-            "g3sg1" => G3SG1,
-            "scar20" => Scar20,
-            "ssg08" => Ssg08,
-
-            "taser" => Taser,
-
-            "flashbang" => Flashbang,
-            "hegrenade" => HeGrenade,
-            "smokegrenade" => Smoke,
-            "molotov" => Molotov,
-            "decoy" => Decoy,
-            "incgrenade" => Incendiary,
-
-            "c4" => C4,
-
+        match index {
+            1 => Deagle,
+            2 => DualBerettas,
+            3 => FiveSeven,
+            4 => Glock,
+            7 => Ak47,
+            8 => Aug,
+            9 => Awp,
+            10 => Famas,
+            11 => G3SG1,
+            13 => Galilar,
+            14 => M249,
+            16 => M4A4,
+            17 => Mac10,
+            19 => P90,
+            23 => Mp5Sd,
+            24 => Ump45,
+            25 => Xm1014,
+            26 => Bizon,
+            27 => Mag7,
+            28 => Negev,
+            29 => Sawedoff,
+            30 => Tec9,
+            31 => Taser,
+            32 => P2000,
+            33 => Mp7,
+            34 => Mp9,
+            35 => Nova,
+            36 => P250,
+            38 => Scar20,
+            39 => Sg556,
+            40 => Ssg08,
+            41 => Knife,
+            42 => Knife,
+            43 => Flashbang,
+            44 => HeGrenade,
+            45 => Smoke,
+            46 => Molotov,
+            47 => Decoy,
+            48 => Incendiary,
+            49 => C4,
+            59 => Knife,
+            60 => M4A1,
+            61 => Usp,
+            63 => Cz75A,
+            64 => Revolver,
+            80 => Knife,
+            500 => Knife,
+            505 => Knife,
+            506 => Knife,
+            507 => Knife,
+            508 => Knife,
+            509 => Knife,
+            512 => Knife,
+            514 => Knife,
+            515 => Knife,
+            516 => Knife,
+            519 => Knife,
+            520 => Knife,
+            522 => Knife,
+            523 => Knife,
             _ => Unknown,
         }
     }

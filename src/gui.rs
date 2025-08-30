@@ -977,7 +977,7 @@ impl App {
                     .color(color),
             );
 
-            egui::ComboBox::from_label("")
+            egui::ComboBox::new("mouse_device", "")
                 .selected_text(
                     self.selected_mouse
                         .as_deref()
@@ -995,12 +995,10 @@ impl App {
                         {
                             self.selected_mouse = Some(device.event_name.clone());
 
-                            if let Err(err) = self.tx.send(Envelope {
-                                target: Target::Game,
-                                message: Message::SelectMouse(device.event_name.clone()),
-                            }) {
-                                log::error!("Failed to send SelectMouse: {}", err);
-                            }
+                            self.send_message(
+                                Message::SelectMouse(device.event_name.clone()),
+                                Target::Game,
+                            );
                         }
                     }
                 });

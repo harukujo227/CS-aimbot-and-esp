@@ -9,7 +9,10 @@ use crossbeam::channel::{Receiver, Sender};
 
 use crate::{
     bvh::Bvh,
-    config::{Config, LOOP_DURATION, SLEEP_DURATION, exe_path, DEFAULT_CONFIG_NAME, parse_config, write_config},
+    config::{
+        Config, DEFAULT_CONFIG_NAME, LOOP_DURATION, SLEEP_DURATION, exe_path, parse_config,
+        write_config,
+    },
     cs2::CS2,
     data::Data,
     message::{Envelope, GameStatus, Message, Target},
@@ -32,7 +35,6 @@ pub struct GameManager {
     aimbot: CS2,
     manual_mouse: bool,
     preferred_event: Option<String>,
-    failed_preferred_attempts: usize,
 }
 
 impl GameManager {
@@ -53,7 +55,6 @@ impl GameManager {
             aimbot: CS2::new(bvh),
             manual_mouse: false,
             preferred_event: None,
-            failed_preferred_attempts: 0,
         };
 
         let config_path = exe_path().join(DEFAULT_CONFIG_NAME);
@@ -61,15 +62,15 @@ impl GameManager {
             game.config = parse_config(&config_path);
         }
 
-        if let Some(ref name) = game.config.preferred_mouse {
-            if let Some(device) = crate::mouse::get_mouse_by_name(name) {
-                let candidate = device.try_open();
-                if let DeviceStatus::Working(_) = candidate.status {
-                    log::info!("Using saved preferred mouse: {}", name);
-                    game.mouse = candidate;
-                    game.manual_mouse = true;
-                    game.preferred_event = Some(device.event_name.clone());
-                }
+        if let Some(ref name) = game.config.preferred_mouse
+            && let Some(device) = crate::mouse::get_mouse_by_name(name)
+        {
+            let candidate = device.try_open();
+            if let DeviceStatus::Working(_) = candidate.status {
+                log::info!("using preferred input device: {}", name);
+                game.mouse = candidate;
+                game.manual_mouse = true;
+                game.preferred_event = Some(device.event_name.clone());
             }
         }
 
@@ -140,29 +141,30 @@ impl GameManager {
                 self.config = *config;
             }
             Message::SelectMouse(event_name) => {
-                log::info!("User selected mouse: {}", event_name);
+                log::debug!("selected input device: {}", event_name);
 
-                if let Some(device) = discover_mice().into_iter().find(|d| d.event_name == event_name) {
+                if let Some(device) = discover_mice()
+                    .into_iter()
+                    .find(|d| d.event_name == event_name)
+                {
                     let new_mouse = device.try_open();
                     if let DeviceStatus::Working(_) = new_mouse.status {
-                        log::info!("Mouse successfully applied: {}", device.name);
                         self.mouse = new_mouse;
                         self.manual_mouse = true;
                         self.preferred_event = Some(device.event_name.clone());
-                        
+
                         self.config.preferred_mouse = Some(device.name.clone());
                         let config_path = exe_path().join(DEFAULT_CONFIG_NAME);
                         write_config(&self.config, &config_path);
-                        log::info!("Saved preferred mouse '{}' to config", device.name);
-                        
-                        self.failed_preferred_attempts = 0;
+                        log::debug!("Saved preferred mouse '{}' to config", device.name);
+
                         self.send_game_message(Message::MouseStatus(self.mouse.status.clone()));
                     } else {
-                        log::warn!("Failed to apply mouse {}", event_name);
+                        log::warn!("failed to apply mouse {}", event_name);
                         self.send_game_message(Message::MouseStatus(DeviceStatus::NotFound));
                     }
                 } else {
-                    log::warn!("Mouse {} not found in discover_mice()", event_name);
+                    log::warn!("input device {} not found", event_name);
                     self.send_game_message(Message::MouseStatus(DeviceStatus::NotFound));
                 }
             }
@@ -176,33 +178,26 @@ impl GameManager {
         self.mouse.status = DeviceStatus::Disconnected;
 
         if let Some(ref event_name) = self.preferred_event {
-            if let Some(device) = discover_mice().into_iter().find(|d| &d.event_name == event_name) {
+            if let Some(device) = discover_mice()
+                .into_iter()
+                .find(|d| &d.event_name == event_name)
+            {
                 let candidate = device.try_open();
                 if let DeviceStatus::Working(_) = candidate.status {
                     let status = candidate.status.clone();
                     self.mouse = candidate;
-                    self.failed_preferred_attempts = 0;
                     self.send_game_message(Message::MouseStatus(status));
-                    log::info!("manual mouse {} reconnected", device.path);
+                    log::info!("input device reconnected");
                     return true;
                 }
             }
-            
-            self.failed_preferred_attempts += 1;
-            const MAX_ATTEMPTS: usize = 2;
-            
-            if self.failed_preferred_attempts >= MAX_ATTEMPTS {
-                log::warn!("preferred mouse {} unavailable after {} attempts, falling back to any available mouse", 
-                          event_name, MAX_ATTEMPTS);
-                self.preferred_event = None;
-                self.manual_mouse = false;
-                self.failed_preferred_attempts = 0;
-            } else {
-                log::warn!("manual mouse {} still unavailable (attempt {}/{})", 
-                          event_name, self.failed_preferred_attempts, MAX_ATTEMPTS);
-                self.send_game_message(Message::MouseStatus(DeviceStatus::NotFound));
-                return false;
-            }
+
+            log::warn!(
+                "preferred input device {} unavailable, falling back to any first available input device",
+                event_name,
+            );
+            self.preferred_event = None;
+            self.manual_mouse = false;
         }
 
         for device in discover_mice() {
