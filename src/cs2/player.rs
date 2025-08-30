@@ -4,7 +4,7 @@ use glam::{Vec2, Vec3};
 
 use crate::{
     constants::cs2,
-    cs2::{bones::Bones, weapon::Weapon, weapon_indexes::index_to_weapon},
+    cs2::{bones::Bones, weapon::Weapon},
 };
 
 use super::{CS2, weapon_class::WeaponClass};
@@ -131,15 +131,9 @@ impl Player {
     }
 
     pub fn weapon(&self, cs2: &CS2) -> Weapon {
+        // BasePlayerWeapon/EconEntity
         let current_weapon: u64 = cs2.process.read(self.pawn + cs2.offsets.pawn.weapon);
-        let weapon_index: u16 = cs2.process.read(
-            current_weapon
-                + cs2.offsets.pawn.attrib_manager
-                + cs2.offsets.pawn.item
-                + cs2.offsets.pawn.item_def_index,
-        );
-
-        index_to_weapon(weapon_index)
+        Weapon::from_handle(current_weapon, cs2)
     }
 
     pub fn all_weapons(&self, cs2: &CS2) -> Vec<Weapon> {
@@ -160,26 +154,15 @@ impl Player {
 
         for i in 0..length as u64 {
             let weapon_index = cs2.process.read::<i32>(weapon_list + 0x04 * i) as u64 & 0xFFF;
-            // CEntityInstance
+            // // BasePlayerWeapon/EconEntity
             let Some(weapon_entity_instance) = Self::get_client_entity(cs2, weapon_index) else {
                 continue;
             };
             if weapon_entity_instance == 0 {
                 continue;
             }
-            // CEntityIdentity, 0x10 = m_pEntity
-            let weapon_entity_identity: u64 = cs2.process.read(weapon_entity_instance + 0x10);
-            if weapon_entity_identity == 0 {
-                continue;
-            }
-            // 0x20 = m_designerName (pointer -> string)
-            let weapon_name_pointer = cs2.process.read(weapon_entity_identity + 0x20);
-            if weapon_name_pointer == 0 {
-                continue;
-            }
-            let name = cs2.process.read_string(weapon_name_pointer);
-            let name = name.replace("weapon_", "");
-            weapons.push(Weapon::from_str(name.as_str()))
+
+            weapons.push(Weapon::from_handle(weapon_entity_instance, cs2));
         }
 
         weapons

@@ -14,7 +14,7 @@ use crate::{
     constants::cs2::{self, TEAM_CT, TEAM_T},
     cs2::{
         bones::Bones, offsets::Offsets, planted_c4::PlantedC4, smoke::Smoke, target::Target,
-        triggerbot::Triggerbot, weapon::Weapon, weapon_indexes::index_to_weapon,
+        triggerbot::Triggerbot, weapon::Weapon,
     },
     data::{Data, PlayerData},
     game::Game,
@@ -38,7 +38,6 @@ mod target;
 mod triggerbot;
 pub mod weapon;
 pub mod weapon_class;
-pub mod weapon_indexes;
 
 #[derive(Debug)]
 pub struct CS2 {
@@ -394,9 +393,6 @@ impl CS2 {
         offsets.pawn.team = client.get("C_BaseEntity", "m_iTeamNum")?;
         offsets.pawn.life_state = client.get("C_BaseEntity", "m_lifeState")?;
         offsets.pawn.weapon = client.get("C_CSPlayerPawn", "m_pClippingWeapon")?;
-        offsets.pawn.attrib_manager = client.get("C_EconEntity", "m_AttributeManager")?;
-        offsets.pawn.item = client.get("C_AttributeContainer", "m_Item")?;
-        offsets.pawn.item_def_index = client.get("C_EconItemView", "m_iItemDefinitionIndex")?;
         offsets.pawn.fov_multiplier = client.get("C_BasePlayerPawn", "m_flFOVSensitivityAdjust")?;
         offsets.pawn.game_scene_node = client.get("C_BaseEntity", "m_pGameSceneNode")?;
         offsets.pawn.eye_offset = client.get("C_BaseModelEntity", "m_vecViewOffset")?;
@@ -434,19 +430,18 @@ impl CS2 {
 
         offsets.weapon_services.weapons = client.get("CPlayer_WeaponServices", "m_hMyWeapons")?;
 
+        offsets.weapon.attribute_manager = client.get("C_EconEntity", "m_AttributeManager")?;
+        offsets.weapon.item = client.get("C_AttributeContainer", "m_Item")?;
+        offsets.weapon.item_definition_index =
+            client.get("C_EconItemView", "m_iItemDefinitionIndex")?;
+
         offsets.planted_c4.is_activated = client.get("C_PlantedC4", "m_bC4Activated")?;
         offsets.planted_c4.is_ticking = client.get("C_PlantedC4", "m_bBombTicking")?;
         offsets.planted_c4.blow_time = client.get("C_PlantedC4", "m_flC4Blow")?;
         offsets.planted_c4.being_defused = client.get("C_PlantedC4", "m_bBeingDefused")?;
 
-        use offsets::Offset as _;
-        if offsets.all_found() {
-            log::debug!("offsets: {:?} ({:?})", offsets, Instant::now() - start);
-            return Some(offsets);
-        }
-
-        log::warn!("not all offsets found: {:?}", offsets);
-        None
+        log::debug!("offsets: {:?} ({:?})", offsets, Instant::now() - start);
+        Some(offsets)
     }
 
     fn entity_type(&self, entity: u64) -> Option<Entity> {
@@ -467,15 +462,10 @@ impl CS2 {
                 return None;
             }
 
-            let weapon_index: u16 = self.process.read(
-                entity
-                    + self.offsets.pawn.attrib_manager
-                    + self.offsets.pawn.item
-                    + self.offsets.pawn.item_def_index,
-            );
+            let weapon = Weapon::from_handle(entity, self);
 
             let position = Player::entity(entity).position(self);
-            Some(Entity::Weapon(index_to_weapon(weapon_index), position))
+            Some(Entity::Weapon(weapon, position))
         } else if name.starts_with("smoke") {
             Some(Entity::Smoke(Smoke::new(entity)))
         } else {
