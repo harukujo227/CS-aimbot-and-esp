@@ -1071,7 +1071,7 @@ impl App {
                 painter.text(
                     pos,
                     Align2::CENTER_CENTER,
-                    weapon.0.as_ref(),
+                    weapon.0.to_string(),
                     font.clone(),
                     self.apply_alpha(self.config.hud.text_color),
                 );
@@ -1335,7 +1335,7 @@ impl App {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                player.weapon.as_ref(),
+                player.weapon.to_string(),
                 font.clone(),
                 text_color,
             );
