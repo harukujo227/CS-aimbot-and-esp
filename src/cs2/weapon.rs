@@ -160,6 +160,56 @@ impl Weapon {
             _ => Unknown,
         }
     }
+
+    pub fn to_icon(&self) -> &'static str {
+        match self {
+            // font source: https://www.unknowncheats.me/forum/counter-strike-2-a/609986-cs2-icons-weapon-esp-icons.html
+            Weapon::Unknown => "",
+            Weapon::Knife => "[",
+            Weapon::Cz75A => "I",
+            Weapon::Deagle => "A",
+            Weapon::DualBerettas => "B",
+            Weapon::FiveSeven => "C",
+            Weapon::Glock => "D",
+            Weapon::P2000 => "E",
+            Weapon::P250 => "F",
+            Weapon::Revolver => "J",
+            Weapon::Tec9 => "H",
+            Weapon::Usp => "G",
+            Weapon::Bizon => "M",
+            Weapon::Mac10 => "K",
+            Weapon::Mp5Sd => "x",
+            Weapon::Mp7 => "N",
+            Weapon::Mp9 => "O",
+            Weapon::P90 => "P",
+            Weapon::Ump45 => "L",
+            Weapon::M249 => "g",
+            Weapon::Negev => "f",
+            Weapon::Mag7 => "d",
+            Weapon::Nova => "e",
+            Weapon::Sawedoff => "c",
+            Weapon::Xm1014 => "b",
+            Weapon::Ak47 => "W",
+            Weapon::Aug => "U",
+            Weapon::Famas => "R",
+            Weapon::Galilar => "Q",
+            Weapon::M4A4 => "S",
+            Weapon::M4A1 => "T",
+            Weapon::Sg556 => "V",
+            Weapon::Awp => "Z",
+            Weapon::G3SG1 => "X",
+            Weapon::Scar20 => "Y",
+            Weapon::Ssg08 => "a",
+            Weapon::Taser => "h",
+            Weapon::Flashbang => "i",
+            Weapon::HeGrenade => "j",
+            Weapon::Smoke => "k",
+            Weapon::Molotov => "l",
+            Weapon::Decoy => "m",
+            Weapon::Incendiary => "n",
+            Weapon::C4 => "o",
+        }
+    }
 }
 
 impl Display for Weapon {

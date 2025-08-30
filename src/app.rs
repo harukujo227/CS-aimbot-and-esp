@@ -242,10 +242,15 @@ fn create_display(
 fn prep_ctx(ctx: &mut egui::Context) {
     // add font
     let fira_sans = include_bytes!("../resources/FiraSansIcons.ttf");
+    let cs2_icons = include_bytes!("../resources/CS2GunIcons.ttf");
     let mut font_definitions = FontDefinitions::default();
     font_definitions.font_data.insert(
         String::from("fira_sans"),
         Arc::new(FontData::from_static(fira_sans)),
+    );
+    font_definitions.font_data.insert(
+        String::from("cs2_icons"),
+        Arc::new(FontData::from_static(cs2_icons)),
     );
 
     // insert into font definitions, so it gets chosen as default
@@ -254,6 +259,11 @@ fn prep_ctx(ctx: &mut egui::Context) {
         .get_mut(&egui::FontFamily::Proportional)
         .unwrap()
         .insert(0, String::from("fira_sans"));
+    font_definitions
+        .families
+        .get_mut(&egui::FontFamily::Monospace)
+        .unwrap()
+        .insert(0, String::from("cs2_icons"));
 
     ctx.set_fonts(font_definitions);
 
