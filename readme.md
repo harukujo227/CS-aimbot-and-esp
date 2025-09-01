@@ -65,6 +65,12 @@ simple cs2 aimbot and esp, for linux only.
 
 ## faq
 
+### where are my configs at?
+
+they are saved in `$XDG_CONFIG_HOME`, if that is set.
+that usually defaults to `$HOME/.config`.
+if not, they are saved alongside the executable.
+
 ### radar
 
 see [radar.md](radar.md)
