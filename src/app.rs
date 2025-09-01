@@ -17,7 +17,7 @@ use crate::{
     bvh::Bvh,
     color::Colors,
     config::{
-        Config, DEFAULT_CONFIG_NAME, available_configs, exe_path, parse_config, write_config,
+        CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, available_configs, parse_config, write_config,
     },
     cs2::weapon::Weapon,
     data::Data,
@@ -69,9 +69,9 @@ impl App {
         bvh: Arc<Mutex<HashMap<String, Bvh>>>,
     ) -> Self {
         // read config
-        let config = parse_config(&exe_path().join(DEFAULT_CONFIG_NAME));
+        let config = parse_config(&CONFIG_PATH.join(DEFAULT_CONFIG_NAME));
         // override config if invalid
-        write_config(&config, &exe_path().join(DEFAULT_CONFIG_NAME));
+        write_config(&config, &CONFIG_PATH.join(DEFAULT_CONFIG_NAME));
 
         let ret = Self {
             gui_window: None,
@@ -88,7 +88,7 @@ impl App {
             data,
             bvh,
             config,
-            current_config: exe_path().join(DEFAULT_CONFIG_NAME),
+            current_config: CONFIG_PATH.join(DEFAULT_CONFIG_NAME),
             available_configs: available_configs(),
             new_config_name: String::new(),
 

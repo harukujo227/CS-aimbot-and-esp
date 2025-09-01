@@ -303,7 +303,7 @@ impl Default for UnsafeConfig {
     }
 }
 
-static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
         PathBuf::from(xdg_config)
     } else {

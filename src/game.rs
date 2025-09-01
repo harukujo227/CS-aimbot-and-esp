@@ -10,13 +10,12 @@ use crossbeam::channel::{Receiver, Sender};
 use crate::{
     bvh::Bvh,
     config::{
-        Config, DEFAULT_CONFIG_NAME, LOOP_DURATION, SLEEP_DURATION, exe_path, parse_config,
-        write_config,
+        parse_config, write_config, Config, CONFIG_PATH, DEFAULT_CONFIG_NAME, LOOP_DURATION, SLEEP_DURATION
     },
     cs2::CS2,
     data::Data,
     message::{Envelope, GameStatus, Message, Target},
-    mouse::{DeviceStatus, Mouse, discover_mice},
+    mouse::{discover_mice, DeviceStatus, Mouse},
 };
 
 pub trait Game: std::fmt::Debug {
@@ -57,7 +56,7 @@ impl GameManager {
             preferred_event: None,
         };
 
-        let config_path = exe_path().join(DEFAULT_CONFIG_NAME);
+        let config_path = CONFIG_PATH.join(DEFAULT_CONFIG_NAME);
         if config_path.exists() {
             game.config = parse_config(&config_path);
         }
@@ -154,7 +153,7 @@ impl GameManager {
                         self.preferred_event = Some(device.event_name.clone());
 
                         self.config.preferred_mouse = Some(device.name.clone());
-                        let config_path = exe_path().join(DEFAULT_CONFIG_NAME);
+                        let config_path = CONFIG_PATH.join(DEFAULT_CONFIG_NAME);
                         write_config(&self.config, &config_path);
                         log::debug!("Saved preferred mouse '{}' to config", device.name);
 

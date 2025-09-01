@@ -11,8 +11,8 @@ use crate::{
     bvh::{Aabb, Triangle},
     color::Colors,
     config::{
-        AimbotConfig, BoxMode, Config, DrawMode, TriggerbotMode, VERSION, WeaponConfig,
-        available_configs, delete_config, exe_path, parse_config, write_config,
+        AimbotConfig, BoxMode, CONFIG_PATH, Config, DrawMode, TriggerbotMode, VERSION,
+        WeaponConfig, available_configs, delete_config, parse_config, write_config,
     },
     constants::cs2,
     cs2::{bones::Bones, weapon::Weapon, weapon_class::WeaponClass},
@@ -863,7 +863,7 @@ impl App {
                         if !self.new_config_name.ends_with(".toml") {
                             self.new_config_name.push_str(".toml");
                         }
-                        let path = exe_path().join(&self.new_config_name);
+                        let path = CONFIG_PATH.join(&self.new_config_name);
                         write_config(&self.config, &path);
                         self.new_config_name.clear();
                         self.current_config = path;
