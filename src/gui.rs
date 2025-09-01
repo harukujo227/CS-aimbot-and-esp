@@ -566,6 +566,13 @@ impl App {
             }
 
             if ui
+                .checkbox(&mut self.config.player.weapon_icon, "Weapon Icon")
+                .changed()
+            {
+                self.send_config();
+            }
+
+            if ui
                 .checkbox(&mut self.config.player.tags, "Show Tags")
                 .changed()
             {
@@ -1229,6 +1236,7 @@ impl App {
         };
         let stroke = Stroke::new(self.config.hud.line_width, color);
         let font = FontId::proportional(self.config.hud.font_size);
+        let icon_font = FontId::monospace(self.config.hud.font_size * 1.5);
 
         let midpoint = (player.position + player.head) / 2.0;
         let height = player.head.z - player.position.z + 24.0;
@@ -1368,6 +1376,17 @@ impl App {
                 Align2::LEFT_TOP,
                 "bomb",
                 font.clone(),
+                text_color,
+            );
+            offset += font_size;
+        }
+
+        if self.config.player.weapon_icon {
+            painter.text(
+                pos2(tr.x + ew, tr.y + offset),
+                Align2::LEFT_TOP,
+                player.weapon.to_icon(),
+                icon_font.clone(),
                 text_color,
             );
         }
