@@ -3,6 +3,7 @@ use std::{
     fs::read_to_string,
     ops::RangeInclusive,
     path::{Path, PathBuf},
+    sync::LazyLock,
     time::Duration,
 };
 
@@ -31,7 +32,7 @@ pub struct Config {
     pub radar: RadarConfig,
     pub misc: UnsafeConfig,
     pub accent_color: Color32,
-    pub preferred_mouse: Option<String>, // <-- NEW
+    pub preferred_mouse: Option<String>,
 }
 
 impl Default for Config {
@@ -43,7 +44,7 @@ impl Default for Config {
             radar: RadarConfig::default(),
             misc: UnsafeConfig::default(),
             accent_color: Colors::BLUE,
-            preferred_mouse: None, // <-- NEW
+            preferred_mouse: None,
         }
     }
 }
@@ -302,13 +303,17 @@ impl Default for UnsafeConfig {
     }
 }
 
-pub fn exe_path() -> PathBuf {
-    std::env::current_exe()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .to_path_buf()
-}
+static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+    if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
+        PathBuf::from(xdg_config)
+    } else {
+        std::env::current_exe()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_path_buf()
+    }
+});
 
 pub fn parse_config(path: &Path) -> Config {
     if !path.exists() {
@@ -339,9 +344,8 @@ pub fn delete_config(path: &Path) {
 }
 
 pub fn available_configs() -> Vec<PathBuf> {
-    let dir = exe_path();
     let mut files = Vec::with_capacity(8);
-    for path in std::fs::read_dir(dir).unwrap() {
+    for path in std::fs::read_dir::<&Path>(CONFIG_PATH.as_ref()).unwrap() {
         let Ok(file) = path else {
             continue;
         };
@@ -354,7 +358,7 @@ pub fn available_configs() -> Vec<PathBuf> {
         files.push(file.path())
     }
     if files.is_empty() {
-        let path = exe_path().join(DEFAULT_CONFIG_NAME);
+        let path = CONFIG_PATH.join(DEFAULT_CONFIG_NAME);
         write_config(&Config::default(), &path);
         files.push(path);
     }
