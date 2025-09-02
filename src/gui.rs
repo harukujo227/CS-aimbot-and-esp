@@ -638,6 +638,13 @@ impl App {
             {
                 self.send_config();
             }
+
+            if ui
+                .checkbox(&mut self.config.hud.sniper_crosshair, "Sniper Crosshair")
+                .changed()
+            {
+                self.send_config();
+            }
         });
 
         collapsing_open(ui, "Appearance", |ui| {
@@ -673,6 +680,13 @@ impl App {
 
             if let Some(color) = self.color_picker(ui, &self.config.hud.text_color, "Text Color") {
                 self.config.hud.text_color = color;
+                self.send_config();
+            }
+
+            if let Some(color) =
+                self.color_picker(ui, &self.config.hud.crosshair_color, "Crosshair Color")
+            {
+                self.config.hud.crosshair_color = color;
                 self.send_config();
             }
         });
