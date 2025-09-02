@@ -1109,7 +1109,7 @@ impl App {
                 };
                 self.text(
                     &painter,
-                    &format!("{}", weapon.0),
+                    format!("{}", weapon.0),
                     pos,
                     Align2::CENTER_CENTER,
                     None,

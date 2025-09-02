@@ -306,7 +306,7 @@ impl Default for UnsafeConfig {
 }
 
 pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
+    let path = if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
         PathBuf::from(xdg_config).join("deadlocked")
     } else {
         std::env::current_exe()
@@ -315,7 +315,9 @@ pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
             .unwrap()
             .to_path_buf()
             .join("configs")
-    }
+    };
+    std::fs::create_dir_all(&path).unwrap();
+    path
 });
 
 pub fn parse_config(path: &Path) -> Config {
@@ -334,9 +336,6 @@ pub fn parse_config(path: &Path) -> Config {
 
 pub fn write_config(config: &Config, path: &Path) {
     let out = toml::to_string(&config).unwrap();
-    if !path.exists() {
-        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-    }
     std::fs::write(path, out).unwrap();
 }
 
@@ -351,9 +350,6 @@ pub fn delete_config(path: &Path) {
 
 pub fn available_configs() -> Vec<PathBuf> {
     let mut files = Vec::with_capacity(8);
-    if !CONFIG_PATH.exists() {
-        std::fs::create_dir_all::<&Path>(CONFIG_PATH.as_ref()).unwrap();
-    }
     for path in std::fs::read_dir::<&Path>(CONFIG_PATH.as_ref()).unwrap() {
         let Ok(file) = path else {
             continue;
