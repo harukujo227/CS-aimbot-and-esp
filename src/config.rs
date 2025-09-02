@@ -307,7 +307,7 @@ impl Default for UnsafeConfig {
 
 pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
-        PathBuf::from(xdg_config)
+        PathBuf::from(xdg_config).join("deadlocked")
     } else {
         std::env::current_exe()
             .unwrap()
@@ -347,6 +347,9 @@ pub fn delete_config(path: &Path) {
 
 pub fn available_configs() -> Vec<PathBuf> {
     let mut files = Vec::with_capacity(8);
+    if !CONFIG_PATH.exists() {
+        std::fs::create_dir_all::<&Path>(CONFIG_PATH.as_ref()).unwrap();
+    }
     for path in std::fs::read_dir::<&Path>(CONFIG_PATH.as_ref()).unwrap() {
         let Ok(file) = path else {
             continue;
