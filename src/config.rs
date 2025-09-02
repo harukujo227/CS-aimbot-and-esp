@@ -314,6 +314,7 @@ pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
             .parent()
             .unwrap()
             .to_path_buf()
+            .join("configs")
     }
 });
 
