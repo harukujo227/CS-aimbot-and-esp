@@ -633,20 +633,22 @@ impl App {
             }
 
             if ui
-                .checkbox(&mut self.config.hud.dropped_weapons, "Dropped Weapons")
+                .checkbox(&mut self.config.hud.sniper_crosshair, "Sniper Crosshair")
                 .changed()
             {
                 self.send_config();
             }
 
             if ui
-                .checkbox(&mut self.config.hud.sniper_crosshair, "Sniper Crosshair")
+                .checkbox(&mut self.config.hud.dropped_weapons, "Dropped Weapons")
                 .changed()
             {
                 self.send_config();
             }
         });
+    }
 
+    fn hud_right(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Appearance", |ui| {
             ui.horizontal(|ui| {
                 if ui
@@ -690,10 +692,8 @@ impl App {
                 self.send_config();
             }
         });
-    }
 
-    fn hud_right(&mut self, ui: &mut Ui) {
-        collapsing_open(ui, "Advanced", |ui| {
+        ui.collapsing("Advanced", |ui| {
             if ui
                 .checkbox(&mut self.config.hud.debug, "Debug Overlay")
                 .changed()
