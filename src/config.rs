@@ -335,7 +335,7 @@ pub fn parse_config(path: &Path) -> Config {
 pub fn write_config(config: &Config, path: &Path) {
     let out = toml::to_string(&config).unwrap();
     if !path.exists() {
-        std::fs::create_dir_all(path).unwrap();
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
     }
     std::fs::write(path, out).unwrap();
 }
