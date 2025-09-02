@@ -40,18 +40,26 @@ pub enum AimbotTab {
     Weapon,
 }
 
-fn outline(
-    pos: Pos2,
-    width: f32,
-    color_content: Color32,
-    color_outline: Color32,
-) -> [(Pos2, Color32); 5] {
+const OUTLINE_WIDTH: f32 = 1.0;
+fn outline(pos: Pos2, color: Color32) -> [(Pos2, Color32); 5] {
     [
-        (pos2(pos.x - width, pos.y - width), color_outline),
-        (pos2(pos.x + width, pos.y - width), color_outline),
-        (pos2(pos.x - width, pos.y + width), color_outline),
-        (pos2(pos.x + width, pos.y + width), color_outline),
-        (pos, color_content),
+        (
+            pos2(pos.x - OUTLINE_WIDTH, pos.y - OUTLINE_WIDTH),
+            Color32::BLACK,
+        ),
+        (
+            pos2(pos.x + OUTLINE_WIDTH, pos.y - OUTLINE_WIDTH),
+            Color32::BLACK,
+        ),
+        (
+            pos2(pos.x - OUTLINE_WIDTH, pos.y + OUTLINE_WIDTH),
+            Color32::BLACK,
+        ),
+        (
+            pos2(pos.x + OUTLINE_WIDTH, pos.y + OUTLINE_WIDTH),
+            Color32::BLACK,
+        ),
+        (pos, color),
     ]
 }
 
@@ -574,13 +582,6 @@ impl App {
             }
 
             if ui
-                .checkbox(&mut self.config.player.weapon_name, "Weapon Name")
-                .changed()
-            {
-                self.send_config();
-            }
-
-            if ui
                 .checkbox(&mut self.config.player.weapon_icon, "Weapon Icon")
                 .changed()
             {
@@ -650,6 +651,13 @@ impl App {
 
     fn hud_right(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Appearance", |ui| {
+            if ui
+                .checkbox(&mut self.config.hud.text_outline, "Text Outline")
+                .changed()
+            {
+                self.send_config();
+            }
+
             ui.horizontal(|ui| {
                 if ui
                     .add(
@@ -1061,7 +1069,6 @@ impl App {
     fn overlay(&self, ctx: &Context) {
         ctx.set_pixels_per_point(1.0);
         let painter = ctx.layer_painter(egui::LayerId::background());
-        let font = FontId::proportional(self.config.hud.font_size);
 
         let data = &self.data.lock().unwrap();
         if let Some(window) = &self.overlay_window {
@@ -1102,41 +1109,32 @@ impl App {
                 let Some(pos) = world_to_screen(&weapon.1, data) else {
                     continue;
                 };
-                outline(
+                self.text(
+                    &painter,
+                    &format!("{}", weapon.0),
                     pos,
-                    1.0,
-                    self.apply_alpha(self.config.hud.text_color),
-                    self.apply_alpha(Color32::BLACK),
-                )
-                .iter()
-                .for_each(|&(pos, color)| {
-                    painter.text(
-                        pos,
-                        Align2::CENTER_CENTER,
-                        weapon.0.to_string(),
-                        font.clone(),
-                        color,
-                    );
-                });
+                    Align2::CENTER_CENTER,
+                    None,
+                );
             }
         }
 
         if self.config.hud.bomb_timer && data.bomb.planted {
             if let Some(pos) = world_to_screen(&data.bomb.position, data) {
-                painter.text(
+                self.text(
+                    &painter,
+                    format!("{:.1}", data.bomb.timer),
                     pos,
                     Align2::CENTER_CENTER,
-                    format!("{:.1}", data.bomb.timer),
-                    font.clone(),
-                    self.apply_alpha(self.config.hud.text_color),
+                    None,
                 );
                 if data.bomb.being_defused {
-                    painter.text(
+                    self.text(
+                        &painter,
+                        "defusing",
                         pos2(pos.x, pos.y + self.config.hud.font_size),
                         Align2::CENTER_CENTER,
-                        "defusing",
-                        font.clone(),
-                        self.apply_alpha(self.config.hud.text_color),
+                        None,
                     );
                 }
             }
@@ -1191,15 +1189,15 @@ impl App {
         }
 
         if data.triggerbot_active {
-            painter.text(
+            self.text(
+                &painter,
+                "trigger active",
                 pos2(
                     data.window_size.x / 2.0 + 8.0,
                     data.window_size.y / 2.0 + 8.0,
                 ),
                 Align2::LEFT_TOP,
-                "trigger active",
-                font,
-                self.apply_alpha(self.config.hud.text_color),
+                None,
             );
         }
     }
@@ -1273,7 +1271,6 @@ impl App {
             }
         };
         let stroke = Stroke::new(self.config.hud.line_width, color);
-        let font = FontId::proportional(self.config.hud.font_size);
         let icon_font = FontId::monospace(self.config.hud.font_size * 1.5);
 
         let midpoint = (player.position + player.head) / 2.0;
@@ -1365,23 +1362,12 @@ impl App {
         let font_size = self.config.hud.font_size;
         let text_color = self.apply_alpha(self.config.hud.text_color);
         if self.config.player.player_name {
-            painter.text(
-                pos2(tr.x + ew, tr.y + offset),
-                Align2::LEFT_TOP,
+            self.text(
+                painter,
                 &player.name,
-                font.clone(),
-                text_color,
-            );
-            offset += font_size;
-        }
-
-        if self.config.player.weapon_name {
-            painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                format!("color: {}", player.color),
-                font.clone(),
-                text_color,
+                None,
             );
             offset += font_size;
         }
@@ -1390,8 +1376,8 @@ impl App {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                "defuser",
-                font.clone(),
+                "r",
+                icon_font.clone(),
                 text_color,
             );
             offset += font_size;
@@ -1401,8 +1387,8 @@ impl App {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                "helmet",
-                font.clone(),
+                "q",
+                icon_font.clone(),
                 text_color,
             );
             offset += font_size;
@@ -1412,17 +1398,16 @@ impl App {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                "bomb",
-                font.clone(),
+                "o",
+                icon_font.clone(),
                 text_color,
             );
-            offset += font_size;
         }
 
         if self.config.player.weapon_icon {
             painter.text(
-                pos2(tr.x + ew, tr.y + offset),
-                Align2::LEFT_TOP,
+                pos2(bl.x + half_width, bl.y),
+                Align2::CENTER_TOP,
                 player.weapon.to_icon(),
                 icon_font.clone(),
                 text_color,
@@ -1465,6 +1450,28 @@ impl App {
         };
 
         Color32::from_rgb(r, g, 0)
+    }
+
+    fn text(
+        &self,
+        painter: &Painter,
+        text: impl AsRef<str>,
+        position: Pos2,
+        align: Align2,
+        color: Option<Color32>,
+    ) {
+        let font = FontId::proportional(self.config.hud.font_size);
+        let color = match color {
+            Some(color) => color,
+            None => self.apply_alpha(self.config.hud.text_color),
+        };
+        if self.config.hud.text_outline {
+            for (pos, color) in outline(position, color) {
+                painter.text(pos, align, text.as_ref(), font.clone(), color);
+            }
+        } else {
+            painter.text(position, align, text.as_ref(), font, color);
+        }
     }
 
     pub fn render(&mut self) {

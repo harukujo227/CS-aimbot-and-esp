@@ -210,7 +210,6 @@ pub struct PlayerConfig {
     pub health_bar: bool,
     pub armor_bar: bool,
     pub player_name: bool,
-    pub weapon_name: bool,
     pub weapon_icon: bool,
     pub tags: bool,
 }
@@ -229,7 +228,6 @@ impl Default for PlayerConfig {
             health_bar: true,
             armor_bar: true,
             player_name: true,
-            weapon_name: true,
             weapon_icon: true,
             tags: true,
         }
@@ -243,6 +241,7 @@ pub struct HudConfig {
     pub sniper_crosshair: bool,
     pub crosshair_color: Color32,
     pub dropped_weapons: bool,
+    pub text_outline: bool,
     pub text_color: Color32,
     pub line_width: f32,
     pub font_size: f32,
@@ -257,6 +256,7 @@ impl Default for HudConfig {
             sniper_crosshair: true,
             crosshair_color: Color32::WHITE,
             dropped_weapons: true,
+            text_outline: true,
             text_color: Colors::TEXT,
             line_width: 2.0,
             font_size: 16.0,
