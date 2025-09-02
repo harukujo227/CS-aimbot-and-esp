@@ -598,23 +598,33 @@ impl App {
     }
 
     fn hud_settings(&mut self, ui: &mut Ui) {
-        ui.columns(2, |cols| {
-            let left = &mut cols[0];
-            egui::ScrollArea::vertical()
-                .auto_shrink([false, true])
-                .id_salt("hud_left")
-                .show(left, |left| {
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, true])
+            .id_salt("hud")
+            .show(ui, |ui| {
+                ui.columns(2, |cols| {
+                    let left = &mut cols[0];
                     self.hud_left(left);
-                });
-
-            let right = &mut cols[1];
-            egui::ScrollArea::vertical()
-                .auto_shrink([false, true])
-                .id_salt("hud_right")
-                .show(right, |right| {
+                    let right = &mut cols[1];
                     self.hud_right(right);
                 });
-        });
+
+                collapsing_open(ui, "Colors", |ui| {
+                    if let Some(color) =
+                        self.color_picker(ui, &self.config.hud.text_color, "Text Color")
+                    {
+                        self.config.hud.text_color = color;
+                        self.send_config();
+                    }
+
+                    if let Some(color) =
+                        self.color_picker(ui, &self.config.hud.crosshair_color, "Crosshair Color")
+                    {
+                        self.config.hud.crosshair_color = color;
+                        self.send_config();
+                    }
+                });
+            });
     }
 
     fn hud_left(&mut self, ui: &mut Ui) {
@@ -687,18 +697,6 @@ impl App {
                 }
                 ui.label("Font Size");
             });
-
-            if let Some(color) = self.color_picker(ui, &self.config.hud.text_color, "Text Color") {
-                self.config.hud.text_color = color;
-                self.send_config();
-            }
-
-            if let Some(color) =
-                self.color_picker(ui, &self.config.hud.crosshair_color, "Crosshair Color")
-            {
-                self.config.hud.crosshair_color = color;
-                self.send_config();
-            }
         });
 
         ui.collapsing("Advanced", |ui| {
