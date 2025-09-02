@@ -319,7 +319,7 @@ pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
 });
 
 pub fn parse_config(path: &Path) -> Config {
-    if !path.exists() {
+    if !path.exists() || path.is_dir() {
         return Config::default();
     }
 
