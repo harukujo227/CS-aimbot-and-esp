@@ -288,6 +288,7 @@ impl App {
                     } else {
                         self.weapon_config().aimbot.bones.push(bone);
                     }
+                    self.send_config();
                 }
             }
         });
