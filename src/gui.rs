@@ -1447,18 +1447,18 @@ impl App {
         if !self.config.player.head_circle {
             return;
         }
-        let head = player.bones.get(&Bones::Head).unwrap();
-        let spine = player.bones.get(&Bones::Spine2).unwrap();
+        let neck = player.bones.get(&Bones::Neck).unwrap();
+        let spine = player.bones.get(&Bones::Spine3).unwrap();
 
-        let Some(head) = world_to_screen(head, data) else {
+        let Some(neck) = world_to_screen(neck, data) else {
             return;
         };
         let Some(spine) = world_to_screen(spine, data) else {
             return;
         };
 
-        let height = head.y - spine.y;
-        let pos = pos2(head.x, head.y + height / 2.0);
+        let height = spine.y - neck.y;
+        let pos = pos2(neck.x - (spine.x - neck.x) / 2.0, neck.y - height / 2.0);
         painter.circle_stroke(pos, height / 2.0, stroke);
     }
 

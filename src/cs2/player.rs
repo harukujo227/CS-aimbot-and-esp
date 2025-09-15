@@ -106,9 +106,9 @@ impl Player {
             .read_string_uncached(self.controller + cs2.offsets.controller.name)
     }
 
-    pub fn has_moved(&self, cs2: &CS2) -> bool {
+    pub fn deathmatch_immunity(&self, cs2: &CS2) -> bool {
         cs2.process
-            .read::<u8>(self.pawn + cs2.offsets.pawn.has_moved)
+            .read::<u8>(self.pawn + cs2.offsets.pawn.deathmatch_immunity)
             != 0
     }
 
@@ -250,7 +250,7 @@ impl Player {
             return false;
         }
 
-        if !self.has_moved(cs2) {
+        if self.deathmatch_immunity(cs2) {
             return false;
         }
 
