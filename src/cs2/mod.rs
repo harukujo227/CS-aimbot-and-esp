@@ -406,6 +406,7 @@ impl CS2 {
         offsets.pawn.is_scoped = client.get("C_CSPlayerPawn", "m_bIsScoped")?;
         offsets.pawn.flash_alpha = client.get("C_CSPlayerPawnBase", "m_flFlashMaxAlpha")?;
         offsets.pawn.flash_duration = client.get("C_CSPlayerPawnBase", "m_flFlashDuration")?;
+        offsets.pawn.has_moved = client.get("C_CSPlayerPawnBase", "m_bHasMovedSinceSpawn")?;
 
         offsets.pawn.camera_services = client.get("C_BasePlayerPawn", "m_pCameraServices")?;
         offsets.pawn.item_services = client.get("C_BasePlayerPawn", "m_pItemServices")?;

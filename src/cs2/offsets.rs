@@ -65,6 +65,7 @@ pub struct PawnOffsets {
     pub camera_services: u64,  // Pointer -> CameraServices (m_pCameraServices)
     pub item_services: u64,    // Pointer -> ItemServices (m_pItemServices)
     pub weapon_services: u64,  // Pointer -> WeaponSercies (m_pWeaponServices)
+    pub has_moved: u64,        // bool (m_bHasMovedSinceSpawn)
 }
 
 #[derive(Debug, Default)]

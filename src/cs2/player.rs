@@ -106,6 +106,12 @@ impl Player {
             .read_string_uncached(self.controller + cs2.offsets.controller.name)
     }
 
+    pub fn has_moved(&self, cs2: &CS2) -> bool {
+        cs2.process
+            .read::<u8>(self.pawn + cs2.offsets.pawn.has_moved)
+            != 0
+    }
+
     pub fn weapon_name(&self, cs2: &CS2) -> String {
         // CEntityInstance
         let weapon_entity_instance: u64 = cs2.process.read(self.pawn + cs2.offsets.pawn.weapon);
@@ -241,6 +247,10 @@ impl Player {
         }
 
         if self.life_state(cs2) != 0 {
+            return false;
+        }
+
+        if !self.has_moved(cs2) {
             return false;
         }
 
