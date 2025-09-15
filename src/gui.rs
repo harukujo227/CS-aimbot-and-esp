@@ -488,6 +488,13 @@ impl App {
                         self.send_config();
                     }
 
+                    if ui
+                        .checkbox(&mut self.config.player.head_circle, "Head Circle")
+                        .changed()
+                    {
+                        self.send_config();
+                    }
+
                     ui.horizontal(|ui| {
                         if ui
                             .add(
@@ -1435,6 +1442,24 @@ impl App {
 
             painter.line(vec![a, b], stroke);
         }
+
+        // head circle
+        if !self.config.player.head_circle {
+            return;
+        }
+        let head = player.bones.get(&Bones::Head).unwrap();
+        let spine = player.bones.get(&Bones::Spine2).unwrap();
+
+        let Some(head) = world_to_screen(head, data) else {
+            return;
+        };
+        let Some(spine) = world_to_screen(spine, data) else {
+            return;
+        };
+
+        let height = head.y - spine.y;
+        let pos = pos2(head.x, head.y + height / 2.0);
+        painter.circle_stroke(pos, height / 2.0, stroke);
     }
 
     fn health_color(&self, health: i32) -> Color32 {
