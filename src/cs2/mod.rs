@@ -416,6 +416,9 @@ impl CS2 {
         offsets.game_scene_node.origin = client.get("CGameSceneNode", "m_vecAbsOrigin")?;
         offsets.game_scene_node.model_state = client.get("CSkeletonInstance", "m_modelState")?;
 
+        offsets.skeleton.skeleton_instance =
+            client.get("CBodyComponentSkeletonInstance", "m_skeletonInstance")?;
+
         offsets.smoke.did_smoke_effect =
             client.get("C_SmokeGrenadeProjectile", "m_bDidSmokeEffect")?;
         offsets.smoke.smoke_color = client.get("C_SmokeGrenadeProjectile", "m_vSmokeColor")?;

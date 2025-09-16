@@ -201,9 +201,11 @@ impl Player {
 
     pub fn bone_position(&self, cs2: &CS2, bone_index: u64) -> Vec3 {
         let gs_node = self.game_scene_node(cs2);
-        let bone_data: u64 = cs2
-            .process
-            .read(gs_node + cs2.offsets.game_scene_node.model_state + 0x80);
+        let bone_data: u64 = cs2.process.read(
+            gs_node
+                + cs2.offsets.game_scene_node.model_state
+                + cs2.offsets.skeleton.skeleton_instance,
+        );
 
         if bone_data == 0 {
             return Vec3::ZERO;
@@ -216,8 +218,25 @@ impl Player {
         use strum::IntoEnumIterator as _;
 
         let mut bones = HashMap::new();
-        for bone in Bones::iter() {
-            let pos = self.bone_position(cs2, bone.u64());
+        let gs_node = self.game_scene_node(cs2);
+        let bone_data: u64 = cs2.process.read(
+            gs_node
+                + cs2.offsets.game_scene_node.model_state
+                + cs2.offsets.skeleton.skeleton_instance,
+        );
+
+        if bone_data == 0 {
+            return bones;
+        }
+
+        let bone_addresses: Vec<u64> = Bones::iter().map(|b| bone_data + b.u64() * 32).collect();
+
+        for (pos, bone) in cs2
+            .process
+            .read_batched(&bone_addresses)
+            .into_iter()
+            .zip(Bones::iter())
+        {
             bones.insert(bone, pos);
         }
         bones

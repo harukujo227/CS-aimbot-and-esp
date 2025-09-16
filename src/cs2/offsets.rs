@@ -76,6 +76,11 @@ pub struct GameSceneNodeOffsets {
 }
 
 #[derive(Debug, Default)]
+pub struct SkeletonInstanceOffsets {
+    pub skeleton_instance: u64, // CSkeletonInstance (m_skeletonInstance)
+}
+
+#[derive(Debug, Default)]
 pub struct SmokeOffsets {
     pub did_smoke_effect: u64, // bool (m_bDidSmokeEffect)
     pub smoke_color: u64,      // Vec3 (m_vSmokeColor)
@@ -127,6 +132,7 @@ pub struct Offsets {
     pub controller: PlayerControllerOffsets,
     pub pawn: PawnOffsets,
     pub game_scene_node: GameSceneNodeOffsets,
+    pub skeleton: SkeletonInstanceOffsets,
     pub smoke: SmokeOffsets,
     pub spotted_state: SpottedStateOffsets,
     pub camera_services: CameraServicesOffsets,
