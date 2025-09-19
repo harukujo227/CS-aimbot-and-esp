@@ -664,6 +664,13 @@ impl App {
             {
                 self.send_config();
             }
+
+            if ui
+                .checkbox(&mut self.config.hud.spectator_list, "Spectator List")
+                .changed()
+            {
+                self.send_config();
+            }
         });
     }
 
@@ -1206,6 +1213,34 @@ impl App {
                 None,
             );
         }
+
+        if self.config.hud.spectator_list {
+            let mut offset = 0.0;
+            let half_height = data.window_size.y / 2.0;
+            for (player, target) in &data.spectators {
+                let Some(player) = find_player(*player, data) else {
+                    continue;
+                };
+                let Some(target) = find_player(*target, data) else {
+                    continue;
+                };
+
+                let color = if target.steam_id == data.local_player.steam_id {
+                    Color32::RED
+                } else {
+                    self.config.hud.text_color
+                };
+
+                self.text(
+                    &painter,
+                    format!("{} -> {}", player.name, target.name),
+                    pos2(4.0, half_height + offset),
+                    Align2::LEFT_TOP,
+                    Some(color),
+                );
+                offset += self.config.hud.font_size;
+            }
+        }
     }
 
     #[allow(unused)]
@@ -1565,4 +1600,14 @@ fn collapsing_open(ui: &mut Ui, title: &str, add_body: impl FnOnce(&mut Ui)) {
     CollapsingHeader::new(title)
         .default_open(true)
         .show(ui, add_body);
+}
+
+fn find_player(steam_id: u64, data: &Data) -> Option<&PlayerData> {
+    if data.local_player.steam_id == steam_id {
+        return Some(&data.local_player);
+    }
+    data.players
+        .iter()
+        .find(|p| p.steam_id == steam_id)
+        .or(data.friendlies.iter().find(|p| p.steam_id == steam_id))
 }

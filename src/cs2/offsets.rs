@@ -35,8 +35,9 @@ pub struct ConvarOffsets {
 
 #[derive(Debug, Default)]
 pub struct PlayerControllerOffsets {
+    pub steam_id: u64,     // u64 (m_steamID)
     pub name: u64,         // Pointer -> String (m_iszPlayerName)
-    pub pawn: u64,         // Pointer -> Pawn (m_hPawn)
+    pub pawn: u64,         // Handle -> Pawn (m_hPawn)
     pub desired_fov: u64,  // u32 (m_iDesiredFOV)
     pub owner_entity: u64, // i32 (h_pOwnerEntity)
     pub color: u64,        // i32 (m_iCompTeammateColor)
@@ -62,10 +63,11 @@ pub struct PawnOffsets {
     pub is_scoped: u64,           // bool (m_bIsScoped)
     pub flash_alpha: u64,         // f32 (m_flFlashMaxAlpha)
     pub flash_duration: u64,      // f32 (m_flFlashDuration)
+    pub deathmatch_immunity: u64, // bool (m_bGunGameImmunity)
     pub camera_services: u64,     // Pointer -> CameraServices (m_pCameraServices)
     pub item_services: u64,       // Pointer -> ItemServices (m_pItemServices)
     pub weapon_services: u64,     // Pointer -> WeaponSercies (m_pWeaponServices)
-    pub deathmatch_immunity: u64, // bool (m_bGunGameImmunity)
+    pub observer_services: u64,   // Pointer -> ObserverServices (m_pObserverServices)
 }
 
 #[derive(Debug, Default)]
@@ -109,6 +111,11 @@ pub struct WeaponServicesOffsets {
 }
 
 #[derive(Debug, Default)]
+pub struct ObserverServicesOffsets {
+    pub target: u64, // Handle -> BaseEntity (m_hObserverTarget)
+}
+
+#[derive(Debug, Default)]
 pub struct WeaponOffsets {
     pub attribute_manager: u64,     // AttributeContainer (m_AttributeManager)
     pub item: u64,                  // EIconItemView (m_Item)
@@ -138,6 +145,7 @@ pub struct Offsets {
     pub camera_services: CameraServicesOffsets,
     pub item_services: ItemServicesOffsets,
     pub weapon_services: WeaponServicesOffsets,
+    pub observer_services: ObserverServicesOffsets,
     pub weapon: WeaponOffsets,
     pub planted_c4: PlantedC4Offsets,
 }

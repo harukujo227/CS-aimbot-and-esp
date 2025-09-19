@@ -119,6 +119,7 @@ impl Game for CS2 {
         data.players.clear();
         data.friendlies.clear();
         data.weapons.clear();
+        data.spectators.clear();
 
         let sdl_window = self.process.read::<u64>(self.offsets.direct.sdl_window);
         if sdl_window == 0 {
@@ -145,6 +146,7 @@ impl Game for CS2 {
         }
         for player in &self.players {
             let player_data = PlayerData {
+                steam_id: player.steam_id(self),
                 health: player.health(self),
                 armor: player.armor(self),
                 position: player.position(self),
@@ -164,9 +166,15 @@ impl Game for CS2 {
             } else {
                 data.players.push(player_data);
             }
+
+            if let Some(target) = player.spectator_target(self) {
+                data.spectators
+                    .push((player.steam_id(self), target.steam_id(self)));
+            }
         }
 
         let local_player_data = PlayerData {
+            steam_id: local_player.steam_id(self),
             health: local_player.health(self),
             armor: local_player.armor(self),
             position: local_player.position(self),
@@ -382,6 +390,7 @@ impl CS2 {
         let schema = Schema::new(&self.process, offsets.library.schema)?;
         let client = schema.get_library(cs2::CLIENT_LIB)?;
 
+        offsets.controller.steam_id = client.get("CBasePlayerController", "m_steamID")?;
         offsets.controller.name = client.get("CBasePlayerController", "m_iszPlayerName")?;
         offsets.controller.pawn = client.get("CBasePlayerController", "m_hPawn")?;
         offsets.controller.desired_fov = client.get("CBasePlayerController", "m_iDesiredFOV")?;
@@ -411,6 +420,7 @@ impl CS2 {
         offsets.pawn.camera_services = client.get("C_BasePlayerPawn", "m_pCameraServices")?;
         offsets.pawn.item_services = client.get("C_BasePlayerPawn", "m_pItemServices")?;
         offsets.pawn.weapon_services = client.get("C_BasePlayerPawn", "m_pWeaponServices")?;
+        offsets.pawn.observer_services = client.get("C_BasePlayerPawn", "m_pObserverServices")?;
 
         offsets.game_scene_node.dormant = client.get("CGameSceneNode", "m_bDormant")?;
         offsets.game_scene_node.origin = client.get("CGameSceneNode", "m_vecAbsOrigin")?;
@@ -433,6 +443,9 @@ impl CS2 {
         offsets.item_services.has_helmet = client.get("CCSPlayer_ItemServices", "m_bHasHelmet")?;
 
         offsets.weapon_services.weapons = client.get("CPlayer_WeaponServices", "m_hMyWeapons")?;
+
+        offsets.observer_services.target =
+            client.get("CPlayer_ObserverServices", "m_hObserverTarget")?;
 
         offsets.weapon.attribute_manager = client.get("C_EconEntity", "m_AttributeManager")?;
         offsets.weapon.item = client.get("C_AttributeContainer", "m_Item")?;

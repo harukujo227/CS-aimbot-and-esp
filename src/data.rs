@@ -20,10 +20,12 @@ pub struct Data {
     pub window_position: Vec2,
     pub window_size: Vec2,
     pub triggerbot_active: bool,
+    pub spectators: Vec<(u64, u64)>,
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct PlayerData {
+    pub steam_id: u64,
     pub health: i32,
     pub armor: i32,
     pub position: Vec3,

@@ -25,15 +25,23 @@ impl Player {
 
     pub fn index(cs2: &CS2, index: u64) -> Option<Self> {
         let controller = Self::get_client_entity(cs2, index)?;
-        Self::get_pawn(cs2, controller).map(|pawn| Self { controller, pawn })
+        Self::get_pawn(
+            cs2,
+            cs2.process.read(controller + cs2.offsets.controller.pawn),
+        )
+        .map(|pawn| Self { controller, pawn })
     }
 
     pub fn local_player(cs2: &CS2) -> Option<Self> {
-        let controller = cs2.process.read(cs2.offsets.direct.local_player);
+        let controller: u64 = cs2.process.read(cs2.offsets.direct.local_player);
         if controller == 0 {
             return None;
         }
-        Self::get_pawn(cs2, controller).map(|pawn| Self { controller, pawn })
+        Self::get_pawn(
+            cs2,
+            cs2.process.read(controller + cs2.offsets.controller.pawn),
+        )
+        .map(|pawn| Self { controller, pawn })
     }
 
     pub fn pawn(pawn: u64) -> Self {
@@ -59,22 +67,17 @@ impl Player {
         Some(entity)
     }
 
-    fn get_pawn(cs2: &CS2, controller: u64) -> Option<u64> {
-        let v1: i32 = cs2.process.read(controller + cs2.offsets.controller.pawn);
-        if v1 == -1 {
-            return None;
-        }
-
+    fn get_pawn(cs2: &CS2, handle: i32) -> Option<u64> {
         // what the fuck is this doing?
         let v2: u64 = cs2
             .process
-            .read(cs2.offsets.interface.player + 8 * ((v1 as u64 & 0x7fff) >> 9));
+            .read(cs2.offsets.interface.player + 8 * ((handle as u64 & 0x7FFF) >> 9));
         if v2 == 0 {
             return None;
         }
 
         // bit-fuckery, why is this needed exactly?
-        let entity = cs2.process.read(v2 + 120 * (v1 as u64 & 0x1ff));
+        let entity = cs2.process.read(v2 + 120 * (handle as u64 & 0x1FF));
         if entity == 0 {
             return None;
         }
@@ -101,9 +104,34 @@ impl Player {
         cs2.process.read(self.pawn + cs2.offsets.pawn.life_state)
     }
 
+    pub fn steam_id(&self, cs2: &CS2) -> u64 {
+        cs2.process
+            .read(self.controller + cs2.offsets.controller.steam_id)
+    }
+
     pub fn name(&self, cs2: &CS2) -> String {
         cs2.process
             .read_string_uncached(self.controller + cs2.offsets.controller.name)
+    }
+
+    /// returns a pawn-only player
+    pub fn spectator_target(&self, cs2: &CS2) -> Option<Self> {
+        let observer_services: u64 = cs2
+            .process
+            .read(self.pawn + cs2.offsets.pawn.observer_services);
+        if observer_services == 0 {
+            return None;
+        }
+
+        let target: i32 = cs2
+            .process
+            .read(observer_services + cs2.offsets.observer_services.target);
+        if target == -1 {
+            return None;
+        }
+
+        let pawn = Player::get_pawn(cs2, target)?;
+        Some(Player::pawn(pawn))
     }
 
     pub fn deathmatch_immunity(&self, cs2: &CS2) -> bool {
