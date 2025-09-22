@@ -103,12 +103,17 @@ impl Radar {
                 (self.url.clone(), format!("ws://{}", self.url))
             }
         };
-        let Ok(mut address) = url.to_socket_addrs() else {
+
+        let Ok(parsed_address) = url::Url::parse(&url_full) else {
             log::debug!("{url} is not a valid address");
             return false;
         };
+        let Ok(address) = parsed_address.socket_addrs(|| Some(6346)) else {
+            log::debug!("{url} is not reachable");
+            return false;
+        };
         let Ok(stream) =
-            TcpStream::connect_timeout(&address.next().unwrap(), Duration::from_secs(5))
+            TcpStream::connect_timeout(address.first().unwrap(), Duration::from_secs(5))
         else {
             log::debug!("could not connect to {url}");
             self.websocket = None;

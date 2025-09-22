@@ -8,7 +8,7 @@ if you have an address of a server, just type it in, and it should connect
 
 Public server instances:
 
-1. <http://radar.disphost.cc:80> (discord: asfgarasd)
+1. `radar.disphost.cc` (discord: asfgarasd)
 
 ## 2. self-host
 
