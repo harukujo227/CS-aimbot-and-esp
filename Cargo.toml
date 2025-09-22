@@ -4,7 +4,8 @@ version = "4.2.0"
 edition = "2024"
 
 [dependencies]
-bincode = {version = "2.0",features = ["std", "serde"]}
+arboard = { version = "3.6", default-features = false }
+bincode = { version = "2.0", features = ["std", "serde"] }
 bytemuck = "1.22"
 crossbeam = "0.8"
 egui = "0.32"

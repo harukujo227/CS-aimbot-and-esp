@@ -1,5 +1,5 @@
 use std::{
-    net::{TcpStream, ToSocketAddrs},
+    net::TcpStream,
     sync::{Arc, Mutex},
     time::Duration,
 };

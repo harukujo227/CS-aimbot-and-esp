@@ -108,7 +108,7 @@ impl App {
                 Tab::Aimbot => self.aimbot_settings(ui),
                 Tab::Player => self.player_settings(ui),
                 Tab::Hud => self.hud_settings(ui),
-                Tab::Radar => self.radar_settings(ui, ctx),
+                Tab::Radar => self.radar_settings(ui),
                 Tab::Unsafe => self.unsafe_settings(ui),
                 Tab::Config => self.config_settings(ui, ctx),
             }
@@ -724,7 +724,7 @@ impl App {
         });
     }
 
-    fn radar_settings(&mut self, ui: &mut Ui, ctx: &Context) {
+    fn radar_settings(&mut self, ui: &mut Ui) {
         egui::ScrollArea::vertical()
             .auto_shrink([false, true])
             .id_salt("hud_left")
@@ -760,20 +760,25 @@ impl App {
                     }
 
                     if let RadarStatus::Connected(uuid) = &self.radar_status {
-                        if ui.button("Open").clicked() {
-                            let link = format!("http://{}/?uuid={}", self.config.radar.url, uuid);
-                            std::process::Command::new("xdg-open")
-                                .arg(&link)
-                                .status()
-                                .unwrap();
-                            log::info!("opened link ({link})");
-                        }
+                        ui.horizontal(|ui| {
+                            if ui.button("Open").clicked() {
+                                let link =
+                                    format!("http://{}/?uuid={}", self.config.radar.url, uuid);
+                                std::process::Command::new("xdg-open")
+                                    .arg(&link)
+                                    .status()
+                                    .unwrap();
+                                log::info!("opened link ({link})");
+                            }
 
-                        if ui.button("Copy Link").clicked() {
-                            let link = format!("http://{}/?uuid={}", self.config.radar.url, uuid);
-                            log::info!("copied link ({link})");
-                            ctx.copy_text(link);
-                        }
+                            if ui.button("Copy Link").clicked() {
+                                let link =
+                                    format!("http://{}/?uuid={}", self.config.radar.url, uuid);
+                                log::info!("copied link ({link})");
+                                // ctx.copy_text(link);
+                                arboard::Clipboard::new().unwrap().set_text(link).unwrap();
+                            }
+                        });
                     }
                 });
             });
