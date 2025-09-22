@@ -81,7 +81,7 @@ impl Radar {
                     let res = websocket.send(ws_message);
                     if let Err(error) = res {
                         log::warn!("could not send radar message: {error}");
-                        websocket.close(None);
+                        let _ = websocket.close(None);
                     }
                 } else {
                     println!("[ERROR] Message too short or empty, not sending");
