@@ -776,7 +776,7 @@ impl App {
                                     format!("http://{}/?uuid={}", self.config.radar.url, uuid);
                                 log::info!("copied link ({link})");
                                 // ctx.copy_text(link);
-                                arboard::Clipboard::new().unwrap().set_text(link).unwrap();
+                                self.clipboard.set_text(link).unwrap();
                             }
                         });
                     }
