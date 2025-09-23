@@ -1470,8 +1470,12 @@ impl App {
         let stroke = Stroke::new(self.config.hud.line_width, color);
 
         for (a, b) in &Bones::CONNECTIONS {
-            let a = player.bones.get(a).unwrap();
-            let b = player.bones.get(b).unwrap();
+            let Some(a) = player.bones.get(a) else {
+                continue;
+            };
+            let Some(b) = player.bones.get(b) else {
+                continue;
+            };
 
             let Some(a) = world_to_screen(a, data) else {
                 continue;
