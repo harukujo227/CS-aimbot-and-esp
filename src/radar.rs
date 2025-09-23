@@ -67,6 +67,11 @@ impl Radar {
             return;
         }
 
+        if self.websocket.as_ref().is_some_and(|ws| !ws.can_write()) {
+            log::info!("websocket closed");
+            self.websocket = None;
+        }
+
         if let Some(websocket) = &mut self.websocket
             && let Some(uuid) = &self.uuid
             && !should_reconnect
@@ -76,15 +81,11 @@ impl Radar {
             if data.in_game {
                 let message_string = message(&data, uuid);
 
-                if !message_string.is_empty() && message_string.len() > 50 {
-                    let ws_message = tungstenite::Message::text(message_string);
-                    let res = websocket.send(ws_message);
-                    if let Err(error) = res {
-                        log::warn!("could not send radar message: {error}");
-                        let _ = websocket.close(None);
-                    }
-                } else {
-                    println!("[ERROR] Message too short or empty, not sending");
+                let ws_message = tungstenite::Message::text(message_string);
+                let res = websocket.send(ws_message);
+                if let Err(error) = res {
+                    log::warn!("could not send radar message: {error}");
+                    let _ = websocket.close(None);
                 }
             }
         } else if !self.connect() {
