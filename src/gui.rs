@@ -1542,62 +1542,44 @@ impl App {
         use glow::HasContext as _;
 
         let self_ptr = self as *mut Self;
-        self.gui_window.as_mut().unwrap().make_current().unwrap();
-        self.gui_glow
-            .as_mut()
-            .unwrap()
-            .run(self.gui_window.as_mut().unwrap().window(), |ctx| {
-                (unsafe { &mut *self_ptr }).gui(ctx)
-            });
+
+        let gui_window = self.gui_window.as_ref().unwrap();
+        let gui_glow = self.gui_glow.as_mut().unwrap();
+
+        let overlay_window = self.overlay_window.as_ref().unwrap();
+        let overlay_glow = self.overlay_glow.as_mut().unwrap();
+
+        gui_window.make_current().unwrap();
+        gui_glow.run(gui_window.window(), |ctx| {
+            (unsafe { &mut *self_ptr }).gui(ctx)
+        });
 
         unsafe {
-            self.gui_gl
-                .as_mut()
-                .unwrap()
-                .clear_color(0.0, 0.0, 0.0, 1.0);
-            self.gui_gl.as_mut().unwrap().clear(glow::COLOR_BUFFER_BIT);
+            let gui_gl = self.gui_gl.as_ref().unwrap();
+            gui_gl.clear_color(0.0, 0.0, 0.0, 1.0);
+            gui_gl.clear(glow::COLOR_BUFFER_BIT);
         }
 
-        self.gui_glow
-            .as_mut()
-            .unwrap()
-            .paint(self.gui_window.as_mut().unwrap().window());
+        gui_glow.paint(gui_window.window());
 
-        self.gui_window.as_mut().unwrap().swap_buffers().unwrap();
+        gui_window.swap_buffers().unwrap();
 
-        self.overlay_window
-            .as_mut()
-            .unwrap()
-            .make_current()
-            .unwrap();
-        self.overlay_glow.as_mut().unwrap().run(
-            self.overlay_window.as_mut().unwrap().window(),
-            move |egui_ctx| {
-                (unsafe { &mut *self_ptr }).overlay(egui_ctx);
-            },
-        );
+        overlay_window.window().set_cursor_hittest(false).unwrap();
+        overlay_window.make_current().unwrap();
+
+        overlay_glow.run(overlay_window.window(), move |egui_ctx| {
+            (unsafe { &mut *self_ptr }).overlay(egui_ctx);
+        });
 
         unsafe {
-            self.overlay_gl
-                .as_mut()
-                .unwrap()
-                .clear_color(0.0, 0.0, 0.0, 0.0);
-            self.overlay_gl
-                .as_mut()
-                .unwrap()
-                .clear(glow::COLOR_BUFFER_BIT);
+            let overlay_gl = self.overlay_gl.as_ref().unwrap();
+            overlay_gl.clear_color(0.0, 0.0, 0.0, 0.0);
+            overlay_gl.clear(glow::COLOR_BUFFER_BIT);
         }
 
-        self.overlay_glow
-            .as_mut()
-            .unwrap()
-            .paint(self.overlay_window.as_mut().unwrap().window());
+        overlay_glow.paint(overlay_window.window());
 
-        self.overlay_window
-            .as_mut()
-            .unwrap()
-            .swap_buffers()
-            .unwrap();
+        overlay_window.swap_buffers().unwrap();
     }
 }
 
