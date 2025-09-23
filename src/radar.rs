@@ -127,7 +127,7 @@ impl Radar {
 
         // send handshake, get uuid
         let message = tungstenite::Message::text(
-            serde_json::json!({"kind":"connect_server","uuid":self.uuid.to_string()}).to_string(),
+            serde_json::json!({"kind":"connect_server","uuid":self.uuid}).to_string(),
         );
         websocket.send(message).unwrap();
 
@@ -163,7 +163,7 @@ impl Radar {
 fn message(data: &Data, uuid: &Uuid) -> String {
     let json_obj = serde_json::json!({
         "kind": "update_data",
-        "uuid": uuid.to_string(),
+        "uuid": uuid,
         "players": data.players,
         "friendlies": data.friendlies,
         "bomb": data.bomb,
