@@ -7,6 +7,7 @@ use std::{
 use crossbeam::channel::{Receiver, Sender};
 use serde::Deserialize;
 use tungstenite::{WebSocket, client};
+use uuid::Uuid;
 
 use crate::{
     config::DEFAULT_URL,
@@ -16,7 +17,7 @@ use crate::{
 
 pub struct Radar {
     websocket: Option<WebSocket<TcpStream>>,
-    uuid: Option<String>,
+    uuid: Uuid,
 
     enabled: bool,
     url: String,
@@ -30,7 +31,7 @@ impl Radar {
     pub fn new(tx: Sender<Envelope>, rx: Receiver<Message>, data: Arc<Mutex<Data>>) -> Self {
         Self {
             websocket: None,
-            uuid: None,
+            uuid: Uuid::new_v4(),
 
             enabled: false,
             url: DEFAULT_URL.to_string(),
@@ -73,13 +74,12 @@ impl Radar {
         }
 
         if let Some(websocket) = &mut self.websocket
-            && let Some(uuid) = &self.uuid
             && !should_reconnect
         {
             let data = self.data.lock().unwrap();
 
             if data.in_game {
-                let message_string = message(&data, uuid);
+                let message_string = message(&data, &self.uuid);
 
                 let ws_message = tungstenite::Message::text(message_string);
                 let res = websocket.send(ws_message);
@@ -126,23 +126,25 @@ impl Radar {
         };
 
         // send handshake, get uuid
-        let message =
-            tungstenite::Message::text(serde_json::json!({"kind":"connect_server"}).to_string());
+        let message = tungstenite::Message::text(
+            serde_json::json!({"kind":"connect_server","uuid":self.uuid.to_string()}).to_string(),
+        );
         websocket.send(message).unwrap();
 
         loop {
             if websocket.can_read() {
                 let reply = websocket.read().unwrap();
-                let json: UuidReply =
+                let json: ConnectionAccept =
                     serde_json::from_str(reply.into_text().unwrap().as_str()).unwrap();
-                self.uuid = Some(json.uuid);
+                if json.kind != "accept" {
+                    log::warn!("invalid first radar message: {}", json.kind);
+                }
                 break;
             }
         }
 
         self.websocket = Some(websocket);
-        let uuid = self.uuid.clone().unwrap();
-        self.send_message(Message::RadarStatus(RadarStatus::Connected(uuid)));
+        self.send_message(Message::RadarStatus(RadarStatus::Connected(self.uuid)));
 
         true
     }
@@ -158,10 +160,10 @@ impl Radar {
     }
 }
 
-fn message(data: &Data, uuid: &str) -> String {
+fn message(data: &Data, uuid: &Uuid) -> String {
     let json_obj = serde_json::json!({
         "kind": "update_data",
-        "uuid": uuid,
+        "uuid": uuid.to_string(),
         "players": data.players,
         "friendlies": data.friendlies,
         "bomb": data.bomb,
@@ -179,7 +181,6 @@ fn message(data: &Data, uuid: &str) -> String {
 
 #[allow(unused)]
 #[derive(Deserialize)]
-struct UuidReply {
+struct ConnectionAccept {
     pub kind: String,
-    pub uuid: String,
 }
