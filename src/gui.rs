@@ -1491,8 +1491,12 @@ impl App {
         if !self.config.player.head_circle {
             return;
         }
-        let neck = player.bones.get(&Bones::Neck).unwrap();
-        let spine = player.bones.get(&Bones::Spine3).unwrap();
+        let Some(neck) = player.bones.get(&Bones::Neck) else {
+            return;
+        };
+        let Some(spine) = player.bones.get(&Bones::Spine3) else {
+            return;
+        };
 
         let Some(neck) = world_to_screen(neck, data) else {
             return;
