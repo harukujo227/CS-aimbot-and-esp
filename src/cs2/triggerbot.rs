@@ -16,8 +16,8 @@ pub struct Triggerbot {
     next_shot: Option<Instant>,
     previous_button_state: bool,
     pub(crate) active: bool,
-    additional_shots_remaining: u32,
-    additional_shot_delay: Option<Instant>,
+    additional_shooting_end_time: Option<Instant>,
+    next_additional_shot: Option<Instant>,
 }
 
 impl CS2 {
@@ -128,37 +128,56 @@ impl CS2 {
         let delay = normal.sample(&mut rng()).max(0.0) as u64;
 
         self.trigger.next_shot = Some(Instant::now() + Duration::from_millis(delay));
-        self.trigger.additional_shots_remaining = config.additional_shots;
+        
+        if config.additional_duration_ms > 0 {
+            self.trigger.additional_shooting_end_time = Some(
+                Instant::now() + Duration::from_millis(delay as u64 + config.additional_duration_ms as u64)
+            );
+        } else {
+            self.trigger.additional_shooting_end_time = None;
+        }
     }
 
     pub fn triggerbot_shoot(&mut self, mouse: &mut Mouse) {
+        let now = Instant::now();
+        
         if let Some(shot_time) = self.trigger.next_shot
-            && Instant::now() >= shot_time
+            && now >= shot_time
         {
             mouse.left_press();
             mouse.left_release();
             self.trigger.next_shot = None;
             
-            if self.trigger.additional_shots_remaining > 0 {
+            if self.trigger.additional_shooting_end_time.is_some() {
                 let additional_delay = 50 + (rand::rng().random::<u64>() % 100);
-                self.trigger.additional_shot_delay = Some(Instant::now() + Duration::from_millis(additional_delay));
+                self.trigger.next_additional_shot = Some(now + Duration::from_millis(additional_delay));
             }
         }
         
-        if let Some(additional_shot_time) = self.trigger.additional_shot_delay
-            && Instant::now() >= additional_shot_time
-            && self.trigger.additional_shots_remaining > 0
+        if let Some(additional_shot_time) = self.trigger.next_additional_shot
+            && let Some(end_time) = self.trigger.additional_shooting_end_time
+            && now >= additional_shot_time
+            && now < end_time
         {
             mouse.left_press();
             mouse.left_release();
-            self.trigger.additional_shots_remaining -= 1;
             
-            if self.trigger.additional_shots_remaining > 0 {
-                let next_delay = 40 + (rand::rng().random::<u64>() % 80);
-                self.trigger.additional_shot_delay = Some(Instant::now() + Duration::from_millis(next_delay));
+            let next_delay = 40 + (rand::rng().random::<u64>() % 80);
+            let next_shot_time = now + Duration::from_millis(next_delay);
+            
+            if next_shot_time < end_time {
+                self.trigger.next_additional_shot = Some(next_shot_time);
             } else {
-                self.trigger.additional_shot_delay = None;
+                self.trigger.next_additional_shot = None;
+                self.trigger.additional_shooting_end_time = None;
             }
+        }
+        
+        if let Some(end_time) = self.trigger.additional_shooting_end_time
+            && now >= end_time
+        {
+            self.trigger.next_additional_shot = None;
+            self.trigger.additional_shooting_end_time = None;
         }
     }
 }
