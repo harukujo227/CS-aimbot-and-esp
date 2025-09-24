@@ -28,7 +28,6 @@ impl CS2 {
             return;
         }
 
-        // button state
         let button_state = self.is_button_down(&hotkey);
         if config.mode == TriggerbotMode::Hold && !button_state {
             return;
@@ -94,12 +93,9 @@ impl CS2 {
 
         self.trigger.next_shot = Some(Instant::now() + Duration::from_millis(delay));
         self.trigger.additional_shots_remaining = config.additional_shots;
-        
-        log::info!("Triggerbot triggered! Additional shots: {}", config.additional_shots);
     }
 
     pub fn triggerbot_shoot(&mut self, mouse: &mut Mouse) {
-        // Handle initial shot
         if let Some(shot_time) = self.trigger.next_shot
             && Instant::now() >= shot_time
         {
@@ -107,16 +103,12 @@ impl CS2 {
             mouse.left_release();
             self.trigger.next_shot = None;
             
-            // Schedule additional shots if configured
             if self.trigger.additional_shots_remaining > 0 {
-                // Random delay between 50-150ms for additional shots to make it less obvious
                 let additional_delay = 50 + (rand::rng().random::<u64>() % 100);
                 self.trigger.additional_shot_delay = Some(Instant::now() + Duration::from_millis(additional_delay));
-                log::info!("Scheduled {} additional shots, first in {}ms", self.trigger.additional_shots_remaining, additional_delay);
             }
         }
         
-        // Handle additional shots
         if let Some(additional_shot_time) = self.trigger.additional_shot_delay
             && Instant::now() >= additional_shot_time
             && self.trigger.additional_shots_remaining > 0
@@ -124,16 +116,12 @@ impl CS2 {
             mouse.left_press();
             mouse.left_release();
             self.trigger.additional_shots_remaining -= 1;
-            log::info!("Fired additional shot, {} shots remaining", self.trigger.additional_shots_remaining);
             
             if self.trigger.additional_shots_remaining > 0 {
-                // Schedule next additional shot with random delay (40-120ms)
                 let next_delay = 40 + (rand::rng().random::<u64>() % 80);
                 self.trigger.additional_shot_delay = Some(Instant::now() + Duration::from_millis(next_delay));
-                log::info!("Next additional shot in {}ms", next_delay);
             } else {
                 self.trigger.additional_shot_delay = None;
-                log::info!("All additional shots completed");
             }
         }
     }
