@@ -498,13 +498,6 @@ impl App {
                         self.send_config();
                     }
 
-                    if ui
-                        .checkbox(&mut self.config.player.head_circle, "Head Circle")
-                        .changed()
-                    {
-                        self.send_config();
-                    }
-
                     ui.horizontal(|ui| {
                         if ui
                             .add(
@@ -587,6 +580,13 @@ impl App {
                         }
                     }
                 });
+
+            if ui
+                .checkbox(&mut self.config.player.head_circle, "Head Circle")
+                .changed()
+            {
+                self.send_config();
+            }
         });
     }
 
