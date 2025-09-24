@@ -138,6 +138,7 @@ pub struct TriggerbotConfig {
     pub scope_check: bool,
     pub velocity_check: bool,
     pub velocity_threshold: f32,
+    pub smoke_check: bool,
     pub head_only: bool,
     pub additional_shots: u32,
 }
@@ -153,6 +154,7 @@ impl Default for TriggerbotConfig {
             scope_check: true,
             velocity_check: true,
             velocity_threshold: 100.0,
+            smoke_check: true,
             head_only: false,
             additional_shots: 0,
         }
@@ -202,6 +204,7 @@ pub enum BoxMode {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlayerConfig {
     pub enabled: bool,
+    pub esp_hotkey: KeyCode,
     pub draw_box: DrawMode,
     pub box_mode: BoxMode,
     pub box_visible_color: Color32,
@@ -221,6 +224,7 @@ impl Default for PlayerConfig {
     fn default() -> Self {
         Self {
             enabled: true,
+            esp_hotkey: KeyCode::KeyX,
             draw_box: DrawMode::Color,
             box_mode: BoxMode::Gap,
             box_visible_color: Color32::WHITE,
