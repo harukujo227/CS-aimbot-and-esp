@@ -197,10 +197,10 @@ pub enum BoxMode {
     Full,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlayerConfig {
     pub enabled: bool,
+    pub esp_hotkey: KeyCode,
     pub draw_box: DrawMode,
     pub box_mode: BoxMode,
     pub box_visible_color: Color32,
@@ -214,13 +214,13 @@ pub struct PlayerConfig {
     pub player_name: bool,
     pub weapon_icon: bool,
     pub tags: bool,
-    pub wallhack_hotkey: KeyCode,
 }
 
 impl Default for PlayerConfig {
     fn default() -> Self {
         Self {
             enabled: true,
+            esp_hotkey: KeyCode::KeyX,
             draw_box: DrawMode::Color,
             box_mode: BoxMode::Gap,
             box_visible_color: Color32::WHITE,
@@ -234,7 +234,6 @@ impl Default for PlayerConfig {
             player_name: true,
             weapon_icon: true,
             tags: true,
-            wallhack_hotkey: KeyCode::Key0,
         }
     }
 }

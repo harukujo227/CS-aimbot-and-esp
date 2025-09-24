@@ -522,17 +522,13 @@ impl App {
                 self.send_config();
             }
 
-            egui::ComboBox::new("wallhack_hotkey", "Wallhack Toggle")
-                .selected_text(format!("{:?}", self.config.player.wallhack_hotkey))
+            egui::ComboBox::new("esp_hotkey", "ESP Hotkey")
+                .selected_text(format!("{:?}", self.config.player.esp_hotkey))
                 .show_ui(ui, |ui| {
                     for key_code in KeyCode::iter() {
                         let text = format!("{:?}", &key_code);
                         if ui
-                            .selectable_value(
-                                &mut self.config.player.wallhack_hotkey,
-                                key_code,
-                                text,
-                            )
+                            .selectable_value(&mut self.config.player.esp_hotkey, key_code, text)
                             .clicked()
                         {
                             self.send_config();
