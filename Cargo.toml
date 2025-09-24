@@ -34,3 +34,4 @@ uuid = { version = "1.18", features = ["v4", "serde"] }
 [profile.release]
 lto = true
 strip = "debuginfo"
+debug = true

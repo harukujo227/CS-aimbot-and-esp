@@ -79,6 +79,9 @@ pub enum Weapon {
 
 impl Weapon {
     pub fn from_handle(handle: u64, cs2: &CS2) -> Self {
+        if handle > u64::MAX - 50000 {
+            return Self::Unknown;
+        }
         let weapon_index: u16 = cs2.process.read(
             handle
                 + cs2.offsets.weapon.attribute_manager
