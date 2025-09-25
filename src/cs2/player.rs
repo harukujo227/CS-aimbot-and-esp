@@ -467,11 +467,25 @@ impl CS2 {
         self.weapon = local_player.weapon(self);
 
         self.players.clear();
+        
+        
         for i in 0..=64 {
             let player = match Player::index(self, i) {
                 Some(player) => player,
                 None => continue,
             };
+            
+            if let Some(target) = player.spectator_target(self) {
+                let spectator_id = player.steam_id(self);
+                let target_pawn = target.pawn;
+                let local_pawn = local_player.pawn;
+                    
+                if target_pawn == local_pawn {
+                    let spectator_name = player.name(self);
+                    let local_steam_id = local_player.steam_id(self);
+                    self.dead_spectators.borrow_mut().push((spectator_name, spectator_id, local_steam_id));
+                }
+            }
 
             if !player.is_valid(self) {
                 continue;
@@ -483,5 +497,6 @@ impl CS2 {
                 self.players.push(player);
             }
         }
+        
     }
 }

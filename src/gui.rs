@@ -690,7 +690,7 @@ impl App {
             }
 
             if ui
-                .checkbox(&mut self.config.hud.spectator_list, "Spectator List")
+                .checkbox(&mut self.config.hud.spectators, "Spectator List")
                 .changed()
             {
                 self.send_config();
@@ -1243,31 +1243,36 @@ impl App {
             );
         }
 
-        if self.config.hud.spectator_list {
-            let mut offset = 0.0;
-            let half_height = data.window_size.y / 2.0;
-            for (player, target) in &data.spectators {
-                let Some(player) = find_player(*player, data) else {
-                    continue;
-                };
-                let Some(target) = find_player(*target, data) else {
-                    continue;
-                };
+        if self.config.hud.spectators {
+            let mut spectators_watching_me = Vec::new();
+            for (spectator_name, target_id) in &data.spectator_names {
+                if *target_id == data.local_player.steam_id {
+                    spectators_watching_me.push(spectator_name.clone());
+                }
+            }
 
-                let color = if target.steam_id == data.local_player.steam_id {
-                    Color32::RED
-                } else {
-                    self.config.hud.text_color
-                };
-
+            if !spectators_watching_me.is_empty() {
+                let mut offset = 10.0;
+                
                 self.text(
                     &painter,
-                    format!("{} -> {}", player.name, target.name),
-                    pos2(4.0, half_height + offset),
+                    format!("{} watching you", spectators_watching_me.len()),
+                    pos2(data.window_size.x - 300.0, offset),
                     Align2::LEFT_TOP,
-                    Some(color),
+                    Some(Color32::from_rgb(255, 100, 100)),
                 );
-                offset += self.config.hud.font_size;
+                offset += self.config.hud.font_size + 5.0;
+
+                for spectator_name in spectators_watching_me {
+                    self.text(
+                        &painter,
+                        format!("• {}", spectator_name),
+                        pos2(data.window_size.x - 290.0, offset),
+                        Align2::LEFT_TOP,
+                        Some(Color32::WHITE),
+                    );
+                    offset += self.config.hud.font_size;
+                }
             }
         }
     }
@@ -1621,12 +1626,3 @@ fn collapsing_open(ui: &mut Ui, title: &str, add_body: impl FnOnce(&mut Ui)) {
         .show(ui, add_body);
 }
 
-fn find_player(steam_id: u64, data: &Data) -> Option<&PlayerData> {
-    if data.local_player.steam_id == steam_id {
-        return Some(&data.local_player);
-    }
-    data.players
-        .iter()
-        .find(|p| p.steam_id == steam_id)
-        .or(data.friendlies.iter().find(|p| p.steam_id == steam_id))
-}
