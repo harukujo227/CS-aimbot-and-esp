@@ -9,11 +9,14 @@ pub fn router(
     tx_radar: Sender<Message>,
 ) {
     while let Ok(envelope) = rx.recv() {
-        match envelope.target {
+        if match envelope.target {
             Target::Gui => tx_gui.send(envelope.message),
             Target::Game => tx_game.send(envelope.message),
             Target::Radar => tx_radar.send(envelope.message),
         }
-        .unwrap();
+        .is_err()
+        {
+            std::process::exit(1);
+        }
     }
 }

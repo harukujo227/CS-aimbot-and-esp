@@ -155,7 +155,7 @@ impl Radar {
             message,
         };
         if self.tx.send(envelope).is_err() {
-            std::process::exit(0);
+            std::process::exit(1);
         }
     }
 }

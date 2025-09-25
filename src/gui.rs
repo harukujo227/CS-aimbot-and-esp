@@ -11,8 +11,8 @@ use crate::{
     bvh::{Aabb, Triangle},
     color::Colors,
     config::{
-        AimbotConfig, BoxMode, CONFIG_PATH, Config, DrawMode, TargetingMode, TriggerbotMode, VERSION,
-        WeaponConfig, available_configs, delete_config, parse_config, write_config,
+        AimbotConfig, BoxMode, CONFIG_PATH, Config, DrawMode, TargetingMode, TriggerbotMode,
+        VERSION, WeaponConfig, available_configs, delete_config, parse_config, write_config,
     },
     constants::cs2,
     cs2::{bones::Bones, weapon::Weapon, weapon_class::WeaponClass},
@@ -70,7 +70,9 @@ impl App {
     }
 
     pub fn send_message(&self, message: Message, target: Target) {
-        self.tx.send(Envelope { target, message }).unwrap();
+        if self.tx.send(Envelope { target, message }).is_err() {
+            std::process::exit(1);
+        }
     }
 
     fn save(&self) {
@@ -259,7 +261,11 @@ impl App {
                     for mode in TargetingMode::iter() {
                         let text = format!("{:?}", &mode);
                         if ui
-                            .selectable_value(&mut self.weapon_config().aimbot.targeting_mode, mode, text)
+                            .selectable_value(
+                                &mut self.weapon_config().aimbot.targeting_mode,
+                                mode,
+                                text,
+                            )
                             .clicked()
                         {
                             self.send_config();
@@ -1281,7 +1287,7 @@ impl App {
 
             if !spectators_watching_me.is_empty() {
                 let mut offset = 10.0;
-                
+
                 self.text(
                     &painter,
                     format!("{} watching you", spectators_watching_me.len()),
@@ -1653,4 +1659,3 @@ fn collapsing_open(ui: &mut Ui, title: &str, add_body: impl FnOnce(&mut Ui)) {
         .default_open(true)
         .show(ui, add_body);
 }
-
