@@ -382,6 +382,20 @@ impl App {
             {
                 self.send_config();
             }
+
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.weapon_config().triggerbot.additional_duration_ms)
+                            .range(0..=2000)
+                            .speed(10.0),
+                    )
+                    .changed()
+                {
+                    self.send_config();
+                }
+                ui.label("Additional Duration (ms)");
+            });
         });
 
         ui.collapsing("Checks\u{200b}", |ui| {
