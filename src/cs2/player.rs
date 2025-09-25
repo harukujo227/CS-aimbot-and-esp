@@ -341,6 +341,9 @@ impl Player {
         let data_address: u64 = cs2
             .process
             .read(self.pawn + cs2.offsets.pawn.aim_punch_cache + 0x08);
+        if data_address > u64::MAX - 50000 {
+            return Vec2::ZERO;
+        }
 
         cs2.process.read(data_address + (length - 1) * 12)
     }

@@ -106,7 +106,7 @@ impl Class {
 
         let mut fields = HashMap::new();
         let field_count: i16 = process.read(address + 0x1C);
-        if field_count < 0 {
+        if !(0..=20000).contains(&field_count) {
             return Self { name, fields };
         }
         let fields_vec: u64 = process.read(address + 0x28);
