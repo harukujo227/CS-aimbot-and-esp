@@ -1,4 +1,5 @@
 use std::{
+    cell::RefCell,
     collections::HashMap,
     sync::{Arc, Mutex},
     time::Instant,
@@ -48,6 +49,8 @@ pub struct CS2 {
     bvh: Arc<Mutex<HashMap<String, Bvh>>>,
     target: Target,
     players: Vec<Player>,
+    previous_spectators: RefCell<HashMap<u64, u64>>,
+    dead_spectators: RefCell<Vec<(String, u64, u64)>>,
     entities: Vec<Entity>,
     recoil: Recoil,
     trigger: Triggerbot,
@@ -123,7 +126,17 @@ impl Game for CS2 {
         data.friendlies.clear();
         data.weapons.clear();
         data.spectators.clear();
-
+        data.spectator_names.clear();
+        
+        let mut current_spectators = HashMap::new();
+        
+        let dead_spectators = {
+            let mut dead_specs = self.dead_spectators.borrow_mut();
+            let specs = dead_specs.clone();
+            dead_specs.clear();
+            specs
+        };
+        
         let sdl_window = self.process.read::<u64>(self.offsets.direct.sdl_window);
         if sdl_window == 0 {
             data.window_position = Vec2::ZERO;
@@ -170,10 +183,6 @@ impl Game for CS2 {
                 data.players.push(player_data);
             }
 
-            if let Some(target) = player.spectator_target(self) {
-                data.spectators
-                    .push((player.steam_id(self), target.steam_id(self)));
-            }
         }
 
         let local_player_data = PlayerData {
@@ -213,6 +222,15 @@ impl Game for CS2 {
         };
         data.wallhack_active = self.esp_enabled(config);
 
+
+        for (spectator_name, spectator_id, target_id) in dead_spectators {
+            data.spectators.push((spectator_id, target_id));
+            data.spectator_names.push((spectator_name, target_id));
+            current_spectators.insert(spectator_id, target_id);
+        }
+
+        *self.previous_spectators.borrow_mut() = current_spectators;
+
         data.view_matrix = self.process.read::<Mat4>(self.offsets.direct.view_matrix);
 
         if let Some(bomb) = PlantedC4::get(self) {
@@ -235,6 +253,8 @@ impl CS2 {
             bvh,
             target: Target::default(),
             players: Vec::with_capacity(64),
+            previous_spectators: RefCell::new(HashMap::new()),
+            dead_spectators: RefCell::new(Vec::new()),
             entities: Vec::with_capacity(128),
             recoil: Recoil::default(),
             trigger: Triggerbot::default(),

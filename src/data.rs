@@ -22,6 +22,7 @@ pub struct Data {
     pub triggerbot_active: bool,
     pub wallhack_active: bool,
     pub spectators: Vec<(u64, u64)>,
+    pub spectator_names: Vec<(String, u64)>, // (spectator_name, target_id)
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
