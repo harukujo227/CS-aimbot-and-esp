@@ -87,6 +87,7 @@ impl Game for CS2 {
     fn run(&mut self, config: &Config, mouse: &mut Mouse) {
         if !self.process.is_valid() {
             self.is_valid = false;
+            log::debug!("process is no longer valid");
             return;
         }
 
@@ -127,16 +128,16 @@ impl Game for CS2 {
         data.weapons.clear();
         data.spectators.clear();
         data.spectator_names.clear();
-        
+
         let mut current_spectators = HashMap::new();
-        
+
         let dead_spectators = {
             let mut dead_specs = self.dead_spectators.borrow_mut();
             let specs = dead_specs.clone();
             dead_specs.clear();
             specs
         };
-        
+
         let sdl_window = self.process.read::<u64>(self.offsets.direct.sdl_window);
         if sdl_window == 0 {
             data.window_position = Vec2::ZERO;

@@ -19,7 +19,6 @@ pub struct Process {
     path: PathBuf,
     pub min: u64,
     pub max: u64,
-    is_setup: bool,
 }
 
 thread_local! {
@@ -39,7 +38,6 @@ impl Process {
                     .unwrap(),
                 min: u64::MAX,
                 max: u64::MIN,
-                is_setup: false,
             };
         }
 
@@ -53,7 +51,6 @@ impl Process {
                 .unwrap(),
             min: u64::MAX,
             max: u64::MIN,
-            is_setup: false,
         };
 
         let libs: Vec<u64> = cs2::LIBS
@@ -73,7 +70,6 @@ impl Process {
             }
         }
 
-        ret.is_setup = true;
         ret
     }
 
@@ -82,9 +78,6 @@ impl Process {
     }
 
     pub fn read<T: AnyBitPattern + Default>(&self, address: u64) -> T {
-        if (address < self.min || address > self.max) && self.is_setup {
-            log::debug!("tried to read at address 0x{address:x}");
-        }
         let mut buffer = vec![0u8; size_of::<T>()];
 
         let local_iov = iovec {
@@ -152,9 +145,6 @@ impl Process {
     }
 
     pub fn write<T: NoUninit>(&self, address: u64, value: T) {
-        if (address < self.min || address > self.max) && self.is_setup {
-            log::debug!("tried to write at address 0x{address:x}");
-        }
         let mut buffer = bytemuck::bytes_of(&value).to_vec();
 
         let local_iov = iovec {
@@ -180,9 +170,6 @@ impl Process {
 
     pub fn read_string_uncached(&self, address: u64) -> String {
         let mut bytes = Vec::with_capacity(8);
-        if (address < self.min || address > self.max) && self.is_setup {
-            log::debug!("tried to read at address 0x{address:x}");
-        }
         let mut i = address;
         loop {
             let c = self.read::<u8>(i);
@@ -197,9 +184,6 @@ impl Process {
     }
 
     pub fn read_bytes(&self, address: u64, count: u64) -> Vec<u8> {
-        if (address < self.min || address > self.max) && self.is_setup {
-            log::debug!("tried to read at address 0x{address:x}");
-        }
         let mut buffer = vec![0u8; count as usize];
         self.file.read_at(&mut buffer, address).unwrap_or(0);
         buffer

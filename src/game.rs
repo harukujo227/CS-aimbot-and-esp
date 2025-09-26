@@ -10,12 +10,13 @@ use crossbeam::channel::{Receiver, Sender};
 use crate::{
     bvh::Bvh,
     config::{
-        parse_config, write_config, Config, CONFIG_PATH, DEFAULT_CONFIG_NAME, LOOP_DURATION, SLEEP_DURATION
+        CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, LOOP_DURATION, SLEEP_DURATION, parse_config,
+        write_config,
     },
     cs2::CS2,
     data::Data,
     message::{Envelope, GameStatus, Message, Target},
-    mouse::{discover_mice, DeviceStatus, Mouse},
+    mouse::{DeviceStatus, Mouse, discover_mice},
 };
 
 pub trait Game: std::fmt::Debug {
@@ -31,7 +32,7 @@ pub struct GameManager {
     data: Arc<Mutex<Data>>,
     config: Config,
     mouse: Mouse,
-    aimbot: CS2,
+    game: CS2,
     manual_mouse: bool,
     preferred_event: Option<String>,
 }
@@ -51,7 +52,7 @@ impl GameManager {
             data,
             config: Config::default(),
             mouse,
-            aimbot: CS2::new(bvh),
+            game: CS2::new(bvh),
             manual_mouse: false,
             preferred_event: None,
         };
@@ -102,30 +103,36 @@ impl GameManager {
                 mouse_valid = self.find_mouse();
             }
 
-            if !self.aimbot.is_valid() {
+            if !self.game.is_valid() {
                 if previous_status == GameStatus::Working {
                     self.send_game_message(Message::GameStatus(GameStatus::GameNotStarted));
                     previous_status = GameStatus::GameNotStarted;
                 }
-                self.aimbot.setup();
+                self.game.setup();
             }
 
-            if mouse_valid && self.aimbot.is_valid() {
+            if mouse_valid && self.game.is_valid() {
                 if previous_status == GameStatus::GameNotStarted {
                     self.send_game_message(Message::GameStatus(GameStatus::Working));
                     previous_status = GameStatus::Working;
                 }
-                self.aimbot.run(&self.config, &mut self.mouse);
+                self.game.run(&self.config, &mut self.mouse);
                 let mut data = self.data.lock().unwrap();
-                self.aimbot.data(&self.config, &mut data);
+                self.game.data(&self.config, &mut data);
+            } else {
+                *self.data.lock().unwrap() = Data::default();
             }
 
-            if self.aimbot.is_valid() && mouse_valid {
+            if self.game.is_valid() && mouse_valid {
                 let elapsed = start.elapsed();
                 if elapsed < LOOP_DURATION {
                     sleep(LOOP_DURATION - elapsed);
                 } else {
-                    log::debug!("aimbot loop took {}ms", elapsed.as_millis());
+                    log::debug!(
+                        "game loop took {} ms (max {} ms)",
+                        elapsed.as_millis(),
+                        LOOP_DURATION.as_millis()
+                    );
                     sleep(LOOP_DURATION);
                 }
             } else {
