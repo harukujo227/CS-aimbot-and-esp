@@ -11,47 +11,21 @@ use bytemuck::AnyBitPattern;
 use glam::{Mat4, Quat, Vec2, Vec3, Vec4};
 use sha2::Digest;
 
-use crate::{bvh::{Bvh, Triangle}, config::CONFIG_PATH};
+use crate::{
+    bvh::{Bvh, Triangle},
+    config::CONFIG_PATH,
+};
 
 const RELEASE_URL: &str =
     "https://api.github.com/repos/ValveResourceFormat/ValveResourceFormat/releases/latest";
 const ASSET_NAME: &str = "cli-linux-x64.zip";
 
 pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, force_reparse: bool) {
-    let client = ureq::Agent::new_with_defaults();
-
-    let release: serde_json::Value = client
-        .get(RELEASE_URL)
-        .call()
-        .expect("failed to fetch release metadata")
-        .body_mut()
-        .read_json()
-        .expect("failed to extract json from release metadata");
-
-    let assets = release["assets"]
-        .as_array()
-        .expect("invalid asset metadata format");
-    let asset = assets
-        .iter()
-        .find(|&a| a["name"].as_str().unwrap_or_default() == ASSET_NAME)
-        .expect("could not find source 2 viewer linux cli");
-
-    let checksum = asset["digest"]
-        .as_str()
-        .expect("could not find asset hash")
-        .replace("sha256:", "");
-
     let file_path = CONFIG_PATH.join(ASSET_NAME);
     let dir = file_path.parent().unwrap().join("source2viewer");
     let exe_path = dir.join("Source2Viewer-CLI");
 
-    if needs_updating(&file_path, &checksum) {
-        let url = asset["browser_download_url"]
-            .as_str()
-            .expect("could not find asset download url");
-        download_s2v(&client, url, &file_path);
-        unzip_s2v(&file_path, &dir);
-    }
+    check_update(&file_path, &dir);
     if !dir.exists() {
         unzip_s2v(&file_path, &dir);
     }
@@ -125,7 +99,7 @@ pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, force_reparse: bool) {
             continue;
         }
 
-        Command::new(exe_path.as_os_str())
+        let _ = Command::new(exe_path.as_os_str())
             .args([
                 "-i",
                 path.to_str().unwrap(),
@@ -135,8 +109,7 @@ pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, force_reparse: bool) {
                 "-f",
                 &format!("maps/{map_name}/world_physics.vmdl_c"),
             ])
-            .output()
-            .unwrap();
+            .output();
     }
 
     let cpus = std::thread::available_parallelism()
@@ -459,9 +432,35 @@ enum Attribute {
     U64Array(Vec<u64>),
 }
 
-fn needs_updating(file_path: &Path, checksum: &str) -> bool {
+fn check_update(file_path: &Path, dir: &Path) {
+    let client = ureq::Agent::new_with_defaults();
+
+    let mut response = client
+        .get(RELEASE_URL)
+        .call()
+        .expect("failed to fetch release metadata");
+    let release: serde_json::Value = response
+        .body_mut()
+        .read_json()
+        .expect("failed to extract json from release metadata");
+
+    let assets = release["assets"]
+        .as_array()
+        .expect("invalid asset metadata format");
+    let asset = assets
+        .iter()
+        .find(|&a| a["name"].as_str().unwrap_or_default() == ASSET_NAME)
+        .expect("could not find source 2 viewer linux cli");
+
+    let checksum = asset["digest"]
+        .as_str()
+        .expect("could not find asset hash")
+        .replace("sha256:", "");
+
+    let mut needs_update = false;
+
     if !file_path.exists() {
-        return true;
+        needs_update = true;
     }
 
     let mut file = File::open(file_path).expect("could not open source 2 viewer file");
@@ -470,7 +469,14 @@ fn needs_updating(file_path: &Path, checksum: &str) -> bool {
     let file_checksum = hasher.finalize();
     let file_checksum = format!("{file_checksum:x}");
 
-    file_checksum != checksum
+    let needs_update = file_checksum != checksum || needs_update;
+    if needs_update {
+        let url = asset["browser_download_url"]
+            .as_str()
+            .expect("could not find asset download url");
+        download_s2v(&client, url, file_path);
+        unzip_s2v(file_path, dir);
+    }
 }
 
 fn download_s2v(client: &ureq::Agent, url: &str, file_path: &Path) {
