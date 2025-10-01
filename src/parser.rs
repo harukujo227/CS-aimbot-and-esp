@@ -457,10 +457,12 @@ fn check_update(file_path: &Path, dir: &Path) {
         .expect("could not find asset hash")
         .replace("sha256:", "");
 
-    let mut needs_update = false;
+    let url = asset["browser_download_url"]
+        .as_str()
+        .expect("could not find asset download url");
 
     if !file_path.exists() {
-        needs_update = true;
+        update_s2v(url, &client, file_path, dir);
     }
 
     let mut file = File::open(file_path).expect("could not open source 2 viewer file");
@@ -469,14 +471,14 @@ fn check_update(file_path: &Path, dir: &Path) {
     let file_checksum = hasher.finalize();
     let file_checksum = format!("{file_checksum:x}");
 
-    let needs_update = file_checksum != checksum || needs_update;
-    if needs_update {
-        let url = asset["browser_download_url"]
-            .as_str()
-            .expect("could not find asset download url");
-        download_s2v(&client, url, file_path);
-        unzip_s2v(file_path, dir);
+    if file_checksum != checksum {
+        update_s2v(url, &client, file_path, dir);
     }
+}
+
+fn update_s2v(url: &str, client: &ureq::Agent, file_path: &Path, dir: &Path) {
+    download_s2v(client, url, file_path);
+    unzip_s2v(file_path, dir);
 }
 
 fn download_s2v(client: &ureq::Agent, url: &str, file_path: &Path) {
