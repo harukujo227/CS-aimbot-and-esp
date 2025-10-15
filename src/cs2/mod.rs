@@ -482,7 +482,6 @@ impl CS2 {
         offsets.planted_c4.being_defused = client.get("C_PlantedC4", "m_bBeingDefused")?;
 
         offsets.entity_identity.size = client.get_class("CEntityIdentity")?.size();
-        println!("ident size: {}", offsets.entity_identity.size);
 
         log::debug!("offsets: {:?} ({:?})", offsets, Instant::now() - start);
         Some(offsets)
