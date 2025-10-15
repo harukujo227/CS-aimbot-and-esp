@@ -7,7 +7,7 @@ use std::{
     path::PathBuf,
 };
 
-use bytemuck::{AnyBitPattern, NoUninit};
+use bytemuck::{AnyBitPattern, NoUninit, Pod};
 use nix::libc::{self, iovec, process_vm_readv, process_vm_writev};
 
 use crate::constants::{cs2, elf};
@@ -77,8 +77,9 @@ impl Process {
         self.path.exists() && self.pid > 0
     }
 
-    pub fn read<T: AnyBitPattern + Default>(&self, address: u64) -> T {
-        let mut buffer = vec![0u8; size_of::<T>()];
+    pub fn read<T: Pod + Default>(&self, address: u64) -> T {
+        let mut t = T::default();
+        let buffer = bytemuck::bytes_of_mut(&mut t);
 
         let local_iov = iovec {
             iov_base: buffer.as_mut_ptr() as *mut libc::c_void,
@@ -93,9 +94,46 @@ impl Process {
             process_vm_readv(self.pid, &local_iov, 1, &remote_iov, 1, 0);
         }
 
-        bytemuck::try_from_bytes(&buffer)
-            .copied()
-            .unwrap_or_default()
+        t
+    }
+
+    pub fn read_or_zeroed<T: Pod>(&self, address: u64) -> T {
+        let mut t = T::zeroed();
+        let buffer = bytemuck::bytes_of_mut(&mut t);
+
+        let local_iov = iovec {
+            iov_base: buffer.as_mut_ptr() as *mut libc::c_void,
+            iov_len: buffer.len(),
+        };
+        let remote_iov = iovec {
+            iov_base: address as *mut libc::c_void,
+            iov_len: buffer.len(),
+        };
+
+        unsafe {
+            process_vm_readv(self.pid, &local_iov, 1, &remote_iov, 1, 0);
+        }
+
+        t
+    }
+
+    pub fn read_vec(&self, address: u64, length: usize) -> Vec<u8> {
+        let mut buffer = vec![0u8; length];
+
+        let local_iov = iovec {
+            iov_base: buffer.as_mut_ptr() as *mut libc::c_void,
+            iov_len: buffer.len(),
+        };
+        let remote_iov = iovec {
+            iov_base: address as *mut libc::c_void,
+            iov_len: buffer.len(),
+        };
+
+        unsafe {
+            process_vm_readv(self.pid, &local_iov, 1, &remote_iov, 1, 0);
+        }
+
+        buffer
     }
 
     pub fn read_batched<T: AnyBitPattern + Default>(&self, addresses: &[u64]) -> Vec<T> {

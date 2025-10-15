@@ -7,7 +7,7 @@ use crate::{
     cs2::{bones::Bones, weapon::Weapon},
 };
 
-use super::{CS2, weapon_class::WeaponClass};
+use super::{CS2, weapon_class::WeaponClass, Entity};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Player {
@@ -51,20 +51,52 @@ impl Player {
         }
     }
 
+    pub fn get_entities_in_bucket(cs2: &CS2, bucket_index: u64) -> Vec<Entity> {
+        let mut entities = vec![];
+        // 512 entity identities
+        let bucket_ptr: u64 = cs2
+            .process
+            .read(cs2.offsets.interface.entity + 0x08 * bucket_index);
+        if bucket_ptr == 0 {
+            return entities;
+        }
+        let bucket = cs2.process.read_vec(bucket_ptr, 512 * cs2.offsets.entity_identity.size as usize);
+        for index_in_bucket in 0..512 {
+            let identity_offset = index_in_bucket * cs2.offsets.entity_identity.size as usize;
+
+            let handle_start = identity_offset + 0x10;
+            let handle: u32 = *bytemuck::from_bytes(&bucket[handle_start..handle_start + 4]);
+            let handle_index = handle & 0x7FFF;
+            // I have no idea why -1024 is needed :(
+            let entity_index = bucket_index as u32 * 512 + index_in_bucket as u32 - 1024;
+            if entity_index != handle_index {
+                continue;
+            }
+
+            let entity: u64 = *bytemuck::from_bytes(&bucket[identity_offset..identity_offset + 8]);
+            let name_pointer: u64 = *bytemuck::from_bytes(&bucket[identity_offset + 0x20..identity_offset + 0x28]);
+            let Some(entity) = cs2.entity_type(entity, name_pointer) else {
+                continue;
+            };
+            entities.push(entity);
+        }
+        entities
+    }
+
     pub fn get_client_entity(cs2: &CS2, index: u64) -> Option<u64> {
         let bucket_index = index >> 9;
         let index_in_bucket = index & 0x1FF;
         // wtf is this doing, and how?
-        let v1: u64 = cs2
+        let bucket_ptr: u64 = cs2
             .process
             .read(cs2.offsets.interface.entity + 0x08 * bucket_index + 0x10);
-        if v1 == 0 {
+        if bucket_ptr == 0 {
             return None;
         }
         // what?
         let entity = cs2
             .process
-            .read(v1 + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
+            .read(bucket_ptr + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
         if entity == 0 {
             return None;
         }
@@ -77,17 +109,17 @@ impl Player {
         let bucket_index = index >> 9;
         let index_in_bucket = index & 0x1FF;
         // what the fuck is this doing?
-        let v2: u64 = cs2
+        let bucket_ptr: u64 = cs2
             .process
             .read(cs2.offsets.interface.player + 8 * bucket_index);
-        if v2 == 0 {
+        if bucket_ptr == 0 {
             return None;
         }
 
         // bit-fuckery, why is this needed exactly?
         let entity = cs2
             .process
-            .read(v2 + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
+            .read(bucket_ptr + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
         if entity == 0 {
             return None;
         }
@@ -267,16 +299,14 @@ impl Player {
             return bones;
         }
 
-        let bone_addresses: Vec<u64> = Bones::iter().map(|b| bone_data + b.u64() * 32).collect();
+        let bones_data: [u8; 32 * 32] = cs2.process.read_or_zeroed(bone_data);
 
-        for (pos, bone) in cs2
-            .process
-            .read_batched(&bone_addresses)
-            .into_iter()
-            .zip(Bones::iter())
-        {
-            bones.insert(bone, pos);
+        for bone in Bones::iter() {
+            let start = bone.u64() as usize * 32;
+            let pos = bytemuck::from_bytes(&bones_data[start..start + 3 * 4]);
+            bones.insert(bone, *pos);
         }
+
         bones
     }
 

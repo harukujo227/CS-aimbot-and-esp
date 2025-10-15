@@ -487,13 +487,7 @@ impl CS2 {
         Some(offsets)
     }
 
-    fn entity_type(&self, entity: u64) -> Option<Entity> {
-        let entity_instance: u64 = self.process.read(entity + 0x10);
-        if entity_instance == 0 {
-            return None;
-        }
-
-        let name_pointer = self.process.read(entity_instance + 0x20);
+    fn entity_type(&self, entity: u64, name_pointer: u64) -> Option<Entity> {
         if name_pointer == 0 {
             return None;
         }
@@ -557,16 +551,8 @@ impl CS2 {
 
     fn cache_entities(&mut self) {
         self.entities.clear();
-        for i in 64..=1024 {
-            let Some(entity) = Player::get_client_entity(self, i) else {
-                continue;
-            };
-
-            let Some(entity) = self.entity_type(entity) else {
-                continue;
-            };
-
-            self.entities.push(entity);
+        for bucket_index in 0..64 {
+            self.entities.extend(Player::get_entities_in_bucket(self, bucket_index));
         }
     }
 }
