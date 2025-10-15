@@ -9,7 +9,7 @@ pub struct Schema {
 impl Schema {
     pub fn new(process: &Process, schema_module: u64) -> Option<Self> {
         let schema_system = process.scan(
-            "48 8D 3D ? ? ? ? E8 ? ? ? ? E9 ? ? ? ? ? ? ? ? ? ? ? 48 8D 95",
+            "48 8D 3D ? ? ? ? E8 ? ? ? ? 48 8B BD ? ? ? ? 31 F6 E8 ? ? ? ? E9",
             schema_module,
         )?;
         let schema_system = process.get_relative_address(schema_system, 3, 7);
@@ -48,11 +48,11 @@ impl ModuleScope {
         let name = process.read_string_uncached(address + 0x08);
 
         let mut classes = HashMap::new();
-        // length is (probably?) 256
+        // has 1024 buckets
         let hash_vector = address + 0x560 + 0x90;
-        for i in 0..256 {
+        for i in 0..1024 {
             // first_uncomitted
-            let mut current_element: u64 = process.read(hash_vector + (i * 0x30) + 0x28);
+            let mut current_element: u64 = process.read(hash_vector + (i * 24) + 0x28);
 
             while current_element != 0 {
                 let data: u64 = process.read(current_element + 0x10);
