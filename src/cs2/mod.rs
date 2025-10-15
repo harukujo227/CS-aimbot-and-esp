@@ -551,8 +551,46 @@ impl CS2 {
 
     fn cache_entities(&mut self) {
         self.entities.clear();
+        const NUM_BUCKETS: usize = 64;
+        let bucket_pointers = self
+            .process
+            .read_vec(self.offsets.interface.entity, 0x8 * NUM_BUCKETS);
         for bucket_index in 0..64 {
-            self.entities.extend(Player::get_entities_in_bucket(self, bucket_index));
+            let bucket_pointer =
+                *bytemuck::from_bytes(&bucket_pointers[bucket_index * 8..(bucket_index + 1) * 8]);
+            self.get_entities_in_bucket(bucket_index as u64, bucket_pointer);
+        }
+    }
+
+    fn get_entities_in_bucket(&mut self, bucket_index: u64, bucket_ptr: u64) {
+        if bucket_ptr == 0 || bucket_ptr >> 48 != 0 {
+            return;
+        }
+        const IDENTITIES_PER_BUCKET: usize = 512;
+        let bucket = self.process.read_vec(
+            bucket_ptr,
+            IDENTITIES_PER_BUCKET * self.offsets.entity_identity.size as usize,
+        );
+        for index_in_bucket in 0..IDENTITIES_PER_BUCKET {
+            let identity_offset = index_in_bucket * self.offsets.entity_identity.size as usize;
+
+            let handle_start = identity_offset + 0x10;
+            let handle: u32 = *bytemuck::from_bytes(&bucket[handle_start..handle_start + 4]);
+            let handle_index = handle & 0x7FFF;
+            // I have no idea why -1024 is needed :(
+            let entity_index =
+                bucket_index as u32 * IDENTITIES_PER_BUCKET as u32 + index_in_bucket as u32 - 1024;
+            if entity_index != handle_index {
+                continue;
+            }
+
+            let entity: u64 = *bytemuck::from_bytes(&bucket[identity_offset..identity_offset + 8]);
+            let name_pointer: u64 =
+                *bytemuck::from_bytes(&bucket[identity_offset + 0x20..identity_offset + 0x28]);
+            let Some(entity) = self.entity_type(entity, name_pointer) else {
+                continue;
+            };
+            self.entities.push(entity);
         }
     }
 }
