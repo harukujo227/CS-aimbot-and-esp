@@ -83,16 +83,16 @@ impl Player {
         let bucket_index = index >> 9;
         let index_in_bucket = index & 0x1FF;
         // wtf is this doing, and how?
-        let v1: u64 = cs2
+        let bucket_ptr: u64 = cs2
             .process
             .read(cs2.offsets.interface.entity + 0x08 * bucket_index + 0x10);
-        if v1 == 0 {
+        if bucket_ptr == 0 {
             return None;
         }
         // what?
         let entity = cs2
             .process
-            .read(v1 + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
+            .read(bucket_ptr + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
         if entity == 0 {
             return None;
         }
@@ -105,17 +105,17 @@ impl Player {
         let bucket_index = index >> 9;
         let index_in_bucket = index & 0x1FF;
         // what the fuck is this doing?
-        let v2: u64 = cs2
+        let bucket_ptr: u64 = cs2
             .process
             .read(cs2.offsets.interface.player + 8 * bucket_index);
-        if v2 == 0 {
+        if bucket_ptr == 0 {
             return None;
         }
 
         // bit-fuckery, why is this needed exactly?
         let entity = cs2
             .process
-            .read(v2 + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
+            .read(bucket_ptr + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
         if entity == 0 {
             return None;
         }
