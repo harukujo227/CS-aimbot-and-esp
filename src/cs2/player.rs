@@ -267,16 +267,14 @@ impl Player {
             return bones;
         }
 
-        let bone_addresses: Vec<u64> = Bones::iter().map(|b| bone_data + b.u64() * 32).collect();
+        let bones_data: [u8; 32 * 32] = cs2.process.read_or_zeroed(bone_data);
 
-        for (pos, bone) in cs2
-            .process
-            .read_batched(&bone_addresses)
-            .into_iter()
-            .zip(Bones::iter())
-        {
-            bones.insert(bone, pos);
+        for bone in Bones::iter() {
+            let start = bone.u64() as usize * 32;
+            let pos = bytemuck::from_bytes(&bones_data[start..start + 3 * 4]);
+            bones.insert(bone, *pos);
         }
+
         bones
     }
 

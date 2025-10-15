@@ -97,6 +97,26 @@ impl Process {
         t
     }
 
+    pub fn read_or_zeroed<T: Pod>(&self, address: u64) -> T {
+        let mut t = T::zeroed();
+        let buffer = bytemuck::bytes_of_mut(&mut t);
+
+        let local_iov = iovec {
+            iov_base: buffer.as_mut_ptr() as *mut libc::c_void,
+            iov_len: buffer.len(),
+        };
+        let remote_iov = iovec {
+            iov_base: address as *mut libc::c_void,
+            iov_len: buffer.len(),
+        };
+
+        unsafe {
+            process_vm_readv(self.pid, &local_iov, 1, &remote_iov, 1, 0);
+        }
+
+        t
+    }
+
     pub fn read_batched<T: AnyBitPattern + Default>(&self, addresses: &[u64]) -> Vec<T> {
         let count = addresses.len();
         let size = size_of::<T>();
