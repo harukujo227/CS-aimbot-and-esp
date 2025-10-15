@@ -525,11 +525,11 @@ impl CS2 {
 
     // convars
     fn get_sensitivity(&self) -> f32 {
-        self.process.read(self.offsets.convar.sensitivity + 0x48)
+        self.process.read(self.offsets.convar.sensitivity + 0x50)
     }
 
     fn is_ffa(&self) -> bool {
-        self.process.read::<u32>(self.offsets.convar.ffa + 0x48) == 1
+        self.process.read::<u32>(self.offsets.convar.ffa + 0x50) == 1
     }
 
     // misc
