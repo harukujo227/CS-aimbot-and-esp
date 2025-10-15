@@ -558,16 +558,8 @@ impl CS2 {
 
     fn cache_entities(&mut self) {
         self.entities.clear();
-        for i in 64..=1024 {
-            let Some(entity) = Player::get_client_entity(self, i) else {
-                continue;
-            };
-
-            let Some(entity) = self.entity_type(entity) else {
-                continue;
-            };
-
-            self.entities.push(entity);
+        for bucket_index in 0..64 {
+            self.entities.extend(Player::get_entities_in_bucket(self, bucket_index));
         }
     }
 }
