@@ -56,7 +56,10 @@ impl Player {
         // 512 entity identities
         let bucket_ptr: u64 = cs2
             .process
-            .read(cs2.offsets.interface.entity + 0x08 * bucket_index + 0x10);
+            .read(cs2.offsets.interface.entity + 0x08 * bucket_index);
+        if bucket_ptr == 0 {
+            return entities;
+        }
         let bucket = cs2.process.read_vec(bucket_ptr, 512 * cs2.offsets.entity_identity.size as usize);
         for index_in_bucket in 0..512 {
             let identity_offset = index_in_bucket * cs2.offsets.entity_identity.size as usize;
@@ -65,7 +68,7 @@ impl Player {
             let handle: u32 = *bytemuck::from_bytes(&bucket[handle_start..handle_start + 4]);
             let handle_index = handle & 0x7FFF;
             // I have no idea why -1024 is needed :(
-            let entity_index = (bucket_index * 512 + index_in_bucket as u64 - 1024) as u32;
+            let entity_index = bucket_index as u32 * 512 + index_in_bucket as u32 - 1024;
             if entity_index != handle_index {
                 continue;
             }
