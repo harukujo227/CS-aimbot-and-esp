@@ -488,13 +488,7 @@ impl CS2 {
         Some(offsets)
     }
 
-    fn entity_type(&self, entity: u64) -> Option<Entity> {
-        let entity_instance: u64 = self.process.read(entity + 0x10);
-        if entity_instance == 0 {
-            return None;
-        }
-
-        let name_pointer = self.process.read(entity_instance + 0x20);
+    fn entity_type(&self, entity: u64, name_pointer: u64) -> Option<Entity> {
         if name_pointer == 0 {
             return None;
         }

@@ -74,7 +74,8 @@ impl Player {
             }
 
             let entity: u64 = *bytemuck::from_bytes(&bucket[identity_offset..identity_offset + 8]);
-            let Some(entity) = cs2.entity_type(entity) else {
+            let name_pointer: u64 = *bytemuck::from_bytes(&bucket[identity_offset + 0x20..identity_offset + 0x28]);
+            let Some(entity) = cs2.entity_type(entity, name_pointer) else {
                 continue;
             };
             entities.push(entity);
