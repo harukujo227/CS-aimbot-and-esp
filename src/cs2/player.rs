@@ -52,15 +52,19 @@ impl Player {
     }
 
     pub fn get_client_entity(cs2: &CS2, index: u64) -> Option<u64> {
+        let bucket_index = index >> 9;
+        let index_in_bucket = index & 0x1FF;
         // wtf is this doing, and how?
         let v1: u64 = cs2
             .process
-            .read(cs2.offsets.interface.entity + 0x08 * (index >> 9) + 0x10);
+            .read(cs2.offsets.interface.entity + 0x08 * bucket_index + 0x10);
         if v1 == 0 {
             return None;
         }
         // what?
-        let entity = cs2.process.read(v1 + 112 * (index & 0x1ff));
+        let entity = cs2
+            .process
+            .read(v1 + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
         if entity == 0 {
             return None;
         }
@@ -68,16 +72,22 @@ impl Player {
     }
 
     fn get_pawn(cs2: &CS2, handle: i32) -> Option<u64> {
+        // upper bits = something irrelevant
+        let index = handle as u64 & 0x7FFF;
+        let bucket_index = index >> 9;
+        let index_in_bucket = index & 0x1FF;
         // what the fuck is this doing?
         let v2: u64 = cs2
             .process
-            .read(cs2.offsets.interface.player + 8 * ((handle as u64 & 0x7FFF) >> 9));
+            .read(cs2.offsets.interface.player + 8 * bucket_index);
         if v2 == 0 {
             return None;
         }
 
         // bit-fuckery, why is this needed exactly?
-        let entity = cs2.process.read(v2 + 120 * (handle as u64 & 0x1FF));
+        let entity = cs2
+            .process
+            .read(v2 + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
         if entity == 0 {
             return None;
         }
@@ -468,7 +478,6 @@ impl CS2 {
 
         self.players.clear();
 
-
         for i in 0..=64 {
             let player = match Player::index(self, i) {
                 Some(player) => player,
@@ -483,7 +492,11 @@ impl CS2 {
                 if target_pawn == local_pawn {
                     let spectator_name = player.name(self);
                     let local_steam_id = local_player.steam_id(self);
-                    self.dead_spectators.borrow_mut().push((spectator_name, spectator_id, local_steam_id));
+                    self.dead_spectators.borrow_mut().push((
+                        spectator_name,
+                        spectator_id,
+                        local_steam_id,
+                    ));
                 }
             }
 
@@ -497,6 +510,5 @@ impl CS2 {
                 self.players.push(player);
             }
         }
-
     }
 }

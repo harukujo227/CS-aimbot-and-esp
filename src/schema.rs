@@ -98,6 +98,7 @@ impl ModuleScope {
 pub struct Class {
     name: String,
     fields: HashMap<String, u64>,
+    size: i32,
 }
 
 impl Class {
@@ -106,19 +107,24 @@ impl Class {
 
         let mut fields = HashMap::new();
         let field_count: i16 = process.read(address + 0x1C);
+        let size = process.read(address + 0x18);
         if !(0..=20000).contains(&field_count) {
-            return Self { name, fields };
+            return Self { name, fields, size };
         }
         let fields_vec: u64 = process.read(address + 0x28);
         for i in 0..field_count as u64 {
             let field = Field::new(process, fields_vec + (0x20 * i));
             fields.insert(field.name, field.offset);
         }
-        Self { name, fields }
+        Self { name, fields, size }
     }
 
     fn get(&self, field: &str) -> Option<u64> {
         self.fields.get(field).copied()
+    }
+
+    pub fn size(&self) -> i32 {
+        self.size
     }
 }
 

@@ -131,6 +131,11 @@ pub struct PlantedC4Offsets {
 }
 
 #[derive(Debug, Default)]
+pub struct EntityIdentityOffsets {
+    pub size: i32,
+}
+
+#[derive(Debug, Default)]
 pub struct Offsets {
     pub library: LibraryOffsets,
     pub interface: InterfaceOffsets,
@@ -148,4 +153,5 @@ pub struct Offsets {
     pub observer_services: ObserverServicesOffsets,
     pub weapon: WeaponOffsets,
     pub planted_c4: PlantedC4Offsets,
+    pub entity_identity: EntityIdentityOffsets,
 }
