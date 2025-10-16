@@ -536,7 +536,7 @@ impl CS2 {
     }
 
     fn is_ffa(&self) -> bool {
-        self.process.read::<u32>(self.offsets.convar.ffa + 0x50) == 1
+        self.process.read::<u8>(self.offsets.convar.ffa + 0x50) == 1
     }
 
     // misc
