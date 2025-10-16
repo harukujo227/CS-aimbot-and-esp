@@ -9,6 +9,7 @@ use arboard::Clipboard;
 use crossbeam::channel::{Receiver, Sender};
 use egui::{FontData, FontDefinitions, Stroke, Style};
 use egui_glow::glow;
+use glam::Vec3;
 use winit::{
     application::ApplicationHandler,
     event::{StartCause, WindowEvent},
@@ -31,6 +32,12 @@ use crate::{
 const FRAME_RATE: u64 = 120;
 const FRAME_DURATION: Duration = Duration::from_micros(1_000_000 / FRAME_RATE);
 
+#[derive(Debug)]
+pub struct Trail {
+    pub trail: Vec<Vec3>,
+    pub last_update: Instant,
+}
+
 pub struct App {
     pub gui_window: Option<WindowContext>,
     pub gui_gl: Option<Arc<glow::Context>>,
@@ -52,6 +59,7 @@ pub struct App {
     pub selected_mouse: Option<String>,
     pub radar_status: RadarStatus,
     pub display_scale: f32,
+    pub trails: HashMap<u64, Trail>,
 
     pub config: Config,
     pub current_config: PathBuf,
@@ -100,6 +108,7 @@ impl App {
             mouse_status: DeviceStatus::Disconnected,
             radar_status: RadarStatus::Disconnected,
             display_scale: 1.0,
+            trails: HashMap::new(),
 
             selected_mouse: None,
 

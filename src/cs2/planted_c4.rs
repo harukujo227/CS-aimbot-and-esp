@@ -8,31 +8,30 @@ pub struct PlantedC4 {
 }
 
 impl PlantedC4 {
-    #[allow(unused)]
-    pub fn get(cs2: &CS2) -> Option<Self> {
-        // todo: fix this
-        return None;
-        let handle = cs2.process.read(cs2.offsets.direct.planted_c4);
-        if handle == 0 {
-            return None;
-        };
+    pub fn new(handle: u64) -> Self {
+        Self { handle }
+    }
 
-        let handle = cs2.process.read(handle);
-        if handle == 0 {
-            return None;
-        };
+    pub fn is_relevant(&self, cs2: &CS2) -> bool {
+        !self.has_exploded(cs2) && self.is_defused(cs2)
+    }
 
-        Some(Self { handle })
+    pub fn has_exploded(&self, cs2: &CS2) -> bool {
+        cs2.process
+            .read::<u8>(self.handle + cs2.offsets.planted_c4.has_exploded)
+            != 0
+    }
+
+    pub fn is_defused(&self, cs2: &CS2) -> bool {
+        cs2.process
+            .read::<u8>(self.handle + cs2.offsets.planted_c4.is_defused)
+            != 0
     }
 
     pub fn is_planted(&self, cs2: &CS2) -> bool {
         cs2.process
-            .read::<u8>(self.handle + cs2.offsets.planted_c4.is_activated)
+            .read::<u8>(self.handle + cs2.offsets.planted_c4.is_ticking)
             == 1
-            && cs2
-                .process
-                .read::<u8>(self.handle + cs2.offsets.planted_c4.is_ticking)
-                == 1
     }
 
     pub fn is_being_defused(&self, cs2: &CS2) -> bool {
@@ -42,13 +41,11 @@ impl PlantedC4 {
     }
 
     pub fn time_to_explosion(&self, cs2: &CS2) -> f32 {
-        let global_vars: u64 = cs2.process.read(cs2.offsets.direct.global_vars);
-        let current_time: f32 = cs2.process.read(global_vars + 0x30);
         let blow_time: f32 = cs2
             .process
             .read(self.handle + cs2.offsets.planted_c4.blow_time);
 
-        blow_time - current_time
+        blow_time - cs2.current_time()
     }
 
     pub fn position(&self, cs2: &CS2) -> Vec3 {

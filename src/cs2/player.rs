@@ -25,7 +25,7 @@ impl Player {
 
     pub fn index(cs2: &CS2, index: u64) -> Option<Self> {
         let controller = Self::get_client_entity(cs2, index)?;
-        Self::get_pawn(
+        Self::get_entity(
             cs2,
             cs2.process.read(controller + cs2.offsets.controller.pawn),
         )
@@ -33,15 +33,15 @@ impl Player {
     }
 
     pub fn local_player(cs2: &CS2) -> Option<Self> {
-        let controller: u64 = cs2.process.read(cs2.offsets.direct.local_player);
+        let controller = cs2.process.read(cs2.offsets.direct.local_player);
         if controller == 0 {
             return None;
         }
-        Self::get_pawn(
-            cs2,
-            cs2.process.read(controller + cs2.offsets.controller.pawn),
-        )
-        .map(|pawn| Self { controller, pawn })
+        let pawn_handle: i32 = cs2.process.read(controller + cs2.offsets.controller.pawn);
+        if pawn_handle == -1 {
+            return None;
+        }
+        Self::get_entity(cs2, pawn_handle).map(|pawn| Self { controller, pawn })
     }
 
     pub fn pawn(pawn: u64) -> Self {
@@ -71,7 +71,7 @@ impl Player {
         Some(entity)
     }
 
-    fn get_pawn(cs2: &CS2, handle: i32) -> Option<u64> {
+    fn get_entity(cs2: &CS2, handle: i32) -> Option<u64> {
         // upper bits = something irrelevant
         let index = handle as u64 & 0x7FFF;
         let bucket_index = index >> 9;
@@ -79,7 +79,7 @@ impl Player {
         // what the fuck is this doing?
         let bucket_ptr: u64 = cs2
             .process
-            .read(cs2.offsets.interface.player + 8 * bucket_index);
+            .read(cs2.offsets.interface.entity + 8 * bucket_index);
         if bucket_ptr == 0 {
             return None;
         }
@@ -140,7 +140,7 @@ impl Player {
             return None;
         }
 
-        let pawn = Player::get_pawn(cs2, target)?;
+        let pawn = Player::get_entity(cs2, target)?;
         Some(Player::pawn(pawn))
     }
 

@@ -1,13 +1,15 @@
+use std::time::Instant;
+
 use egui::{
     Align, Align2, Button, CollapsingHeader, Color32, Context, DragValue, FontId, Painter, Pos2,
-    Sense, Stroke, Ui, pos2,
+    Sense, Shape, Stroke, Ui, pos2,
 };
 use egui_glow::glow;
 use glam::{Vec3, vec3};
 use strum::IntoEnumIterator;
 
 use crate::{
-    app::App,
+    app::{App, Trail},
     bvh::{Aabb, Triangle},
     color::Colors,
     config::{
@@ -15,7 +17,15 @@ use crate::{
         VERSION, WeaponConfig, available_configs, delete_config, parse_config, write_config,
     },
     constants::cs2,
-    cs2::{bones::Bones, weapon::Weapon, weapon_class::WeaponClass},
+    cs2::{
+        bones::Bones,
+        entity::{EntityInfo, GrenadeInfo},
+        inferno::InfernoInfo,
+        molotov::MolotovInfo,
+        smoke::SmokeInfo,
+        weapon::Weapon,
+        weapon_class::WeaponClass,
+    },
     data::{Data, PlayerData},
     drag_range::DragRange,
     key_codes::KeyCode,
@@ -691,6 +701,63 @@ impl App {
                     }
                 });
             });
+
+        collapsing_open(ui, "Grenade Trails", |ui| {
+            if ui
+                .checkbox(&mut self.config.hud.grenade_trails, "Grenade Trails")
+                .changed()
+            {
+                self.send_config();
+            }
+
+            if let Some(color) =
+                self.color_picker(ui, &self.config.hud.smoke_trail_color, "Smoke Trail Color")
+            {
+                self.config.hud.smoke_trail_color = color;
+                self.send_config();
+            }
+
+            if let Some(color) = self.color_picker(
+                ui,
+                &self.config.hud.molotov_trail_color,
+                "Molotov Trail Color",
+            ) {
+                self.config.hud.molotov_trail_color = color;
+                self.send_config();
+            }
+
+            if let Some(color) = self.color_picker(
+                ui,
+                &self.config.hud.incendiary_trail_color,
+                "Incendiary Trail Color",
+            ) {
+                self.config.hud.incendiary_trail_color = color;
+                self.send_config();
+            }
+
+            if let Some(color) =
+                self.color_picker(ui, &self.config.hud.flash_trail_color, "Flash Trail Color")
+            {
+                self.config.hud.flash_trail_color = color;
+                self.send_config();
+            }
+
+            if let Some(color) = self.color_picker(
+                ui,
+                &self.config.hud.he_trail_color,
+                "HE Grenade Trail Color",
+            ) {
+                self.config.hud.he_trail_color = color;
+                self.send_config();
+            }
+
+            if let Some(color) =
+                self.color_picker(ui, &self.config.hud.decoy_trail_color, "Decoy Trail Color")
+            {
+                self.config.hud.decoy_trail_color = color;
+                self.send_config();
+            }
+        });
     }
 
     fn hud_left(&mut self, ui: &mut Ui) {
@@ -1142,10 +1209,11 @@ impl App {
         Color32::from_rgba_unmultiplied(r, g, b, alpha)
     }
 
-    fn overlay(&self, ctx: &Context) {
+    fn overlay(&mut self, ctx: &Context) {
         ctx.set_pixels_per_point(1.0);
         let painter = ctx.layer_painter(egui::LayerId::background());
 
+        self.add_trails();
         let data = &self.data.lock().unwrap();
         if let Some(window) = &self.overlay_window {
             window
@@ -1180,18 +1248,9 @@ impl App {
             }
         }
 
-        if self.config.hud.dropped_weapons {
-            for weapon in &data.weapons {
-                let Some(pos) = world_to_screen(&weapon.1, data) else {
-                    continue;
-                };
-                self.text(
-                    &painter,
-                    format!("{}", weapon.0),
-                    pos,
-                    Align2::CENTER_CENTER,
-                    None,
-                );
+        if self.config.hud.dropped_weapons || self.config.hud.grenade_trails {
+            for entity in &data.entities {
+                self.entity(&painter, entity, data);
             }
         }
 
@@ -1573,6 +1632,168 @@ impl App {
         painter.circle_stroke(pos, height / 2.0, stroke);
     }
 
+    fn entity(&self, painter: &Painter, entity: &EntityInfo, data: &Data) {
+        match entity {
+            EntityInfo::Weapon { weapon, position } => {
+                if !self.config.hud.dropped_weapons {
+                    return;
+                }
+                let Some(position) = world_to_screen(position, data) else {
+                    return;
+                };
+                painter.text(
+                    position,
+                    Align2::CENTER_CENTER,
+                    format!("{weapon}"),
+                    FontId::proportional(self.config.hud.font_size),
+                    self.config.hud.text_color,
+                );
+            }
+            EntityInfo::Inferno(inferno) => self.inferno(painter, data, inferno),
+            EntityInfo::Smoke(smoke) => self.smoke(painter, data, smoke),
+            EntityInfo::Molotov(molotov) => self.molotov(painter, data, molotov),
+            EntityInfo::Flashbang(info) => {
+                self.draw_grenade(painter, data, info, self.config.hud.flash_trail_color)
+            }
+            EntityInfo::HeGrenade(info) => {
+                self.draw_grenade(painter, data, info, self.config.hud.he_trail_color)
+            }
+            EntityInfo::Decoy(info) => {
+                self.draw_grenade(painter, data, info, self.config.hud.decoy_trail_color)
+            }
+        };
+    }
+
+    fn draw_grenade(
+        &self,
+        painter: &Painter,
+        data: &Data,
+        info: &GrenadeInfo,
+        trail_color: Color32,
+    ) {
+        if !self.config.hud.grenade_trails {
+            return;
+        }
+        let Some(position) = world_to_screen(&info.position, data) else {
+            return;
+        };
+        painter.text(
+            position,
+            Align2::CENTER_CENTER,
+            info.name,
+            FontId::proportional(self.config.hud.font_size),
+            self.config.hud.text_color,
+        );
+
+        if !self.config.hud.grenade_trails {
+            return;
+        }
+
+        let stroke = Stroke::new(self.config.hud.line_width, trail_color);
+        let Some(trail) = self.trails.get(&info.entity) else {
+            return;
+        };
+        for window in trail.trail.windows(2) {
+            if let [v1, v2] = window {
+                let Some(v1) = world_to_screen(v1, data) else {
+                    continue;
+                };
+                let Some(v2) = world_to_screen(v2, data) else {
+                    continue;
+                };
+                painter.line_segment([v1, v2], stroke);
+            }
+        }
+    }
+
+    fn inferno(&self, painter: &Painter, data: &Data, inferno: &InfernoInfo) {
+        if !self.config.hud.grenade_trails {
+            return;
+        }
+        let hull: Vec<Pos2> = convex_hull(&inferno.hull)
+            .iter()
+            .filter_map(|p| {
+                let p = p + (p - inferno.position).clamp_length(60.0, 60.0);
+                world_to_screen(&p, data)
+            })
+            .collect();
+        if hull.len() < 3 {
+            return;
+        }
+
+        let shape = Shape::convex_polygon(
+            hull,
+            Color32::from_rgba_premultiplied(255, 0, 0, 127),
+            Stroke::NONE,
+        );
+        painter.add(shape);
+
+        self.draw_grenade(painter, data, &inferno.grenade(), Color32::TRANSPARENT);
+    }
+
+    fn smoke(&self, painter: &Painter, data: &Data, smoke: &SmokeInfo) {
+        if !self.config.hud.grenade_trails {
+            return;
+        }
+        self.draw_grenade(
+            painter,
+            data,
+            &smoke.grenade(),
+            self.config.hud.smoke_trail_color,
+        );
+    }
+
+    fn molotov(&self, painter: &Painter, data: &Data, molotov: &MolotovInfo) {
+        if !self.config.hud.grenade_trails {
+            return;
+        }
+        if molotov.is_incendiary {
+            self.draw_grenade(
+                painter,
+                data,
+                &molotov.grenade(),
+                self.config.hud.incendiary_trail_color,
+            );
+        } else {
+            self.draw_grenade(
+                painter,
+                data,
+                &molotov.grenade(),
+                self.config.hud.molotov_trail_color,
+            );
+        }
+    }
+
+    fn add_trails(&mut self) {
+        let data = self.data.lock().unwrap();
+        for entity in &data.entities {
+            let (entity, position) = match entity {
+                EntityInfo::Inferno(info) => (info.entity, info.position),
+                EntityInfo::Smoke(info) => (info.entity, info.position),
+                EntityInfo::Molotov(info) => (info.entity, info.position),
+                EntityInfo::Flashbang(info) | EntityInfo::HeGrenade(info) => {
+                    (info.entity, info.position)
+                }
+                _ => continue,
+            };
+            if let Some(trail) = self.trails.get_mut(&entity) {
+                if (position - trail.trail.last().unwrap()).length() < 1.0 {
+                    continue;
+                }
+                trail.trail.push(position);
+                trail.last_update = Instant::now();
+            } else {
+                self.trails.insert(
+                    entity,
+                    Trail {
+                        trail: vec![position],
+                        last_update: Instant::now(),
+                    },
+                );
+            }
+        }
+    }
+
     fn health_color(&self, health: i32) -> Color32 {
         let health = health.clamp(0, 100);
 
@@ -1658,4 +1879,61 @@ fn collapsing_open(ui: &mut Ui, title: &str, add_body: impl FnOnce(&mut Ui)) {
     CollapsingHeader::new(title)
         .default_open(true)
         .show(ui, add_body);
+}
+
+fn convex_hull(points: &[Vec3]) -> Vec<Vec3> {
+    if points.len() <= 2 {
+        return points.to_vec();
+    }
+
+    let mut sorted_points = points.to_vec();
+    sorted_points.sort_by(|a, b| {
+        a.x.partial_cmp(&b.x)
+            .unwrap()
+            .then(a.y.partial_cmp(&b.y).unwrap())
+    });
+
+    let mut deduped: Vec<Vec3> = Vec::new();
+    for point in sorted_points {
+        if deduped.is_empty()
+            || point.x != deduped.last().unwrap().x
+            || point.y != deduped.last().unwrap().y
+        {
+            deduped.push(point);
+        }
+    }
+
+    if deduped.len() <= 2 {
+        return deduped;
+    }
+
+    let mut lower = Vec::new();
+    for point in &deduped {
+        while lower.len() >= 2
+            && cross(&lower[lower.len() - 2], &lower[lower.len() - 1], point) <= 0.0
+        {
+            lower.pop();
+        }
+        lower.push(*point);
+    }
+
+    let mut upper = Vec::new();
+    for point in deduped.iter().rev() {
+        while upper.len() >= 2
+            && cross(&upper[upper.len() - 2], &upper[upper.len() - 1], point) <= 0.0
+        {
+            upper.pop();
+        }
+        upper.push(*point);
+    }
+
+    upper.pop();
+    lower.pop();
+
+    lower.append(&mut upper);
+    lower
+}
+
+fn cross(o: &Vec3, a: &Vec3, b: &Vec3) -> f32 {
+    (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
 }

@@ -13,7 +13,6 @@ pub struct InterfaceOffsets {
     pub resource: u64,
     pub entity: u64,
     pub cvar: u64,
-    pub player: u64,
     pub input: u64,
 }
 
@@ -89,6 +88,18 @@ pub struct SmokeOffsets {
 }
 
 #[derive(Debug, Default)]
+pub struct MolotovOffsets {
+    pub is_incendiary: u64, // bool (m_bIsIncGrenade)
+}
+
+#[derive(Debug, Default)]
+pub struct InfernoOffsets {
+    pub is_burning: u64,     // bool[64] (m_bFireIsBurning)
+    pub fire_count: u64,     // i32 (m_fireCount)
+    pub fire_positions: u64, // Vec3[64] (m_firePositions)
+}
+
+#[derive(Debug, Default)]
 pub struct SpottedStateOffsets {
     pub spotted: u64, // bool (m_bSpotted)
     pub mask: u64,    // i32[2] or u64? (m_bSpottedByMask)
@@ -124,10 +135,11 @@ pub struct WeaponOffsets {
 
 #[derive(Debug, Default)]
 pub struct PlantedC4Offsets {
-    pub is_activated: u64,  // bool (m_bC4Activated)
     pub is_ticking: u64,    // bool (m_bBombTicking)
     pub blow_time: u64,     // f32 (m_flC4Blow)
     pub being_defused: u64, // bool (m_bBeingDefused)
+    pub is_defused: u64,    // bool (m_bBombDefused)
+    pub has_exploded: u64,  // bool (m_bHasExploded)
 }
 
 #[derive(Debug, Default)]
@@ -146,6 +158,8 @@ pub struct Offsets {
     pub game_scene_node: GameSceneNodeOffsets,
     pub skeleton: SkeletonInstanceOffsets,
     pub smoke: SmokeOffsets,
+    pub molotov: MolotovOffsets,
+    pub inferno: InfernoOffsets,
     pub spotted_state: SpottedStateOffsets,
     pub camera_services: CameraServicesOffsets,
     pub item_services: ItemServicesOffsets,

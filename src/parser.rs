@@ -14,6 +14,7 @@ use sha2::Digest;
 use crate::{
     bvh::{Bvh, Triangle},
     config::CONFIG_PATH,
+    crash,
 };
 
 const RELEASE_URL: &str =
@@ -21,6 +22,7 @@ const RELEASE_URL: &str =
 const ASSET_NAME: &str = "cli-linux-x64.zip";
 
 pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, force_reparse: bool) {
+    crash::info();
     let file_path = CONFIG_PATH.join(ASSET_NAME);
     let dir = file_path.parent().unwrap().join("source2viewer");
     let exe_path = dir.join("Source2Viewer-CLI");

@@ -12,10 +12,19 @@ use rcs::Recoil;
 use crate::{
     bvh::Bvh,
     config::{AimbotConfig, Config, RcsConfig, TriggerbotConfig, TriggerbotMode},
-    constants::cs2::{self, TEAM_CT, TEAM_T},
+    constants::cs2::{self, TEAM_CT, TEAM_T, class},
     cs2::{
-        bones::Bones, esp_toggle::EspToggle, offsets::Offsets, planted_c4::PlantedC4, smoke::Smoke,
-        target::Target, triggerbot::Triggerbot, weapon::Weapon,
+        bones::Bones,
+        entity::{Entity, EntityInfo, GrenadeInfo},
+        esp_toggle::EspToggle,
+        inferno::Inferno,
+        molotov::Molotov,
+        offsets::Offsets,
+        planted_c4::PlantedC4,
+        smoke::Smoke,
+        target::Target,
+        triggerbot::Triggerbot,
+        weapon::Weapon,
     },
     data::{Data, PlayerData},
     game::Game,
@@ -28,14 +37,17 @@ use crate::{
 
 mod aimbot;
 pub mod bones;
+pub mod entity;
 mod esp_toggle;
 mod fov_changer;
+pub mod inferno;
+pub mod molotov;
 mod no_flash;
 mod offsets;
 mod planted_c4;
 pub mod player;
 mod rcs;
-mod smoke;
+pub mod smoke;
 mod target;
 mod triggerbot;
 pub mod weapon;
@@ -56,6 +68,7 @@ pub struct CS2 {
     trigger: Triggerbot,
     wallhack: EspToggle,
     weapon: Weapon,
+    planted_c4: Option<PlantedC4>,
 }
 
 impl Game for CS2 {
@@ -125,7 +138,7 @@ impl Game for CS2 {
     fn data(&self, config: &Config, data: &mut Data) {
         data.players.clear();
         data.friendlies.clear();
-        data.weapons.clear();
+        data.entities.clear();
         data.spectators.clear();
         data.spectator_names.clear();
 
@@ -204,12 +217,28 @@ impl Game for CS2 {
         data.local_player = local_player_data.clone();
         data.friendlies.push(local_player_data);
 
-        data.weapons.clear();
-        for entity in &self.entities {
-            if let Entity::Weapon(weapon, position) = entity {
-                data.weapons.push((weapon.clone(), *position));
-            }
-        }
+        data.entities = self
+            .entities
+            .iter()
+            .map(|e| match e {
+                Entity::Weapon { weapon, entity } => EntityInfo::Weapon {
+                    weapon: weapon.clone(),
+                    position: Player::entity(*entity).position(self),
+                },
+                Entity::Inferno(inferno) => EntityInfo::Inferno(inferno.info(self)),
+                Entity::Smoke(smoke) => EntityInfo::Smoke(smoke.info(self)),
+                Entity::Molotov(molotov) => EntityInfo::Molotov(molotov.info(self)),
+                Entity::Flashbang(entity) => {
+                    EntityInfo::Flashbang(GrenadeInfo::new(*entity, "Flashbang", self))
+                }
+                Entity::HeGrenade(entity) => {
+                    EntityInfo::HeGrenade(GrenadeInfo::new(*entity, "HE Grenade", self))
+                }
+                Entity::Decoy(entity) => {
+                    EntityInfo::Decoy(GrenadeInfo::new(*entity, "Decoy", self))
+                }
+            })
+            .collect();
 
         data.weapon = local_player.weapon(self);
         data.in_game = true;
@@ -232,7 +261,7 @@ impl Game for CS2 {
 
         data.view_matrix = self.process.read::<Mat4>(self.offsets.direct.view_matrix);
 
-        if let Some(bomb) = PlantedC4::get(self) {
+        if let Some(bomb) = &self.planted_c4 {
             data.bomb.planted = bomb.is_planted(self);
             data.bomb.timer = bomb.time_to_explosion(self);
             data.bomb.position = bomb.position(self);
@@ -259,6 +288,7 @@ impl CS2 {
             trigger: Triggerbot::default(),
             wallhack: EspToggle::default(),
             weapon: Weapon::default(),
+            planted_c4: None,
         }
     }
 
@@ -319,8 +349,8 @@ impl CS2 {
         };
         offsets.interface.resource = resource_offset;
 
-        offsets.interface.entity = self.process.read(offsets.interface.resource + 0x50);
-        offsets.interface.player = offsets.interface.entity + 0x10;
+        offsets.interface.entity =
+            self.process.read::<u64>(offsets.interface.resource + 0x50) + 0x10;
 
         let Some(cvar_address) = self
             .process
@@ -457,6 +487,12 @@ impl CS2 {
             client.get("C_SmokeGrenadeProjectile", "m_bDidSmokeEffect")?;
         offsets.smoke.smoke_color = client.get("C_SmokeGrenadeProjectile", "m_vSmokeColor")?;
 
+        offsets.molotov.is_incendiary = client.get("C_MolotovProjectile", "m_bIsIncGrenade")?;
+
+        offsets.inferno.is_burning = client.get("C_Inferno", "m_bFireIsBurning")?;
+        offsets.inferno.fire_count = client.get("C_Inferno", "m_fireCount")?;
+        offsets.inferno.fire_positions = client.get("C_Inferno", "m_firePositions")?;
+
         offsets.spotted_state.spotted = client.get("EntitySpottedState_t", "m_bSpotted")?;
         offsets.spotted_state.mask = client.get("EntitySpottedState_t", "m_bSpottedByMask")?;
 
@@ -476,38 +512,16 @@ impl CS2 {
         offsets.weapon.item_definition_index =
             client.get("C_EconItemView", "m_iItemDefinitionIndex")?;
 
-        offsets.planted_c4.is_activated = client.get("C_PlantedC4", "m_bC4Activated")?;
         offsets.planted_c4.is_ticking = client.get("C_PlantedC4", "m_bBombTicking")?;
         offsets.planted_c4.blow_time = client.get("C_PlantedC4", "m_flC4Blow")?;
         offsets.planted_c4.being_defused = client.get("C_PlantedC4", "m_bBeingDefused")?;
+        offsets.planted_c4.is_defused = client.get("C_PlantedC4", "m_bBombDefused")?;
+        offsets.planted_c4.has_exploded = client.get("C_PlantedC4", "m_bHasExploded")?;
 
         offsets.entity_identity.size = client.get_class("CEntityIdentity")?.size();
 
         log::debug!("offsets: {:?} ({:?})", offsets, Instant::now() - start);
         Some(offsets)
-    }
-
-    fn entity_type(&self, entity: u64, name_pointer: u64) -> Option<Entity> {
-        if name_pointer == 0 {
-            return None;
-        }
-
-        let name = self.process.read_string(name_pointer);
-
-        if name.starts_with("weapon_") {
-            if self.entity_has_owner(entity) {
-                return None;
-            }
-
-            let weapon = Weapon::from_handle(entity, self);
-
-            let position = Player::entity(entity).position(self);
-            Some(Entity::Weapon(weapon, position))
-        } else if name.starts_with("smoke") {
-            Some(Entity::Smoke(Smoke::new(entity)))
-        } else {
-            None
-        }
     }
 
     fn entity_has_owner(&self, entity: u64) -> bool {
@@ -533,6 +547,11 @@ impl CS2 {
                 + (((button.u64() >> 5) * 4) + self.offsets.direct.button_state),
         );
         ((value >> (button.u64() & 31)) & 1) != 0
+    }
+
+    fn current_time(&self) -> f32 {
+        let global_vars: u64 = self.process.read(self.offsets.direct.global_vars);
+        self.process.read(global_vars + 0x30)
     }
 
     fn current_map(&self) -> String {
@@ -574,29 +593,76 @@ impl CS2 {
         for index_in_bucket in 0..IDENTITIES_PER_BUCKET {
             let identity_offset = index_in_bucket * self.offsets.entity_identity.size as usize;
 
+            let entity: u64 = *bytemuck::from_bytes(&bucket[identity_offset..identity_offset + 8]);
+            if entity == 0 {
+                continue;
+            }
+
             let handle_start = identity_offset + 0x10;
             let handle: u32 = *bytemuck::from_bytes(&bucket[handle_start..handle_start + 4]);
             let handle_index = handle & 0x7FFF;
-            // I have no idea why -1024 is needed :(
             let entity_index =
-                bucket_index as u32 * IDENTITIES_PER_BUCKET as u32 + index_in_bucket as u32 - 1024;
+                (bucket_index as usize * IDENTITIES_PER_BUCKET + index_in_bucket) as u32;
             if entity_index != handle_index {
                 continue;
             }
 
-            let entity: u64 = *bytemuck::from_bytes(&bucket[identity_offset..identity_offset + 8]);
-            let name_pointer: u64 =
+            let class_info_ptr: u64 =
+                *bytemuck::from_bytes(&bucket[identity_offset + 8..identity_offset + 16]);
+            let class_info: u64 = self.process.read(class_info_ptr + 0x30);
+            let class_name_ptr: u64 = self.process.read(class_info + 0x08);
+            let class = self.process.read_string(class_name_ptr);
+
+            match class.as_str() {
+                class::PLANTED_C4 => {
+                    let planted_c4 = PlantedC4::new(entity);
+                    if planted_c4.is_relevant(self) {
+                        self.planted_c4 = Some(planted_c4)
+                    }
+                }
+                class::INFERNO => {
+                    self.entities.push(Entity::Inferno(Inferno::new(entity)));
+                }
+                class::SMOKE => {
+                    self.entities.push(Entity::Smoke(Smoke::new(entity)));
+                }
+                class::MOLOTOV => self.entities.push(Entity::Molotov(Molotov::new(entity))),
+                class::FLASHBANG => self.entities.push(Entity::Flashbang(entity)),
+                class::HE_GRENADE => self.entities.push(Entity::HeGrenade(entity)),
+                class::DECOY => self.entities.push(Entity::Decoy(entity)),
+                _ => {
+                    // check if weapon
+                    let entity_identity: u64 = self.process.read(entity + 0x10);
+                    if entity_identity == 0 {
+                        continue;
+                    }
+
+                    let name_pointer = self.process.read(entity_identity + 0x20);
+                    if name_pointer == 0 {
+                        continue;
+                    }
+
+                    let name = self.process.read_string(name_pointer);
+
+                    if name.starts_with("weapon_") {
+                        if self.entity_has_owner(entity) {
+                            continue;
+                        }
+
+                        let weapon = Weapon::from_handle(entity, self);
+
+                        self.entities.push(Entity::Weapon { weapon, entity })
+                    }
+                }
+            }
+
+            // m_designerName
+            /*let name_pointer: u64 =
                 *bytemuck::from_bytes(&bucket[identity_offset + 0x20..identity_offset + 0x28]);
             let Some(entity) = self.entity_type(entity, name_pointer) else {
                 continue;
             };
-            self.entities.push(entity);
+            self.entities.push(entity);*/
         }
     }
-}
-
-#[derive(Debug)]
-pub enum Entity {
-    Weapon(Weapon, Vec3),
-    Smoke(Smoke),
 }

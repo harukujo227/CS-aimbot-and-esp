@@ -136,6 +136,44 @@ impl Process {
         buffer
     }
 
+    pub fn read_typed_vec<T: Pod + Default>(
+        &self,
+        address: u64,
+        stride: usize,
+        count: usize,
+    ) -> Vec<T> {
+        let size = size_of::<T>();
+        assert!(stride >= size);
+
+        let mut buffer = vec![0u8; stride * count];
+
+        let local_iov = iovec {
+            iov_base: buffer.as_mut_ptr() as *mut libc::c_void,
+            iov_len: buffer.len(),
+        };
+        let remote_iov = iovec {
+            iov_base: address as *mut libc::c_void,
+            iov_len: buffer.len(),
+        };
+
+        unsafe {
+            process_vm_readv(self.pid, &local_iov, 1, &remote_iov, 1, 0);
+        }
+
+        let mut result = vec![T::default(); count];
+        let result_ptr = result.as_mut_ptr() as *mut u8;
+
+        for i in 0..count {
+            unsafe {
+                let src = buffer.as_ptr().add(i * stride);
+                let dst = result_ptr.add(i * size);
+                std::ptr::copy_nonoverlapping(src, dst, size);
+            }
+        }
+
+        result
+    }
+
     pub fn write<T: NoUninit>(&self, address: u64, value: T) {
         let mut buffer = bytemuck::bytes_of(&value).to_vec();
 

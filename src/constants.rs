@@ -16,6 +16,16 @@ pub mod cs2 {
 
     pub const WEAPON_UNKNOWN: &str = "unknown";
     pub const DEFAULT_FOV: u32 = 90;
+
+    pub mod class {
+        pub const PLANTED_C4: &str = "C_PlantedC4";
+        pub const INFERNO: &str = "C_Inferno";
+        pub const SMOKE: &str = "C_SmokeGrenadeProjectile";
+        pub const MOLOTOV: &str = "C_MolotovProjectile";
+        pub const FLASHBANG: &str = "C_FlashbangProjectile";
+        pub const HE_GRENADE: &str = "C_HEGrenadeProjectile";
+        pub const DECOY: &str = "C_DecoyProjectile";
+    }
 }
 
 pub mod elf {

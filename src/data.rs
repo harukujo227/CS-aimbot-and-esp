@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use glam::{Mat4, Vec2, Vec3};
 use serde::Serialize;
 
-use crate::cs2::{bones::Bones, weapon::Weapon};
+use crate::cs2::{bones::Bones, entity::EntityInfo, weapon::Weapon};
 
 #[derive(Debug, Default, Serialize)]
 pub struct Data {
@@ -13,7 +13,7 @@ pub struct Data {
     pub players: Vec<PlayerData>,
     pub friendlies: Vec<PlayerData>,
     pub local_player: PlayerData,
-    pub weapons: Vec<(Weapon, Vec3)>,
+    pub entities: Vec<EntityInfo>,
     pub bomb: BombData,
     pub map_name: String,
     pub view_matrix: Mat4,
