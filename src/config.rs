@@ -146,7 +146,6 @@ pub struct TriggerbotConfig {
     pub scope_check: bool,
     pub velocity_check: bool,
     pub velocity_threshold: f32,
-    pub smoke_check: bool,
     pub head_only: bool,
     pub additional_duration_ms: u32,
 }
@@ -162,7 +161,6 @@ impl Default for TriggerbotConfig {
             scope_check: true,
             velocity_check: true,
             velocity_threshold: 100.0,
-            smoke_check: true,
             head_only: false,
             additional_duration_ms: 200,
         }

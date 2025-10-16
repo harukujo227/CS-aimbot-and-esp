@@ -457,16 +457,6 @@ impl App {
                 }
                 ui.label("Velocity Threshold");
             });
-
-            if ui
-                .checkbox(
-                    &mut self.weapon_config().triggerbot.smoke_check,
-                    "Smoke Check",
-                )
-                .changed()
-            {
-                self.send_config();
-            }
         });
 
         collapsing_open(ui, "RCS", |ui| {
