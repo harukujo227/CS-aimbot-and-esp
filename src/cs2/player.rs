@@ -12,7 +12,7 @@ use super::{CS2, weapon_class::WeaponClass};
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Player {
     controller: u64,
-    pawn: u64,
+    pub(crate) pawn: u64,
 }
 
 impl Player {
@@ -23,13 +23,14 @@ impl Player {
         }
     }
 
+    #[allow(unused)]
     pub fn index(cs2: &CS2, index: u64) -> Option<Self> {
         let controller = Self::get_client_entity(cs2, index)?;
-        Self::get_entity(
-            cs2,
-            cs2.process.read(controller + cs2.offsets.controller.pawn),
-        )
-        .map(|pawn| Self { controller, pawn })
+        let pawn_handle: i32 = cs2.process.read(controller + cs2.offsets.controller.pawn);
+        if pawn_handle == -1 {
+            return None;
+        }
+        Self::get_entity(cs2, pawn_handle).map(|pawn| Self { controller, pawn })
     }
 
     pub fn local_player(cs2: &CS2) -> Option<Self> {
@@ -37,6 +38,14 @@ impl Player {
         if controller == 0 {
             return None;
         }
+        let pawn_handle: i32 = cs2.process.read(controller + cs2.offsets.controller.pawn);
+        if pawn_handle == -1 {
+            return None;
+        }
+        Self::get_entity(cs2, pawn_handle).map(|pawn| Self { controller, pawn })
+    }
+
+    pub fn from_controller(controller: u64, cs2: &CS2) -> Option<Self> {
         let pawn_handle: i32 = cs2.process.read(controller + cs2.offsets.controller.pawn);
         if pawn_handle == -1 {
             return None;
@@ -462,6 +471,7 @@ impl Player {
 }
 
 impl CS2 {
+    #[allow(unused)]
     pub fn cache_players(&mut self) {
         if !self.process.is_valid() {
             self.players.clear();

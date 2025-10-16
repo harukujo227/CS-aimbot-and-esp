@@ -18,6 +18,8 @@ pub mod cs2 {
     pub const DEFAULT_FOV: u32 = 90;
 
     pub mod class {
+        pub const PLAYER_CONTROLLER: &str = "CCSPlayerController";
+
         pub const PLANTED_C4: &str = "C_PlantedC4";
         pub const INFERNO: &str = "C_Inferno";
         pub const SMOKE: &str = "C_SmokeGrenadeProjectile";

@@ -104,7 +104,7 @@ impl Game for CS2 {
             return;
         }
 
-        self.cache_players();
+        // self.cache_players();
         self.cache_entities();
 
         for entity in &self.entities {
@@ -569,7 +569,11 @@ impl CS2 {
     }
 
     fn cache_entities(&mut self) {
+        self.players.clear();
         self.entities.clear();
+        let Some(local_player) = Player::local_player(self) else {
+            return;
+        };
         const NUM_BUCKETS: usize = 64;
         let bucket_pointers = self
             .process
@@ -577,11 +581,16 @@ impl CS2 {
         for bucket_index in 0..64 {
             let bucket_pointer =
                 *bytemuck::from_bytes(&bucket_pointers[bucket_index * 8..(bucket_index + 1) * 8]);
-            self.get_entities_in_bucket(bucket_index as u64, bucket_pointer);
+            self.get_entities_in_bucket(bucket_index as u64, bucket_pointer, &local_player);
         }
     }
 
-    fn get_entities_in_bucket(&mut self, bucket_index: u64, bucket_ptr: u64) {
+    fn get_entities_in_bucket(
+        &mut self,
+        bucket_index: u64,
+        bucket_ptr: u64,
+        local_player: &Player,
+    ) {
         if bucket_ptr == 0 || bucket_ptr >> 48 != 0 {
             return;
         }
@@ -614,6 +623,37 @@ impl CS2 {
             let class = self.process.read_string(class_name_ptr);
 
             match class.as_str() {
+                class::PLAYER_CONTROLLER => {
+                    let Some(player) = Player::from_controller(entity, self) else {
+                        return;
+                    };
+
+                    if !player.is_valid(self) {
+                        return;
+                    }
+
+                    if let Some(target) = player.spectator_target(self) {
+                        let spectator_id = player.steam_id(self);
+                        let target_pawn = target.pawn;
+                        let local_pawn = local_player.pawn;
+
+                        if target_pawn == local_pawn {
+                            let spectator_name = player.name(self);
+                            let local_steam_id = local_player.steam_id(self);
+                            self.dead_spectators.borrow_mut().push((
+                                spectator_name,
+                                spectator_id,
+                                local_steam_id,
+                            ));
+                        }
+                    }
+
+                    if player == *local_player {
+                        self.target.local_pawn_index = (handle as u64 & 0x7FFF) - 1;
+                    } else {
+                        self.players.push(player);
+                    }
+                }
                 class::PLANTED_C4 => {
                     let planted_c4 = PlantedC4::new(entity);
                     if planted_c4.is_relevant(self) {
