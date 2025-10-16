@@ -495,6 +495,9 @@ fn download_s2v(client: &ureq::Agent, url: &str, file_path: &Path) {
 }
 
 fn unzip_s2v(file_path: &Path, dir: &Path) {
+    if !dir.exists() {
+        std::fs::create_dir_all(dir).unwrap();
+    }
     Command::new("unzip")
         .args([file_path.to_str().unwrap(), "-d", dir.to_str().unwrap()])
         .output()
