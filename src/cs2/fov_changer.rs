@@ -1,6 +1,6 @@
 use crate::{config::Config, constants::cs2};
 
-use super::{player::Player, CS2};
+use super::{CS2, player::Player};
 
 impl CS2 {
     pub fn fov_changer(&self, config: &Config) {

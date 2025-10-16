@@ -1,6 +1,8 @@
 .idea
 .vscode
+.direnv
 
+/result
 /target
 /radar/node_modules
 

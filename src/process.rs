@@ -7,7 +7,7 @@ use std::{
     path::PathBuf,
 };
 
-use bytemuck::{AnyBitPattern, NoUninit, Pod};
+use bytemuck::{NoUninit, Pod};
 use nix::libc::{self, iovec, process_vm_readv, process_vm_writev};
 
 use crate::constants::{cs2, elf};
@@ -134,52 +134,6 @@ impl Process {
         }
 
         buffer
-    }
-
-    pub fn read_batched<T: AnyBitPattern + Default>(&self, addresses: &[u64]) -> Vec<T> {
-        let count = addresses.len();
-        let size = size_of::<T>();
-
-        let mut buffer = vec![0u8; count * size];
-
-        let mut local_iovecs = Vec::with_capacity(count);
-        for i in 0..count {
-            let pointer = unsafe { buffer.as_mut_ptr().add(i * size) as *mut libc::c_void };
-            local_iovecs.push(iovec {
-                iov_base: pointer,
-                iov_len: size,
-            });
-        }
-
-        let mut remove_iovecs = Vec::with_capacity(count);
-        for &address in addresses {
-            remove_iovecs.push(iovec {
-                iov_base: address as *mut libc::c_void,
-                iov_len: size,
-            });
-        }
-
-        unsafe {
-            process_vm_readv(
-                self.pid,
-                local_iovecs.as_ptr(),
-                local_iovecs.len() as libc::c_ulong,
-                remove_iovecs.as_ptr(),
-                remove_iovecs.len() as libc::c_ulong,
-                0,
-            );
-        }
-
-        let mut results = Vec::with_capacity(count);
-        for i in 0..count {
-            let start = i * size;
-            let end = start + size;
-            let slice = &buffer[start..end];
-            let value = bytemuck::try_from_bytes(slice).copied().unwrap_or_default();
-            results.push(value);
-        }
-
-        results
     }
 
     pub fn write<T: NoUninit>(&self, address: u64, value: T) {

@@ -1,7 +1,11 @@
 use glam::Vec2;
 use strum::IntoEnumIterator;
 
-use crate::{constants::cs2, math::angles_to_fov, config::{Config, TargetingMode}};
+use crate::{
+    config::{Config, TargetingMode},
+    constants::cs2,
+    math::angles_to_fov,
+};
 
 use super::{CS2, bones::Bones, player::Player, weapon_class::WeaponClass};
 
@@ -55,11 +59,11 @@ impl CS2 {
         let aimbot_config = self.aimbot_config(config);
         let targeting_mode = &aimbot_config.targeting_mode;
         let max_fov = aimbot_config.fov;
-        
+
         let mut best_fov = 360.0;
         let mut best_distance = f32::MAX;
         let eye_position = local_player.eye_position(self);
-        
+
         if self.target.player.is_none() {
             self.target.reset();
         }
@@ -68,7 +72,7 @@ impl CS2 {
         {
             self.target.reset();
         }
-        
+
         for player in &self.players {
             if !ffa && team == player.team(self) {
                 continue;
@@ -78,7 +82,7 @@ impl CS2 {
             let distance = eye_position.distance(head_position);
             let angle = self.angle_to_target(&local_player, &head_position, &aim_punch);
             let fov = angles_to_fov(&view_angles, &angle);
-            
+
             let fov_limit = max_fov * self.distance_scale(distance);
             if fov > fov_limit {
                 continue;
