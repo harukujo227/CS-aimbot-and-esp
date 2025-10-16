@@ -25,6 +25,7 @@ pub const DEFAULT_URL: &str = "localhost:6346";
 pub const VERSION: &str = concat!("v", env!("CARGO_PKG_VERSION"));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Config {
     pub aim: AimConfig,
     pub player: PlayerConfig,
@@ -50,6 +51,7 @@ impl Default for Config {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct WeaponConfig {
     pub aimbot: AimbotConfig,
     pub rcs: RcsConfig,
@@ -71,6 +73,7 @@ impl WeaponConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct AimbotConfig {
     pub enable_override: bool,
     pub enabled: bool,
@@ -108,6 +111,7 @@ impl Default for AimbotConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct RcsConfig {
     pub enable_override: bool,
     pub enabled: bool,
@@ -137,6 +141,7 @@ pub enum TargetingMode {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct TriggerbotConfig {
     pub enable_override: bool,
     pub enabled: bool,
@@ -168,6 +173,7 @@ impl Default for TriggerbotConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct AimConfig {
     pub hotkey: KeyCode,
     pub triggerbot_hotkey: KeyCode,
@@ -208,6 +214,7 @@ pub enum BoxMode {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct PlayerConfig {
     pub enabled: bool,
     pub esp_hotkey: KeyCode,
@@ -249,6 +256,7 @@ impl Default for PlayerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct HudConfig {
     pub bomb_timer: bool,
     pub fov_circle: bool,
@@ -296,6 +304,7 @@ impl Default for HudConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct RadarConfig {
     pub enabled: bool,
     pub url: String,
@@ -311,6 +320,7 @@ impl Default for RadarConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct UnsafeConfig {
     pub no_flash: bool,
     pub max_flash_alpha: f32,
