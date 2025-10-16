@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 
 use glam::Vec2;
-use rand::{rng, Rng};
+use rand::{Rng, rng};
 
 use crate::{
     config::{Config, TriggerbotMode},
@@ -68,7 +68,16 @@ impl CS2 {
             let mut best_player: Option<Player> = None;
             let mut best_fov = 1.5;
 
-            let critical_bones = [Bones::Head, Bones::Neck, Bones::Spine4, Bones::Spine3, Bones::LeftFoot, Bones::RightFoot, Bones::LeftHand, Bones::RightHand];
+            let critical_bones = [
+                Bones::Head,
+                Bones::Neck,
+                Bones::Spine4,
+                Bones::Spine3,
+                Bones::LeftFoot,
+                Bones::RightFoot,
+                Bones::LeftHand,
+                Bones::RightHand,
+            ];
 
             for player in &self.players {
                 if !self.is_ffa() && player.team(self) == local_player.team(self) {
@@ -134,10 +143,11 @@ impl CS2 {
         let delay = normal.sample(&mut rng()).max(0.0) as u64;
 
         self.trigger.next_shot = Some(Instant::now() + Duration::from_millis(delay));
-        
+
         if config.additional_duration_ms > 0 {
             self.trigger.additional_shooting_end_time = Some(
-                Instant::now() + Duration::from_millis(delay as u64 + config.additional_duration_ms as u64)
+                Instant::now()
+                    + Duration::from_millis(delay as u64 + config.additional_duration_ms as u64),
             );
         } else {
             self.trigger.additional_shooting_end_time = None;
@@ -146,20 +156,21 @@ impl CS2 {
 
     pub fn triggerbot_shoot(&mut self, mouse: &mut Mouse) {
         let now = Instant::now();
-        
+
         if let Some(shot_time) = self.trigger.next_shot
             && now >= shot_time
         {
             mouse.left_press();
             mouse.left_release();
             self.trigger.next_shot = None;
-            
+
             if self.trigger.additional_shooting_end_time.is_some() {
                 let additional_delay = 50 + (rand::rng().random::<u64>() % 100);
-                self.trigger.next_additional_shot = Some(now + Duration::from_millis(additional_delay));
+                self.trigger.next_additional_shot =
+                    Some(now + Duration::from_millis(additional_delay));
             }
         }
-        
+
         if let Some(additional_shot_time) = self.trigger.next_additional_shot
             && let Some(end_time) = self.trigger.additional_shooting_end_time
             && now >= additional_shot_time
@@ -167,10 +178,10 @@ impl CS2 {
         {
             mouse.left_press();
             mouse.left_release();
-            
+
             let next_delay = 40 + (rand::rng().random::<u64>() % 80);
             let next_shot_time = now + Duration::from_millis(next_delay);
-            
+
             if next_shot_time < end_time {
                 self.trigger.next_additional_shot = Some(next_shot_time);
             } else {
@@ -178,7 +189,7 @@ impl CS2 {
                 self.trigger.additional_shooting_end_time = None;
             }
         }
-        
+
         if let Some(end_time) = self.trigger.additional_shooting_end_time
             && now >= end_time
         {
@@ -186,5 +197,4 @@ impl CS2 {
             self.trigger.additional_shooting_end_time = None;
         }
     }
-
 }
