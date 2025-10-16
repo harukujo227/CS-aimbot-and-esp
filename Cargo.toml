@@ -36,5 +36,4 @@ overflow-checks = false
 
 [profile.release]
 lto = true
-strip = "debuginfo"
 debug = true
