@@ -625,11 +625,11 @@ impl CS2 {
             match class.as_str() {
                 class::PLAYER_CONTROLLER => {
                     let Some(player) = Player::from_controller(entity, self) else {
-                        return;
+                        continue;
                     };
 
                     if !player.is_valid(self) {
-                        return;
+                        continue;
                     }
 
                     if let Some(target) = player.spectator_target(self) {
