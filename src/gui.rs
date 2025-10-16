@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use egui::{
     Align, Align2, Button, CollapsingHeader, Color32, Context, DragValue, FontId, Painter, Pos2,
@@ -1247,6 +1247,11 @@ impl App {
                 self.skeleton(&painter, player, data);
             }
         }
+
+        let now = Instant::now();
+        let max_age = Duration::from_secs(1);
+        self.trails
+            .retain(|_k, trail| now - trail.last_update < max_age);
 
         if self.config.hud.dropped_weapons || self.config.hud.grenade_trails {
             for entity in &data.entities {
