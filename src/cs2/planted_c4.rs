@@ -13,7 +13,7 @@ impl PlantedC4 {
     }
 
     pub fn is_relevant(&self, cs2: &CS2) -> bool {
-        !self.has_exploded(cs2) && self.is_defused(cs2)
+        !self.has_exploded(cs2) && !self.is_defused(cs2)
     }
 
     pub fn has_exploded(&self, cs2: &CS2) -> bool {
