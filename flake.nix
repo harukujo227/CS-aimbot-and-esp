@@ -1,5 +1,5 @@
 {
-  description = "deadlocked dev shell for nix users";
+  description = "deadlocked dev shell for Nix users";
   
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
