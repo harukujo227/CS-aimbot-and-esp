@@ -61,9 +61,6 @@ fn main() {
     let bvh_gui = bvh.clone();
 
     let force_reparse = args.iter().any(|arg| arg == "--force-reparse");
-    if force_reparse {
-        log::info!("reparsing map data");
-    }
     std::thread::spawn(move || {
         crash::install_crash_handler();
         parse_maps(bvh, force_reparse);

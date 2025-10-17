@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     fs::File,
-    io::{self, BufReader, Read},
+    io::{BufReader, Read, Write as _},
     path::{Path, PathBuf},
     process::Command,
     sync::{Arc, Mutex},
@@ -9,61 +9,41 @@ use std::{
 
 use bytemuck::AnyBitPattern;
 use glam::{Mat4, Quat, Vec2, Vec3, Vec4};
-use sha2::Digest;
 
 use crate::{
     bvh::{Bvh, Triangle},
-    config::CONFIG_PATH,
     crash,
 };
 
-const RELEASE_URL: &str =
-    "https://api.github.com/repos/ValveResourceFormat/ValveResourceFormat/releases/latest";
-const ASSET_NAME: &str = "cli-linux-x64.zip";
-
-pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, force_reparse: bool) {
+pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, mut force_reparse: bool) {
     crash::info();
-    let file_path = CONFIG_PATH.join(ASSET_NAME);
-    let dir = file_path.parent().unwrap().join("source2viewer");
-    let exe_path = dir.join("Source2Viewer-CLI");
+    let source2viewer = exe_path().join("source2viewer/Source2Viewer-CLI");
 
-    check_update(&file_path, &dir);
-    if !dir.exists() {
-        unzip_s2v(&file_path, &dir);
+    let game_dir = game_dir().unwrap();
+    let build_file = game_dir.join("game/bin/built_from_cl.txt");
+    let cs2_build_raw =
+        std::fs::read_to_string(&build_file).expect("could not read cs2 build number");
+    let cs2_build = cs2_build_raw.trim();
+    let cs2_build: u64 = cs2_build.parse().unwrap();
+
+    let maps_dir = maps_dir().unwrap();
+    let parsed_build_file = maps_dir.join("parsed_build.txt");
+    let parsed_build = std::fs::read_to_string(&parsed_build_file).unwrap_or_default();
+    let parsed_build: u64 = parsed_build.parse().unwrap_or_default();
+
+    if parsed_build != cs2_build {
+        force_reparse = true;
     }
 
-    let home = std::env::var("HOME").expect("could not find home directory");
-    let steam_path = PathBuf::from(home).join(".steam/steam");
-    if !steam_path.exists() {
-        log::warn!("could not locate steam directory");
-        return;
+    if force_reparse {
+        log::info!("reparsing map data");
     }
 
-    let library_folders = steam_path.join("config/libraryfolders.vdf");
-    let content =
-        std::fs::read_to_string(&library_folders).expect("could not read steam library folders");
-    let libs: Vec<&str> = content
-        .lines()
-        .filter_map(|line| {
-            if line.contains("\"path\"") {
-                Some(line.rsplit('"').nth(1).unwrap())
-            } else {
-                None
-            }
-        })
-        .collect();
+    if force_reparse {
+        log::info!("reparsing map data");
+    }
 
-    let game_dir = libs
-        .iter()
-        .find(|&&lib| {
-            let dir = PathBuf::from(lib).join("steamapps/common/Counter-Strike Global Offensive");
-            dir.exists()
-        })
-        .expect("could not find game directory");
-    let maps_dir = PathBuf::from(game_dir)
-        .join("steamapps/common/Counter-Strike Global Offensive/game/csgo/maps");
-
-    let mut files = Vec::with_capacity(16);
+    let mut files = Vec::with_capacity(32);
     for file in std::fs::read_dir(&maps_dir).expect("could not read cs2 maps dir") {
         let Ok(file) = file else {
             continue;
@@ -93,6 +73,15 @@ pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, force_reparse: bool) {
         files.push(file_name.to_string());
     }
 
+    let geom_dir = maps_dir.join("geometry");
+    if force_reparse && geom_dir.exists() {
+        std::fs::remove_dir_all(&geom_dir).unwrap();
+    }
+
+    if !geom_dir.exists() {
+        std::fs::create_dir_all(geom_dir.join("maps")).unwrap();
+    }
+
     for file in &files {
         let path = maps_dir.join(file);
         let map_name = file.replace(".vpk", "");
@@ -101,17 +90,17 @@ pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, force_reparse: bool) {
             continue;
         }
 
-        let _ = Command::new(exe_path.as_os_str())
-            .args([
-                "-i",
-                path.to_str().unwrap(),
-                "-d",
-                "-o",
-                maps_dir.join("geometry").to_str().unwrap(),
-                "-f",
-                &format!("maps/{map_name}/world_physics.vmdl_c"),
-            ])
-            .output();
+        let mut s2v_cmd = Command::new(source2viewer.as_os_str());
+        s2v_cmd.args([
+            "-i",
+            path.to_str().unwrap(),
+            "-d",
+            "-o",
+            geom_dir.to_str().unwrap(),
+            "-f",
+            &format!("maps/{map_name}/world_physics.vmdl_c"),
+        ]);
+        s2v_cmd.output().unwrap();
     }
 
     let cpus = std::thread::available_parallelism()
@@ -134,6 +123,10 @@ pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, force_reparse: bool) {
             let _ = thread.join();
         }
     }
+    let mut parsed_build_file = File::create(&parsed_build_file).unwrap();
+    parsed_build_file
+        .write_all(format!("{cs2_build}").as_bytes())
+        .unwrap();
     log::info!("loaded map info");
 }
 
@@ -434,75 +427,50 @@ enum Attribute {
     U64Array(Vec<u64>),
 }
 
-fn check_update(file_path: &Path, dir: &Path) {
-    let client = ureq::Agent::new_with_defaults();
-
-    let mut response = client
-        .get(RELEASE_URL)
-        .call()
-        .expect("failed to fetch release metadata");
-    let release: serde_json::Value = response
-        .body_mut()
-        .read_json()
-        .expect("failed to extract json from release metadata");
-
-    let assets = release["assets"]
-        .as_array()
-        .expect("invalid asset metadata format");
-    let asset = assets
-        .iter()
-        .find(|&a| a["name"].as_str().unwrap_or_default() == ASSET_NAME)
-        .expect("could not find source 2 viewer linux cli");
-
-    let checksum = asset["digest"]
-        .as_str()
-        .expect("could not find asset hash")
-        .replace("sha256:", "");
-
-    let url = asset["browser_download_url"]
-        .as_str()
-        .expect("could not find asset download url");
-
-    if !file_path.exists() {
-        update_s2v(url, &client, file_path, dir);
+fn game_dir() -> Option<PathBuf> {
+    let Ok(home) = std::env::var("HOME") else {
+        log::warn!("could not find home directory");
+        return None;
+    };
+    let steam_path = PathBuf::from(home).join(".steam/steam");
+    if !steam_path.exists() {
+        log::warn!("could not locate steam directory");
+        return None;
     }
 
-    let mut file = File::open(file_path).expect("could not open source 2 viewer file");
-    let mut hasher = sha2::Sha256::new();
-    io::copy(&mut file, &mut hasher).unwrap();
-    let file_checksum = hasher.finalize();
-    let file_checksum = format!("{file_checksum:x}");
+    let library_folders = steam_path.join("config/libraryfolders.vdf");
+    let Ok(content) = std::fs::read_to_string(&library_folders) else {
+        log::warn!("could not read steam library folders");
+        return None;
+    };
+    let libs: Vec<&str> = content
+        .lines()
+        .filter_map(|line| {
+            if line.contains("\"path\"") {
+                Some(line.rsplit('"').nth(1).unwrap())
+            } else {
+                None
+            }
+        })
+        .collect();
 
-    if file_checksum != checksum {
-        update_s2v(url, &client, file_path, dir);
-    }
+    let game_dir = libs.iter().find(|&&lib| {
+        let dir = PathBuf::from(lib).join("steamapps/common/Counter-Strike Global Offensive");
+        dir.exists()
+    })?;
+    Some(PathBuf::from(game_dir).join("steamapps/common/Counter-Strike Global Offensive"))
 }
 
-fn update_s2v(url: &str, client: &ureq::Agent, file_path: &Path, dir: &Path) {
-    download_s2v(client, url, file_path);
-    unzip_s2v(file_path, dir);
+fn maps_dir() -> Option<PathBuf> {
+    game_dir().map(|p| p.join("game/csgo/maps"))
 }
 
-fn download_s2v(client: &ureq::Agent, url: &str, file_path: &Path) {
-    let mut res = client
-        .get(url)
-        .call()
-        .expect("could not fetch source 2 viewer cli");
-
-    let mut file = File::create(file_path).expect("could not create source 2 viewer cli");
-    io::copy(&mut res.body_mut().as_reader(), &mut file).unwrap();
-    log::info!("downloaded source 2 viewer cli");
-}
-
-fn unzip_s2v(file_path: &Path, dir: &Path) {
-    if !dir.exists() {
-        std::fs::create_dir_all(dir).unwrap();
-    }
-    Command::new("unzip")
-        .args([file_path.to_str().unwrap(), "-d", dir.to_str().unwrap()])
-        .output()
-        .expect("could not unzip source 2 viewer cli");
-    log::info!("unzipped source 2 viewer cli");
+fn exe_path() -> PathBuf {
+    std::env::current_exe()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .to_path_buf()
 }
 
 fn read<T: AnyBitPattern + Default>(reader: &mut impl Read) -> T {
