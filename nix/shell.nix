@@ -1,34 +1,31 @@
-{pkgs}:
-let 
-  source2viewer = pkgs.callPackage ./source2viewer.nix {};
-in
-pkgs.mkShell rec {
-  name = "deadlocked-dev-shell";
+{ pkgs }:
 
-  # Libraries that need to be prelinked
+let
+  # Graphics and X11 libraries
   baseLibs = with pkgs; [
     libx11
     libxcursor
     libxkbcommon
-    xorg.libXcursor
-    xorg.libXi
-
     libGL
+    xorg.libXi
   ];
+
+  source2viewer = pkgs.callPackage ./source2viewer.nix {};
+in
+pkgs.mkShell {
+  name = "deadlocked-dev-shell";
+  
   nativeBuildInputs = with pkgs;
     [
-      # Compilers
+      # Rust toolchain
       cargo
       rustc
       scdoc
-
-      # Dependencies
+      # Runtime dependencies
       wayland
       source2viewer
-
-      nodejs_24 # radar
-
-      # Tools
+      nodejs_24
+      # Development tools
       cargo-audit
       cargo-deny
       pkg-config
@@ -39,5 +36,6 @@ pkgs.mkShell rec {
       gdb
     ]
     ++ baseLibs;
-  LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath baseLibs}";
+    
+  LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath baseLibs;
 }

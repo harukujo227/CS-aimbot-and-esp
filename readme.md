@@ -1,108 +1,166 @@
 # deadlocked
-
-![downloads](https://img.shields.io/github/downloads/avitran0/deadlocked/total?color=blue)
-[![foss cs2 hacking](https://badgen.net/discord/members/eXjG4Ar9Sx)](https://discord.gg/eXjG4Ar9Sx)
-
 simple cs2 aimbot and esp, for linux only.
 
-## features
+[![Open Source CS2 Hacking](https://badgen.net/discord/members/eXjG4Ar9Sx)](https://discord.gg/eXjG4Ar9Sx)
 
-- aimbot
-  - fov
-  - smoothing
-  - visibility check (vpk parsing)
-  - head only/whole body
-  - flash check
-  - fov circle
-- esp
-  - box
-  - skeleton
-  - health bar
-  - armor bar
-  - player name
-  - weapon name
-  - player tags (helmet, defuser, bomb)
-  - dropped weapons
-  - bomb timer
-- triggerbot
-  - min/max delay
-  - visibility check
-  - flash check
-  - scope check
-  - velocity threshold
-  - head only mode
-- standalone rcs
-  - smoothing
-- aimbot, triggerbot and rcs per-weapon overrides
-- misc
-  - sniper crosshair
-- unsafe
-  - no flash
-    - max flash alpha
-  - fov changer
-  - no smoke
-  - smoke color change
+## Features
+
+### Aimbot
+- FOV
+- Smoothing
+- Visibility check (VPK parsing)
+- Head only/whole body
+- Flash check
+- FOV circle
+
+### ESP
+- Box
+- Skeleton
+- Health bar
+- Armor bar
+- Player name
+- Weapon name
+- Player tags (helmet, defuser, bomb)
+- Dropped weapons
+- Bomb timer
+
+### Triggerbot
+- Min/max delay
+- Visibility check
+- Flash check
+- Scope check
+- Velocity threshold
+- Head only mode
+
+### Standalone RCS
+- Smoothing
+
+### Per-Weapon Overrides
+- Aimbot
+- Triggerbot
+- RCS
+
+### Misc
+- Sniper crosshair
+
+### Unsafe
 
 > [!WARNING]
-> the features in the unsafe tab are there for a reason.
-> do not use them unless you are fine with risking a ban.
-> they write to game memory.
+> These features write to game memory and carry ban risk.
+
+- No flash (with max flash alpha)
+- FOV changer
+- No smoke
+- Smoke color change
 
 > [!CAUTION]
-> vacnet 3.0 seems to be better at detecting aimbot and wallhacks, so **do not** use aim lock,
-> and play with a low fov to avoid bans. use visuals sparingly.
+> VACNet 3.0 is better at detecting aimbot and wallhacks. **Do not** use aim lock. Play with a low FOV. Use visuals sparingly.
 
-## setup
+## Setup
 
-- add your user to the `input` group: `sudo usermod -aG input $(whoami)`
-- restart your machine (this will **_not_** work without a restart!)
-- clone the repository: `git clone --recursive https://github.com/avitran0/deadlocked`
-- install rust from `https://rustup.rs/`
+### Linux (Generic)
 
-## running
+```bash
+sudo usermod -aG input $(whoami)
+# Restart your machine (required)
+git clone --recursive https://github.com/avitran0/deadlocked
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
 
-- `cargo run --release`
+### NixOS
 
-## faq
+Add `"input"` to your user's `extraGroups` in `configuration.nix`:
 
-### where are my configs at?
+```nix
+users.users.yourname = {
+  isNormalUser = true;
+  extraGroups = [ "wheel" "input" ];
+};
+```
 
-they are saved in `$XDG_CONFIG_HOME`, if that is set.
-that usually defaults to `$HOME/.config`.
-if not, they are saved alongside the executable.
+Then rebuild and reboot:
 
-### radar
+```bash
+sudo nixos-rebuild switch
+sudo reboot
+```
 
-see [radar.md](radar.md)
+After reboot:
 
-### what desktop environments and window managers are supported?
+```bash
+git clone --recursive https://github.com/avitran0/deadlocked
+cd deadlocked
+nix flake update
+nix develop
+cargo run --release
+```
 
-it is tested on GNOME with Mutter, KDE with KWin, and SwayWM.
-support for other (especially tiling) window managers is not guaranteed.
-if in doubt, use either GNOME or KDE.
+Everything is configured in `flake.nix` and `nix/shell.nix`.
 
-### i'm using hyprland and something does not work
+### Fedora Atomic
 
-too bad, hyprland has bad support for the x11 shenanigans this cheat tries to do.
-this is nothing i can fix, and i doubt hyprland will improve its x11 support.
+```bash
+grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group && sudo usermod -aG input $USER
+# Restart your machine (required)
+git clone --recursive https://github.com/avitran0/deadlocked
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
 
-### i'm using gamescope to stretch the window, and the overlay is too small
+## Running
 
-this is because the game still thinks it's running in a 16/9 resolution.
-i can't really fix that, unfortunately.
+```bash
+cargo run --release
+```
 
-### the overlay window/my screen is black
+## FAQ
 
-your compositor or window manager does not support transparency, or it is not enabled.
+### Where are my configs saved?
 
-### the overlay shows up, but i cannot click on anything
+Configs are saved in `$XDG_CONFIG_HOME` if set (usually `$HOME/.config`). Otherwise they're saved alongside the executable.
 
-the window could not be made click-through, which might be because of window manager/compositor support.
+### How do I configure the radar?
 
-### the overlay does not show up
+See [radar.md](radar.md)
 
-you window manager does not support positioning or resizing the window.
+### Which desktop environments and window managers are supported?
 
-### the overlay is not on top of other windows
+**Best support:**
+- GNOME (Mutter)
+- KDE (KWin)
 
-your window manager does not support always on top windows.
+**Good support:**
+- SwayWM
+- Weston
+
+**Fair support:**
+- i3
+- OpenBox
+- XFCE
+
+**Limited/No support:**
+- Hyprland (poor X11 support)
+- Other Wayland-only compositors
+
+### I'm using Hyprland and something doesn't work
+
+Hyprland has poor X11 support for the techniques this cheat uses. This cannot be fixed.
+
+### I'm using Gamescope and the overlay is too small
+
+The game still thinks it's running in 16:9 resolution. This cannot be fixed.
+
+### My screen/overlay is black
+
+Your compositor or window manager doesn't support transparency, or it's not enabled.
+
+### The overlay shows but I can't click anything
+
+The window couldn't be made click-through. This is a window manager/compositor limitation.
+
+### The overlay doesn't show up
+
+Your window manager doesn't support positioning or resizing windows.
+
+### The overlay isn't on top of other windows
+
+Your window manager doesn't support always-on-top windows.
