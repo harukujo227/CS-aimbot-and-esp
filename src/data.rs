@@ -49,4 +49,5 @@ pub struct BombData {
     pub timer: f32,
     pub being_defused: bool,
     pub position: Vec3,
+    pub defuse_remain_time: f32,
 }

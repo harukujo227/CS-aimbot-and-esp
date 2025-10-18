@@ -140,6 +140,7 @@ pub struct PlantedC4Offsets {
     pub being_defused: u64, // bool (m_bBeingDefused)
     pub is_defused: u64,    // bool (m_bBombDefused)
     pub has_exploded: u64,  // bool (m_bHasExploded)
+    pub defuse_time_left: u64, // u64 (m_flDefuseCountDown)
 }
 
 #[derive(Debug, Default)]
