@@ -55,19 +55,19 @@ fn outline(pos: Pos2, color: Color32) -> [(Pos2, Color32); 5] {
     [
         (
             pos2(pos.x - OUTLINE_WIDTH, pos.y - OUTLINE_WIDTH),
-         Color32::BLACK,
+            Color32::BLACK,
         ),
         (
             pos2(pos.x + OUTLINE_WIDTH, pos.y - OUTLINE_WIDTH),
-         Color32::BLACK,
+            Color32::BLACK,
         ),
         (
             pos2(pos.x - OUTLINE_WIDTH, pos.y + OUTLINE_WIDTH),
-         Color32::BLACK,
+            Color32::BLACK,
         ),
         (
             pos2(pos.x + OUTLINE_WIDTH, pos.y + OUTLINE_WIDTH),
-         Color32::BLACK,
+            Color32::BLACK,
         ),
         (pos, color),
     ]
@@ -92,25 +92,25 @@ impl App {
     fn gui(&mut self, ctx: &Context) {
         ctx.set_pixels_per_point(self.display_scale);
         egui::SidePanel::left("sidebar")
-        .resizable(false)
-        .show(ctx, |ui| {
-            ui.selectable_value(&mut self.current_tab, Tab::Aimbot, "\u{f04fe} Aimbot");
-            ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
-            ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
-            ui.selectable_value(&mut self.current_tab, Tab::Radar, "\u{f0437} Radar");
-            ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
-            ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
+            .resizable(false)
+            .show(ctx, |ui| {
+                ui.selectable_value(&mut self.current_tab, Tab::Aimbot, "\u{f04fe} Aimbot");
+                ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
+                ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
+                ui.selectable_value(&mut self.current_tab, Tab::Radar, "\u{f0437} Radar");
+                ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
+                ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
 
-            ui.with_layout(egui::Layout::bottom_up(Align::Min), |ui| {
-                if ui.button("Report Issue").clicked() {
-                    std::process::Command::new("xdg-open")
-                    .arg("https://github.com/avitran0/deadlocked/issues")
-                    .status()
-                    .unwrap();
-                }
-                ui.label(VERSION);
+                ui.with_layout(egui::Layout::bottom_up(Align::Min), |ui| {
+                    if ui.button("Report Issue").clicked() {
+                        std::process::Command::new("xdg-open")
+                            .arg("https://github.com/avitran0/deadlocked/issues")
+                            .status()
+                            .unwrap();
+                    }
+                    ui.label(VERSION);
+                });
             });
-        });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             self.add_game_status(ui);
@@ -118,11 +118,11 @@ impl App {
 
             match self.current_tab {
                 Tab::Aimbot => self.aimbot_settings(ui),
-                                           Tab::Player => self.player_settings(ui),
-                                           Tab::Hud => self.hud_settings(ui),
-                                           Tab::Radar => self.radar_settings(ui),
-                                           Tab::Unsafe => self.unsafe_settings(ui),
-                                           Tab::Config => self.config_settings(ui, ctx),
+                Tab::Player => self.player_settings(ui),
+                Tab::Hud => self.hud_settings(ui),
+                Tab::Radar => self.radar_settings(ui),
+                Tab::Unsafe => self.unsafe_settings(ui),
+                Tab::Config => self.config_settings(ui, ctx),
             }
         });
     }
@@ -130,19 +130,19 @@ impl App {
     fn aimbot_config(&self, weapon: &Weapon) -> &AimbotConfig {
         if let Some(weapon_config) = self.config.aim.weapons.get(weapon)
             && weapon_config.aimbot.enable_override
-            {
-                return &weapon_config.aimbot;
-            }
-            &self.config.aim.global.aimbot
+        {
+            return &weapon_config.aimbot;
+        }
+        &self.config.aim.global.aimbot
     }
 
     fn weapon_config(&mut self) -> &mut WeaponConfig {
         if self.aimbot_tab == AimbotTab::Weapon {
             self.config
-            .aim
-            .weapons
-            .get_mut(&self.aimbot_weapon)
-            .unwrap()
+                .aim
+                .weapons
+                .get_mut(&self.aimbot_weapon)
+                .unwrap()
         } else {
             &mut self.config.aim.global
         }
@@ -154,164 +154,164 @@ impl App {
             ui.selectable_value(&mut self.aimbot_tab, AimbotTab::Weapon, "Weapon");
             if self.aimbot_tab == AimbotTab::Weapon {
                 egui::ComboBox::new("aimbot_weapon", "Weapon")
-                .selected_text(format!("{:?}", self.aimbot_weapon))
-                .show_ui(ui, |ui| {
-                    for weapon in Weapon::iter() {
-                        if weapon == Weapon::Unknown {
-                            continue;
+                    .selected_text(format!("{:?}", self.aimbot_weapon))
+                    .show_ui(ui, |ui| {
+                        for weapon in Weapon::iter() {
+                            if weapon == Weapon::Unknown {
+                                continue;
+                            }
+                            let text = format!("{:?}", weapon);
+                            ui.selectable_value(&mut self.aimbot_weapon, weapon, text);
                         }
-                        let text = format!("{:?}", weapon);
-                        ui.selectable_value(&mut self.aimbot_weapon, weapon, text);
-                    }
-                });
+                    });
             }
         });
         ui.separator();
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
-            .auto_shrink([false, true])
-            .id_salt("aimbot_left")
-            .show(left, |left| {
-                self.aimbot_left(left);
-            });
+                .auto_shrink([false, true])
+                .id_salt("aimbot_left")
+                .show(left, |left| {
+                    self.aimbot_left(left);
+                });
 
             let right = &mut cols[1];
             egui::ScrollArea::vertical()
-            .auto_shrink([false, true])
-            .id_salt("aimbot_right")
-            .show(right, |right| {
-                self.aimbot_right(right);
-            });
+                .auto_shrink([false, true])
+                .id_salt("aimbot_right")
+                .show(right, |right| {
+                    self.aimbot_right(right);
+                });
         });
     }
 
     fn aimbot_left(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Aimbot", |ui| {
             egui::ComboBox::new("aimbot_hotkey", "Hotkey")
-            .selected_text(format!("{:?}", self.config.aim.hotkey))
-            .show_ui(ui, |ui| {
-                for key_code in KeyCode::iter() {
-                    let text = format!("{:?}", &key_code);
-                    if ui
-                        .selectable_value(&mut self.config.aim.hotkey, key_code, text)
-                        .clicked()
+                .selected_text(format!("{:?}", self.config.aim.hotkey))
+                .show_ui(ui, |ui| {
+                    for key_code in KeyCode::iter() {
+                        let text = format!("{:?}", &key_code);
+                        if ui
+                            .selectable_value(&mut self.config.aim.hotkey, key_code, text)
+                            .clicked()
                         {
                             self.send_config();
                         }
-                }
-            });
+                    }
+                });
 
             if self.aimbot_tab == AimbotTab::Weapon
                 && ui
-                .checkbox(
-                    &mut self.weapon_config().aimbot.enable_override,
-                          "Enable Override",
-                )
+                    .checkbox(
+                        &mut self.weapon_config().aimbot.enable_override,
+                        "Enable Override",
+                    )
+                    .changed()
+            {
+                self.send_config();
+            }
+
+            if ui
+                .checkbox(&mut self.weapon_config().aimbot.enabled, "Enable Aimbot")
                 .changed()
+            {
+                self.send_config();
+            }
+
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.weapon_config().aimbot.fov)
+                            .range(0.1..=360.0)
+                            .suffix("°")
+                            .speed(0.02)
+                            .max_decimals(1),
+                    )
+                    .changed()
                 {
                     self.send_config();
                 }
+                ui.label("FOV");
+            });
 
+            ui.horizontal(|ui| {
                 if ui
-                    .checkbox(&mut self.weapon_config().aimbot.enabled, "Enable Aimbot")
+                    .add(
+                        DragValue::new(&mut self.weapon_config().aimbot.smooth)
+                            .range(0.0..=10.0)
+                            .speed(0.02)
+                            .max_decimals(1),
+                    )
                     .changed()
-                    {
-                        self.send_config();
-                    }
+                {
+                    self.send_config();
+                }
+                ui.label("Smooth");
+            });
 
-                    ui.horizontal(|ui| {
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.weapon_config().aimbot.start_bullet)
+                            .range(0..=10)
+                            .speed(0.05),
+                    )
+                    .changed()
+                {
+                    self.send_config();
+                }
+                ui.label("Start Bullet");
+            });
+
+            egui::ComboBox::new("targeting_mode", "Targeting Mode")
+                .selected_text(format!("{:?}", self.weapon_config().aimbot.targeting_mode))
+                .show_ui(ui, |ui| {
+                    for mode in TargetingMode::iter() {
+                        let text = format!("{:?}", &mode);
                         if ui
-                            .add(
-                                DragValue::new(&mut self.weapon_config().aimbot.fov)
-                                .range(0.1..=360.0)
-                                .suffix("°")
-                                .speed(0.02)
-                                .max_decimals(1),
+                            .selectable_value(
+                                &mut self.weapon_config().aimbot.targeting_mode,
+                                mode,
+                                text,
                             )
-                            .changed()
-                            {
-                                self.send_config();
-                            }
-                            ui.label("FOV");
-                    });
-
-                    ui.horizontal(|ui| {
-                        if ui
-                            .add(
-                                DragValue::new(&mut self.weapon_config().aimbot.smooth)
-                                .range(0.0..=10.0)
-                                .speed(0.02)
-                                .max_decimals(1),
-                            )
-                            .changed()
-                            {
-                                self.send_config();
-                            }
-                            ui.label("Smooth");
-                    });
-
-                    ui.horizontal(|ui| {
-                        if ui
-                            .add(
-                                DragValue::new(&mut self.weapon_config().aimbot.start_bullet)
-                                .range(0..=10)
-                                .speed(0.05),
-                            )
-                            .changed()
-                            {
-                                self.send_config();
-                            }
-                            ui.label("Start Bullet");
-                    });
-
-                    egui::ComboBox::new("targeting_mode", "Targeting Mode")
-                    .selected_text(format!("{:?}", self.weapon_config().aimbot.targeting_mode))
-                    .show_ui(ui, |ui| {
-                        for mode in TargetingMode::iter() {
-                            let text = format!("{:?}", &mode);
-                            if ui
-                                .selectable_value(
-                                    &mut self.weapon_config().aimbot.targeting_mode,
-                                                  mode,
-                                                  text,
-                                )
-                                .clicked()
-                                {
-                                    self.send_config();
-                                }
+                            .clicked()
+                        {
+                            self.send_config();
                         }
-                    });
+                    }
+                });
         });
 
         ui.collapsing("Checks", |ui| {
             if ui
                 .checkbox(
                     &mut self.weapon_config().aimbot.visibility_check,
-                          "Visibility Check",
+                    "Visibility Check",
                 )
                 .changed()
-                {
-                    self.send_config();
-                }
+            {
+                self.send_config();
+            }
 
-                if ui
-                    .checkbox(&mut self.weapon_config().aimbot.flash_check, "Flash Check")
-                    .changed()
-                    {
-                        self.send_config();
-                    }
+            if ui
+                .checkbox(&mut self.weapon_config().aimbot.flash_check, "Flash Check")
+                .changed()
+            {
+                self.send_config();
+            }
         });
 
         ui.collapsing("Bones", |ui| {
             for bone in Bones::iter() {
                 let text = format!("{:?}", bone);
                 let index = self
-                .weapon_config()
-                .aimbot
-                .bones
-                .iter()
-                .position(|b| *b == bone);
+                    .weapon_config()
+                    .aimbot
+                    .bones
+                    .iter()
+                    .position(|b| *b == bone);
                 if ui.selectable_label(index.is_some(), text).clicked() {
                     if let Some(index) = index {
                         self.weapon_config().aimbot.bones.remove(index);
@@ -328,205 +328,205 @@ impl App {
         collapsing_open(ui, "Triggerbot", |ui| {
             if self.aimbot_tab == AimbotTab::Weapon
                 && ui
-                .checkbox(
-                    &mut self.weapon_config().triggerbot.enable_override,
-                          "Enable Override",
-                )
-                .changed()
-                {
-                    self.send_config();
-                }
-
-                if ui
                     .checkbox(
-                        &mut self.weapon_config().triggerbot.enabled,
-                              "Enable Triggerbot",
+                        &mut self.weapon_config().triggerbot.enable_override,
+                        "Enable Override",
                     )
                     .changed()
-                    {
-                        self.send_config();
-                    }
+            {
+                self.send_config();
+            }
 
-                    egui::ComboBox::new("triggerbot_hotkey", "Hotkey")
-                    .selected_text(format!("{:?}", self.config.aim.triggerbot_hotkey))
-                    .show_ui(ui, |ui| {
-                        for key_code in KeyCode::iter() {
-                            let text = format!("{:?}", &key_code);
-                            if ui
-                                .selectable_value(
-                                    &mut self.config.aim.triggerbot_hotkey,
-                                    key_code,
-                                    text,
-                                )
-                                .clicked()
-                                {
-                                    self.send_config();
-                                }
-                        }
-                    });
+            if ui
+                .checkbox(
+                    &mut self.weapon_config().triggerbot.enabled,
+                    "Enable Triggerbot",
+                )
+                .changed()
+            {
+                self.send_config();
+            }
 
-                    ui.horizontal(|ui| {
+            egui::ComboBox::new("triggerbot_hotkey", "Hotkey")
+                .selected_text(format!("{:?}", self.config.aim.triggerbot_hotkey))
+                .show_ui(ui, |ui| {
+                    for key_code in KeyCode::iter() {
+                        let text = format!("{:?}", &key_code);
                         if ui
-                            .add(DragRange::new(
-                                &mut self.weapon_config().triggerbot.delay,
-                                                0..=999,
-                            ))
-                            .changed()
-                            {
-                                self.send_config();
-                            }
-                            ui.label("Delay (ms)");
-                    });
-
-                    egui::ComboBox::new("triggerbot_mode", "Mode")
-                    .selected_text(format!("{:?}", self.weapon_config().triggerbot.mode))
-                    .show_ui(ui, |ui| {
-                        for mode in TriggerbotMode::iter() {
-                            let text = format!("{:?}", &mode);
-                            if ui
-                                .selectable_value(&mut self.weapon_config().triggerbot.mode, mode, text)
-                                .clicked()
-                                {
-                                    self.send_config();
-                                }
-                        }
-                    });
-
-                    if ui
-                        .checkbox(&mut self.weapon_config().triggerbot.head_only, "Head Only")
-                        .changed()
+                            .selectable_value(
+                                &mut self.config.aim.triggerbot_hotkey,
+                                key_code,
+                                text,
+                            )
+                            .clicked()
                         {
                             self.send_config();
                         }
+                    }
+                });
 
-                        ui.horizontal(|ui| {
-                            if ui
-                                .add(
-                                    DragValue::new(&mut self.weapon_config().triggerbot.additional_duration_ms)
-                                    .range(0..=2000)
-                                    .speed(10.0),
-                                )
-                                .changed()
-                                {
-                                    self.send_config();
-                                }
-                                ui.label("Additional Duration (ms)");
-                        });
+            ui.horizontal(|ui| {
+                if ui
+                    .add(DragRange::new(
+                        &mut self.weapon_config().triggerbot.delay,
+                        0..=999,
+                    ))
+                    .changed()
+                {
+                    self.send_config();
+                }
+                ui.label("Delay (ms)");
+            });
+
+            egui::ComboBox::new("triggerbot_mode", "Mode")
+                .selected_text(format!("{:?}", self.weapon_config().triggerbot.mode))
+                .show_ui(ui, |ui| {
+                    for mode in TriggerbotMode::iter() {
+                        let text = format!("{:?}", &mode);
+                        if ui
+                            .selectable_value(&mut self.weapon_config().triggerbot.mode, mode, text)
+                            .clicked()
+                        {
+                            self.send_config();
+                        }
+                    }
+                });
+
+            if ui
+                .checkbox(&mut self.weapon_config().triggerbot.head_only, "Head Only")
+                .changed()
+            {
+                self.send_config();
+            }
+
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.weapon_config().triggerbot.additional_duration_ms)
+                            .range(0..=2000)
+                            .speed(10.0),
+                    )
+                    .changed()
+                {
+                    self.send_config();
+                }
+                ui.label("Additional Duration (ms)");
+            });
         });
 
         ui.collapsing("Checks\u{200b}", |ui| {
             if ui
                 .checkbox(
                     &mut self.weapon_config().triggerbot.flash_check,
-                          "Flash Check",
+                    "Flash Check",
                 )
                 .changed()
+            {
+                self.send_config();
+            }
+
+            if ui
+                .checkbox(
+                    &mut self.weapon_config().triggerbot.scope_check,
+                    "Scope Check",
+                )
+                .changed()
+            {
+                self.send_config();
+            }
+
+            if ui
+                .checkbox(
+                    &mut self.weapon_config().triggerbot.velocity_check,
+                    "Velocity Check",
+                )
+                .changed()
+            {
+                self.send_config();
+            }
+
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.weapon_config().triggerbot.velocity_threshold)
+                            .range(0..=5000),
+                    )
+                    .changed()
                 {
                     self.send_config();
                 }
-
-                if ui
-                    .checkbox(
-                        &mut self.weapon_config().triggerbot.scope_check,
-                              "Scope Check",
-                    )
-                    .changed()
-                    {
-                        self.send_config();
-                    }
-
-                    if ui
-                        .checkbox(
-                            &mut self.weapon_config().triggerbot.velocity_check,
-                                  "Velocity Check",
-                        )
-                        .changed()
-                        {
-                            self.send_config();
-                        }
-
-                        ui.horizontal(|ui| {
-                            if ui
-                                .add(
-                                    DragValue::new(&mut self.weapon_config().triggerbot.velocity_threshold)
-                                    .range(0..=5000),
-                                )
-                                .changed()
-                                {
-                                    self.send_config();
-                                }
-                                ui.label("Velocity Threshold");
-                        });
+                ui.label("Velocity Threshold");
+            });
         });
 
         collapsing_open(ui, "RCS", |ui| {
             if self.aimbot_tab == AimbotTab::Weapon
                 && ui
-                .checkbox(
-                    &mut self.weapon_config().rcs.enable_override,
-                          "Enable Override",
-                )
+                    .checkbox(
+                        &mut self.weapon_config().rcs.enable_override,
+                        "Enable Override",
+                    )
+                    .changed()
+            {
+                self.send_config();
+            }
+
+            if ui
+                .checkbox(&mut self.weapon_config().rcs.enabled, "Enable RCS")
                 .changed()
+            {
+                self.send_config();
+            }
+
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.weapon_config().rcs.smooth)
+                            .range(0.0..=1.0)
+                            .speed(0.02),
+                    )
+                    .changed()
                 {
                     self.send_config();
                 }
-
-                if ui
-                    .checkbox(&mut self.weapon_config().rcs.enabled, "Enable RCS")
-                    .changed()
-                    {
-                        self.send_config();
-                    }
-
-                    ui.horizontal(|ui| {
-                        if ui
-                            .add(
-                                DragValue::new(&mut self.weapon_config().rcs.smooth)
-                                .range(0.0..=1.0)
-                                .speed(0.02),
-                            )
-                            .changed()
-                            {
-                                self.send_config();
-                            }
-                            ui.label("RCS Smooth");
-                    });
+                ui.label("RCS Smooth");
+            });
         });
     }
 
     fn player_settings(&mut self, ui: &mut Ui) {
         egui::ScrollArea::vertical()
-        .auto_shrink([false, true])
-        .id_salt("player")
-        .show(ui, |ui| {
-            ui.columns(2, |cols| {
-                let left = &mut cols[0];
-                self.player_left(left);
-                let right = &mut cols[1];
-                self.player_right(right);
-            });
+            .auto_shrink([false, true])
+            .id_salt("player")
+            .show(ui, |ui| {
+                ui.columns(2, |cols| {
+                    let left = &mut cols[0];
+                    self.player_left(left);
+                    let right = &mut cols[1];
+                    self.player_right(right);
+                });
 
-            collapsing_open(ui, "Colors", |ui| {
-                if let Some(color) = self.color_picker(
-                    ui,
-                    &self.config.player.box_visible_color,
-                    "Box (visible)",
-                ) {
-                    self.config.player.box_visible_color = color;
-                    self.send_config();
-                }
+                collapsing_open(ui, "Colors", |ui| {
+                    if let Some(color) = self.color_picker(
+                        ui,
+                        &self.config.player.box_visible_color,
+                        "Box (visible)",
+                    ) {
+                        self.config.player.box_visible_color = color;
+                        self.send_config();
+                    }
 
-                if let Some(color) = self.color_picker(
-                    ui,
-                    &self.config.player.box_invisible_color,
-                    "Box (invisible)",
-                ) {
-                    self.config.player.box_invisible_color = color;
-                    self.send_config();
-                }
+                    if let Some(color) = self.color_picker(
+                        ui,
+                        &self.config.player.box_invisible_color,
+                        "Box (invisible)",
+                    ) {
+                        self.config.player.box_invisible_color = color;
+                        self.send_config();
+                    }
 
-                if let Some(color) =
-                    self.color_picker(ui, &self.config.player.skeleton_color, "Skeleton")
+                    if let Some(color) =
+                        self.color_picker(ui, &self.config.player.skeleton_color, "Skeleton")
                     {
                         self.config.player.skeleton_color = color;
                         self.send_config();
@@ -536,18 +536,18 @@ impl App {
                         if ui
                             .add(
                                 DragValue::new(&mut self.config.player.alpha)
-                                .range(0.0..=1.0)
-                                .speed(0.01)
-                                .max_decimals(2),
+                                    .range(0.0..=1.0)
+                                    .speed(0.01)
+                                    .max_decimals(2),
                             )
                             .changed()
-                            {
-                                self.send_config();
-                            }
-                            ui.label("Alpha (0=transparent, 1=opaque)");
+                        {
+                            self.send_config();
+                        }
+                        ui.label("Alpha (0=transparent, 1=opaque)");
                     });
+                });
             });
-        });
     }
 
     fn player_left(&mut self, ui: &mut Ui) {
@@ -555,11 +555,11 @@ impl App {
             if ui
                 .checkbox(&mut self.config.player.enabled, "Enable")
                 .changed()
-                {
-                    self.send_config();
-                }
+            {
+                self.send_config();
+            }
 
-                egui::ComboBox::new("esp_hotkey", "ESP Hotkey")
+            egui::ComboBox::new("esp_hotkey", "ESP Hotkey")
                 .selected_text(format!("{:?}", self.config.player.esp_hotkey))
                 .show_ui(ui, |ui| {
                     for key_code in KeyCode::iter() {
@@ -567,13 +567,13 @@ impl App {
                         if ui
                             .selectable_value(&mut self.config.player.esp_hotkey, key_code, text)
                             .clicked()
-                            {
-                                self.send_config();
-                            }
+                        {
+                            self.send_config();
+                        }
                     }
                 });
 
-                egui::ComboBox::new("draw_box", "Box")
+            egui::ComboBox::new("draw_box", "Box")
                 .selected_text(format!("{:?}", self.config.player.draw_box))
                 .show_ui(ui, |ui| {
                     for mode in DrawMode::iter() {
@@ -581,13 +581,13 @@ impl App {
                         if ui
                             .selectable_value(&mut self.config.player.draw_box, mode, text)
                             .clicked()
-                            {
-                                self.send_config();
-                            }
+                        {
+                            self.send_config();
+                        }
                     }
                 });
 
-                egui::ComboBox::new("box_mode", "Box Mode")
+            egui::ComboBox::new("box_mode", "Box Mode")
                 .selected_text(format!("{:?}", self.config.player.box_mode))
                 .show_ui(ui, |ui| {
                     for mode in BoxMode::iter() {
@@ -595,13 +595,13 @@ impl App {
                         if ui
                             .selectable_value(&mut self.config.player.box_mode, mode, text)
                             .clicked()
-                            {
-                                self.send_config();
-                            }
+                        {
+                            self.send_config();
+                        }
                     }
                 });
 
-                egui::ComboBox::new("draw_skeleton", "Skeleton")
+            egui::ComboBox::new("draw_skeleton", "Skeleton")
                 .selected_text(format!("{:?}", self.config.player.draw_skeleton))
                 .show_ui(ui, |ui| {
                     for mode in DrawMode::iter() {
@@ -609,18 +609,18 @@ impl App {
                         if ui
                             .selectable_value(&mut self.config.player.draw_skeleton, mode, text)
                             .clicked()
-                            {
-                                self.send_config();
-                            }
+                        {
+                            self.send_config();
+                        }
                     }
                 });
 
-                if ui
-                    .checkbox(&mut self.config.player.head_circle, "Head Circle")
-                    .changed()
-                    {
-                        self.send_config();
-                    }
+            if ui
+                .checkbox(&mut self.config.player.head_circle, "Head Circle")
+                .changed()
+            {
+                self.send_config();
+            }
         });
     }
 
@@ -629,55 +629,55 @@ impl App {
             if ui
                 .checkbox(&mut self.config.player.health_bar, "Health Bar")
                 .changed()
-                {
-                    self.send_config();
-                }
+            {
+                self.send_config();
+            }
 
-                if ui
-                    .checkbox(&mut self.config.player.armor_bar, "Armor Bar")
-                    .changed()
-                    {
-                        self.send_config();
-                    }
+            if ui
+                .checkbox(&mut self.config.player.armor_bar, "Armor Bar")
+                .changed()
+            {
+                self.send_config();
+            }
 
-                    if ui
-                        .checkbox(&mut self.config.player.player_name, "Player Name")
-                        .changed()
-                        {
-                            self.send_config();
-                        }
+            if ui
+                .checkbox(&mut self.config.player.player_name, "Player Name")
+                .changed()
+            {
+                self.send_config();
+            }
 
-                        if ui
-                            .checkbox(&mut self.config.player.weapon_icon, "Weapon Icon")
-                            .changed()
-                            {
-                                self.send_config();
-                            }
+            if ui
+                .checkbox(&mut self.config.player.weapon_icon, "Weapon Icon")
+                .changed()
+            {
+                self.send_config();
+            }
 
-                            if ui
-                                .checkbox(&mut self.config.player.tags, "Show Tags")
-                                .changed()
-                                {
-                                    self.send_config();
-                                }
+            if ui
+                .checkbox(&mut self.config.player.tags, "Show Tags")
+                .changed()
+            {
+                self.send_config();
+            }
         });
     }
 
     fn hud_settings(&mut self, ui: &mut Ui) {
         egui::ScrollArea::vertical()
-        .auto_shrink([false, true])
-        .id_salt("hud")
-        .show(ui, |ui| {
-            ui.columns(2, |cols| {
-                let left = &mut cols[0];
-                self.hud_left(left);
-                let right = &mut cols[1];
-                self.hud_right(right);
-            });
+            .auto_shrink([false, true])
+            .id_salt("hud")
+            .show(ui, |ui| {
+                ui.columns(2, |cols| {
+                    let left = &mut cols[0];
+                    self.hud_left(left);
+                    let right = &mut cols[1];
+                    self.hud_right(right);
+                });
 
-            collapsing_open(ui, "Colors", |ui| {
-                if let Some(color) =
-                    self.color_picker(ui, &self.config.hud.text_color, "Text Color")
+                collapsing_open(ui, "Colors", |ui| {
+                    if let Some(color) =
+                        self.color_picker(ui, &self.config.hud.text_color, "Text Color")
                     {
                         self.config.hud.text_color = color;
                         self.send_config();
@@ -685,68 +685,68 @@ impl App {
 
                     if let Some(color) =
                         self.color_picker(ui, &self.config.hud.crosshair_color, "Crosshair Color")
-                        {
-                            self.config.hud.crosshair_color = color;
-                            self.send_config();
-                        }
+                    {
+                        self.config.hud.crosshair_color = color;
+                        self.send_config();
+                    }
+                });
             });
-        });
 
         collapsing_open(ui, "Grenade Trails", |ui| {
             if ui
                 .checkbox(&mut self.config.hud.grenade_trails, "Grenade Trails")
                 .changed()
-                {
-                    self.send_config();
-                }
+            {
+                self.send_config();
+            }
 
-                if let Some(color) =
-                    self.color_picker(ui, &self.config.hud.smoke_trail_color, "Smoke Trail Color")
-                    {
-                        self.config.hud.smoke_trail_color = color;
-                        self.send_config();
-                    }
+            if let Some(color) =
+                self.color_picker(ui, &self.config.hud.smoke_trail_color, "Smoke Trail Color")
+            {
+                self.config.hud.smoke_trail_color = color;
+                self.send_config();
+            }
 
-                    if let Some(color) = self.color_picker(
-                        ui,
-                        &self.config.hud.molotov_trail_color,
-                        "Molotov Trail Color",
-                    ) {
-                        self.config.hud.molotov_trail_color = color;
-                        self.send_config();
-                    }
+            if let Some(color) = self.color_picker(
+                ui,
+                &self.config.hud.molotov_trail_color,
+                "Molotov Trail Color",
+            ) {
+                self.config.hud.molotov_trail_color = color;
+                self.send_config();
+            }
 
-                    if let Some(color) = self.color_picker(
-                        ui,
-                        &self.config.hud.incendiary_trail_color,
-                        "Incendiary Trail Color",
-                    ) {
-                        self.config.hud.incendiary_trail_color = color;
-                        self.send_config();
-                    }
+            if let Some(color) = self.color_picker(
+                ui,
+                &self.config.hud.incendiary_trail_color,
+                "Incendiary Trail Color",
+            ) {
+                self.config.hud.incendiary_trail_color = color;
+                self.send_config();
+            }
 
-                    if let Some(color) =
-                        self.color_picker(ui, &self.config.hud.flash_trail_color, "Flash Trail Color")
-                        {
-                            self.config.hud.flash_trail_color = color;
-                            self.send_config();
-                        }
+            if let Some(color) =
+                self.color_picker(ui, &self.config.hud.flash_trail_color, "Flash Trail Color")
+            {
+                self.config.hud.flash_trail_color = color;
+                self.send_config();
+            }
 
-                        if let Some(color) = self.color_picker(
-                            ui,
-                            &self.config.hud.he_trail_color,
-                            "HE Grenade Trail Color",
-                        ) {
-                            self.config.hud.he_trail_color = color;
-                            self.send_config();
-                        }
+            if let Some(color) = self.color_picker(
+                ui,
+                &self.config.hud.he_trail_color,
+                "HE Grenade Trail Color",
+            ) {
+                self.config.hud.he_trail_color = color;
+                self.send_config();
+            }
 
-                        if let Some(color) =
-                            self.color_picker(ui, &self.config.hud.decoy_trail_color, "Decoy Trail Color")
-                            {
-                                self.config.hud.decoy_trail_color = color;
-                                self.send_config();
-                            }
+            if let Some(color) =
+                self.color_picker(ui, &self.config.hud.decoy_trail_color, "Decoy Trail Color")
+            {
+                self.config.hud.decoy_trail_color = color;
+                self.send_config();
+            }
         });
     }
 
@@ -755,37 +755,37 @@ impl App {
             if ui
                 .checkbox(&mut self.config.hud.bomb_timer, "Bomb Timer")
                 .changed()
-                {
-                    self.send_config();
-                }
+            {
+                self.send_config();
+            }
 
-                if ui
-                    .checkbox(&mut self.config.hud.fov_circle, "FOV Circle")
-                    .changed()
-                    {
-                        self.send_config();
-                    }
+            if ui
+                .checkbox(&mut self.config.hud.fov_circle, "FOV Circle")
+                .changed()
+            {
+                self.send_config();
+            }
 
-                    if ui
-                        .checkbox(&mut self.config.hud.sniper_crosshair, "Sniper Crosshair")
-                        .changed()
-                        {
-                            self.send_config();
-                        }
+            if ui
+                .checkbox(&mut self.config.hud.sniper_crosshair, "Sniper Crosshair")
+                .changed()
+            {
+                self.send_config();
+            }
 
-                        if ui
-                            .checkbox(&mut self.config.hud.dropped_weapons, "Dropped Weapons")
-                            .changed()
-                            {
-                                self.send_config();
-                            }
+            if ui
+                .checkbox(&mut self.config.hud.dropped_weapons, "Dropped Weapons")
+                .changed()
+            {
+                self.send_config();
+            }
 
-                            if ui
-                                .checkbox(&mut self.config.hud.spectators, "Spectator List")
-                                .changed()
-                                {
-                                    self.send_config();
-                                }
+            if ui
+                .checkbox(&mut self.config.hud.spectators, "Spectator List")
+                .changed()
+            {
+                self.send_config();
+            }
         });
     }
 
@@ -794,71 +794,71 @@ impl App {
             if ui
                 .checkbox(&mut self.config.hud.text_outline, "Text Outline")
                 .changed()
-                {
-                    self.send_config();
-                }
+            {
+                self.send_config();
+            }
 
-                ui.horizontal(|ui| {
-                    if ui
-                        .add(
-                            DragValue::new(&mut self.config.hud.line_width)
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.config.hud.line_width)
                             .range(0.1..=8.0)
                             .speed(0.02)
                             .max_decimals(1),
-                        )
-                        .changed()
-                        {
-                            self.send_config();
-                        }
-                        ui.label("Line Width");
-                });
+                    )
+                    .changed()
+                {
+                    self.send_config();
+                }
+                ui.label("Line Width");
+            });
 
-                ui.horizontal(|ui| {
-                    if ui
-                        .add(
-                            DragValue::new(&mut self.config.hud.font_size)
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.config.hud.font_size)
                             .range(1.0..=99.0)
                             .speed(0.2)
                             .max_decimals(1),
-                        )
-                        .changed()
-                        {
-                            self.send_config();
-                        }
-                        ui.label("Font Size");
-                });
+                    )
+                    .changed()
+                {
+                    self.send_config();
+                }
+                ui.label("Font Size");
+            });
         });
 
         ui.collapsing("Advanced", |ui| {
             if ui
                 .checkbox(&mut self.config.hud.debug, "Debug Overlay")
                 .changed()
-                {
-                    self.send_config();
-                }
+            {
+                self.send_config();
+            }
         });
     }
 
     fn radar_settings(&mut self, ui: &mut Ui) {
         egui::ScrollArea::vertical()
-        .auto_shrink([false, true])
-        .id_salt("hud_left")
-        .show(ui, |ui| {
-            collapsing_open(ui, "Radar", |ui| {
-                ui.label(egui::RichText::new(format!("{}", self.radar_status)).color(
-                    match self.radar_status {
-                        RadarStatus::Connected(_) => Colors::GREEN,
-                                                                                     RadarStatus::Disconnected => Colors::YELLOW,
-                    },
-                ));
+            .auto_shrink([false, true])
+            .id_salt("hud_left")
+            .show(ui, |ui| {
+                collapsing_open(ui, "Radar", |ui| {
+                    ui.label(egui::RichText::new(format!("{}", self.radar_status)).color(
+                        match self.radar_status {
+                            RadarStatus::Connected(_) => Colors::GREEN,
+                            RadarStatus::Disconnected => Colors::YELLOW,
+                        },
+                    ));
 
-                if ui
-                    .checkbox(&mut self.config.radar.enabled, "Enable Radar")
-                    .changed()
+                    if ui
+                        .checkbox(&mut self.config.radar.enabled, "Enable Radar")
+                        .changed()
                     {
                         self.send_message(
                             Message::RadarSetEnabled(self.config.radar.enabled),
-                                          Target::Radar,
+                            Target::Radar,
                         );
                         self.save();
                     }
@@ -866,81 +866,81 @@ impl App {
                     if ui
                         .text_edit_singleline(&mut self.config.radar.url)
                         .changed()
-                        {
-                            self.send_message(
-                                Message::ChangeRadarUrl(self.config.radar.url.clone()),
-                                              Target::Radar,
-                            );
-                            self.save();
-                        }
+                    {
+                        self.send_message(
+                            Message::ChangeRadarUrl(self.config.radar.url.clone()),
+                            Target::Radar,
+                        );
+                        self.save();
+                    }
 
-                        if let RadarStatus::Connected(uuid) = &self.radar_status {
-                            ui.horizontal(|ui| {
-                                if ui.button("Open").clicked() {
-                                    let link =
+                    if let RadarStatus::Connected(uuid) = &self.radar_status {
+                        ui.horizontal(|ui| {
+                            if ui.button("Open").clicked() {
+                                let link =
                                     format!("http://{}/?uuid={}", self.config.radar.url, uuid);
-                                        std::process::Command::new("xdg-open")
-                                        .arg(&link)
-                                        .status()
-                                        .unwrap();
-                                        log::info!("opened link ({link})");
-                                }
+                                std::process::Command::new("xdg-open")
+                                    .arg(&link)
+                                    .status()
+                                    .unwrap();
+                                log::info!("opened link ({link})");
+                            }
 
-                                if ui.button("Copy Link").clicked() {
-                                    let link =
+                            if ui.button("Copy Link").clicked() {
+                                let link =
                                     format!("http://{}/?uuid={}", self.config.radar.url, uuid);
-                                        log::info!("copied link ({link})");
-                                        // ctx.copy_text(link);
-                                        self.clipboard.set_text(link).unwrap();
-                                }
-                            });
-                        }
+                                log::info!("copied link ({link})");
+                                // ctx.copy_text(link);
+                                self.clipboard.set_text(link).unwrap();
+                            }
+                        });
+                    }
+                });
             });
-        });
     }
 
     fn unsafe_settings(&mut self, ui: &mut Ui) {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
-            .auto_shrink([false, true])
-            .id_salt("unsafe_left")
-            .show(left, |left| {
-                self.unsafe_left(left);
-            });
+                .auto_shrink([false, true])
+                .id_salt("unsafe_left")
+                .show(left, |left| {
+                    self.unsafe_left(left);
+                });
 
             let right = &mut cols[1];
             egui::ScrollArea::vertical()
-            .auto_shrink([false, true])
-            .id_salt("unsafe_right")
-            .show(right, |right| {
-                self.unsafe_right(right);
-            });
+                .auto_shrink([false, true])
+                .id_salt("unsafe_right")
+                .show(right, |right| {
+                    self.unsafe_right(right);
+                });
         });
 
         collapsing_open(ui, "Smokes", |ui| {
             if ui
                 .checkbox(&mut self.config.misc.no_smoke, "No Smoke")
                 .changed()
-                {
-                    self.send_config();
-                }
+            {
+                self.send_config();
+            }
 
-                if ui
-                    .checkbox(
-                        &mut self.config.misc.change_smoke_color,
-                        "Change Smoke Color",
-                    )
-                    .changed()
-                    {
-                        self.send_config();
-                    }
+            if ui
+                .checkbox(
+                    &mut self.config.misc.change_smoke_color,
+                    "Change Smoke Color",
+                )
+                .changed()
+            {
+                self.send_config();
+            }
 
-                    if let Some(color) = self.color_picker(ui, &self.config.misc.smoke_color, "Smoke Color")
-                    {
-                        self.config.misc.smoke_color = color;
-                        self.send_config();
-                    }
+            if let Some(color) = self.color_picker(ui, &self.config.misc.smoke_color, "Smoke Color")
+            {
+                self.config.misc.smoke_color = color;
+                self.send_config();
+            }
         });
     }
 
@@ -949,24 +949,24 @@ impl App {
             if ui
                 .checkbox(&mut self.config.misc.no_flash, "No Flash")
                 .changed()
-                {
-                    self.send_config();
-                }
+            {
+                self.send_config();
+            }
 
-                ui.horizontal(|ui| {
-                    if ui
-                        .add(
-                            DragValue::new(&mut self.config.misc.max_flash_alpha)
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.config.misc.max_flash_alpha)
                             .range(0.0..=255.0)
                             .speed(0.5)
                             .max_decimals(0),
-                        )
-                        .changed()
-                        {
-                            self.send_config();
-                        }
-                        ui.label("Max Flash Alpha");
-                });
+                    )
+                    .changed()
+                {
+                    self.send_config();
+                }
+                ui.label("Max Flash Alpha");
+            });
         });
     }
 
@@ -975,28 +975,28 @@ impl App {
             if ui
                 .checkbox(&mut self.config.misc.fov_changer, "FOV Changer")
                 .changed()
+            {
+                self.send_config();
+            }
+
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.config.misc.desired_fov)
+                            .speed(0.1)
+                            .range(1..=179),
+                    )
+                    .changed()
                 {
                     self.send_config();
                 }
+                ui.label("Desired FOV");
 
-                ui.horizontal(|ui| {
-                    if ui
-                        .add(
-                            DragValue::new(&mut self.config.misc.desired_fov)
-                            .speed(0.1)
-                            .range(1..=179),
-                        )
-                        .changed()
-                        {
-                            self.send_config();
-                        }
-                        ui.label("Desired FOV");
-
-                    if ui.button("Reset").clicked() {
-                        self.config.misc.desired_fov = cs2::DEFAULT_FOV;
-                        self.send_config();
-                    }
-                });
+                if ui.button("Reset").clicked() {
+                    self.config.misc.desired_fov = cs2::DEFAULT_FOV;
+                    self.send_config();
+                }
+            });
         });
     }
 
@@ -1004,11 +1004,11 @@ impl App {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
-            .auto_shrink([false, true])
-            .id_salt("config_left")
-            .show(left, |left| {
-                self.config_left(left, ctx);
-            });
+                .auto_shrink([false, true])
+                .id_salt("config_left")
+                .show(left, |left| {
+                    self.config_left(left, ctx);
+                });
 
             let right = &mut cols[1];
 
@@ -1028,11 +1028,11 @@ impl App {
                 });
 
                 egui::ScrollArea::vertical()
-                .auto_shrink([false, true])
-                .id_salt("config_right")
-                .show(right, |right| {
-                    self.config_right(right);
-                });
+                    .auto_shrink([false, true])
+                    .id_salt("config_right")
+                    .show(right, |right| {
+                        self.config_right(right);
+                    });
             });
         });
     }
@@ -1048,27 +1048,27 @@ impl App {
 
         collapsing_open(ui, "Accent Color", |ui| {
             egui::ComboBox::new("accent_color", "Accent Color")
-            .selected_text(
-                Colors::ACCENT_COLORS
-                .iter()
-                .find(|c| c.1 == self.config.accent_color)
-                .unwrap_or(&Colors::ACCENT_COLORS[5])
-                .0,
-            )
-            .show_ui(ui, |ui| {
-                for (name, color) in Colors::ACCENT_COLORS {
-                    if ui
-                        .add(
-                            Button::selectable(color == self.config.accent_color, name)
-                            .fill(color),
-                        )
-                        .clicked()
+                .selected_text(
+                    Colors::ACCENT_COLORS
+                        .iter()
+                        .find(|c| c.1 == self.config.accent_color)
+                        .unwrap_or(&Colors::ACCENT_COLORS[5])
+                        .0,
+                )
+                .show_ui(ui, |ui| {
+                    for (name, color) in Colors::ACCENT_COLORS {
+                        if ui
+                            .add(
+                                Button::selectable(color == self.config.accent_color, name)
+                                    .fill(color),
+                            )
+                            .clicked()
                         {
                             self.config.accent_color = color;
                             ctx.style_mut(|style| style.visuals.selection.bg_fill = color);
                         }
-                }
-            });
+                    }
+                });
         });
     }
 
@@ -1084,14 +1084,14 @@ impl App {
                         config.file_name().unwrap().to_str().unwrap(),
                     ))
                     .clicked()
-                    {
-                        clicked_config = Some(config.clone());
+                {
+                    clicked_config = Some(config.clone());
+                }
+                ui.with_layout(egui::Layout::right_to_left(Align::Center), |ui| {
+                    if ui.button("\u{f0a7a}").clicked() {
+                        delete = Some(config.clone());
                     }
-                    ui.with_layout(egui::Layout::right_to_left(Align::Center), |ui| {
-                        if ui.button("\u{f0a7a}").clicked() {
-                            delete = Some(config.clone());
-                        }
-                    });
+                });
             });
         }
 
@@ -1113,78 +1113,78 @@ impl App {
         ui.horizontal_top(|ui| {
             ui.label(
                 egui::RichText::new(format!("{}", self.game_status))
-                .line_height(Some(8.0))
-                .color(match self.game_status {
-                    GameStatus::Working => Colors::GREEN,
-                    GameStatus::GameNotStarted => Colors::YELLOW,
-                }),
+                    .line_height(Some(8.0))
+                    .color(match self.game_status {
+                        GameStatus::Working => Colors::GREEN,
+                        GameStatus::GameNotStarted => Colors::YELLOW,
+                    }),
             );
 
             let mouse_text = match &self.mouse_status {
                 DeviceStatus::Working(name) => name,
-                          DeviceStatus::PermissionsRequired => {
-                              "mouse input only works when user is in input group"
-                          }
-                          DeviceStatus::Disconnected => "mouse was disconnected",
-                          DeviceStatus::NotFound => "no mouse was found",
+                DeviceStatus::PermissionsRequired => {
+                    "mouse input only works when user is in input group"
+                }
+                DeviceStatus::Disconnected => "mouse was disconnected",
+                DeviceStatus::NotFound => "no mouse was found",
             };
 
             let color = match &self.mouse_status {
                 DeviceStatus::Working(_) => Colors::SUBTEXT,
-                          _ => Colors::YELLOW,
+                _ => Colors::YELLOW,
             };
             ui.label(
                 egui::RichText::new(mouse_text)
-                .line_height(Some(8.0))
-                .color(color),
+                    .line_height(Some(8.0))
+                    .color(color),
             );
 
             egui::ComboBox::new("mouse_device", "")
-            .selected_text(
-                self.selected_mouse
-                .as_deref()
-                .unwrap_or("No device selected"),
-            )
-            .show_ui(ui, |ui| {
-                for device in discover_mice() {
-                    let label = format!("{} ({})", device.name, device.event_name);
-                    if ui
-                        .selectable_label(
-                            self.selected_mouse.as_deref() == Some(&device.event_name),
-                                          &label,
-                        )
-                        .clicked()
+                .selected_text(
+                    self.selected_mouse
+                        .as_deref()
+                        .unwrap_or("No device selected"),
+                )
+                .show_ui(ui, |ui| {
+                    for device in discover_mice() {
+                        let label = format!("{} ({})", device.name, device.event_name);
+                        if ui
+                            .selectable_label(
+                                self.selected_mouse.as_deref() == Some(&device.event_name),
+                                &label,
+                            )
+                            .clicked()
                         {
                             self.selected_mouse = Some(device.event_name.clone());
 
                             self.send_message(
                                 Message::SelectMouse(device.event_name.clone()),
-                                              Target::Game,
+                                Target::Game,
                             );
                         }
-                }
-            });
+                    }
+                });
         });
     }
 
     fn color_picker(&self, ui: &mut Ui, color: &Color32, label: &str) -> Option<Color32> {
         let [mut r, mut g, mut b, _] = color.to_array();
         let res = ui
-        .horizontal(|ui| {
-            let (response, painter) =
-            ui.allocate_painter(ui.spacing().interact_size, Sense::hover());
-            painter.rect_filled(
-                response.rect,
-                ui.style().visuals.widgets.inactive.corner_radius,
-                                *color,
-            );
-            let mut res = ui.add(DragValue::new(&mut r).prefix("r: "));
-            res = res.union(ui.add(DragValue::new(&mut g).prefix("g: ")));
-            res = res.union(ui.add(DragValue::new(&mut b).prefix("b: ")));
-            ui.label(label);
-            res
-        })
-        .inner;
+            .horizontal(|ui| {
+                let (response, painter) =
+                    ui.allocate_painter(ui.spacing().interact_size, Sense::hover());
+                painter.rect_filled(
+                    response.rect,
+                    ui.style().visuals.widgets.inactive.corner_radius,
+                    *color,
+                );
+                let mut res = ui.add(DragValue::new(&mut r).prefix("r: "));
+                res = res.union(ui.add(DragValue::new(&mut g).prefix("g: ")));
+                res = res.union(ui.add(DragValue::new(&mut b).prefix("b: ")));
+                ui.label(label);
+                res
+            })
+            .inner;
 
         if res.changed() {
             Some(Color32::from_rgb(r, g, b))
@@ -1207,27 +1207,27 @@ impl App {
         let data = &self.data.lock().unwrap();
         if let Some(window) = &self.overlay_window {
             window
-            .window()
-            .set_outer_position(winit::dpi::PhysicalPosition::new(
-                data.window_position.x,
-                data.window_position.y,
-            ));
+                .window()
+                .set_outer_position(winit::dpi::PhysicalPosition::new(
+                    data.window_position.x,
+                    data.window_position.y,
+                ));
             let _ = window
-            .window()
-            .request_inner_size(winit::dpi::PhysicalSize::new(
-                data.window_size.x.max(1.0),
-                                                              data.window_size.y.max(1.0),
-            ));
+                .window()
+                .request_inner_size(winit::dpi::PhysicalSize::new(
+                    data.window_size.x.max(1.0),
+                    data.window_size.y.max(1.0),
+                ));
         }
 
         if self.config.hud.debug {
             painter.line(
                 vec![pos2(0.0, 0.0), pos2(data.window_size.x, data.window_size.y)],
-                         Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
             painter.line(
                 vec![pos2(data.window_size.x, 0.0), pos2(0.0, data.window_size.y)],
-                         Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
         }
 
@@ -1241,7 +1241,7 @@ impl App {
         let now = Instant::now();
         let max_age = Duration::from_secs(1);
         self.trails
-        .retain(|_k, trail| now - trail.last_update < max_age);
+            .retain(|_k, trail| now - trail.last_update < max_age);
 
         if self.config.hud.dropped_weapons || self.config.hud.grenade_trails {
             for entity in &data.entities {
@@ -1274,7 +1274,7 @@ impl App {
             painter.line(
                 vec![
                     pos2(0.0, data.window_size.y),
-                         pos2(data.window_size.x * fraction, data.window_size.y),
+                    pos2(data.window_size.x * fraction, data.window_size.y),
                 ],
                 Stroke::new(self.config.hud.line_width * 3.0, color),
             );
@@ -1290,79 +1290,79 @@ impl App {
                 cs2::DEFAULT_FOV
             } as f32;
             let radius = (aim_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
-            * data.window_size.x
-            / 2.0;
+                * data.window_size.x
+                / 2.0;
             painter.circle_stroke(
                 pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
-                                  radius,
-                                  Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+                radius,
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
             );
         }
 
         if self.config.hud.sniper_crosshair
             && WeaponClass::from_string(data.weapon.as_ref()) == WeaponClass::Sniper
-            {
-                painter.line(
-                    vec![
-                        pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 - 50.0),
-                             pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 + 50.0),
-                    ],
-                    Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
-                );
-                painter.line(
-                    vec![
-                        pos2(data.window_size.x / 2.0 - 50.0, data.window_size.y / 2.0),
-                             pos2(data.window_size.x / 2.0 + 50.0, data.window_size.y / 2.0),
-                    ],
-                    Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
-                );
+        {
+            painter.line(
+                vec![
+                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 - 50.0),
+                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 + 50.0),
+                ],
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+            );
+            painter.line(
+                vec![
+                    pos2(data.window_size.x / 2.0 - 50.0, data.window_size.y / 2.0),
+                    pos2(data.window_size.x / 2.0 + 50.0, data.window_size.y / 2.0),
+                ],
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+            );
+        }
+
+        if data.triggerbot_active {
+            self.text(
+                &painter,
+                "trigger active",
+                pos2(
+                    data.window_size.x / 2.0 + 8.0,
+                    data.window_size.y / 2.0 + 8.0,
+                ),
+                Align2::LEFT_TOP,
+                None,
+            );
+        }
+
+        if self.config.hud.spectators {
+            let mut spectators_watching_me = Vec::new();
+            for (spectator_name, target_id) in &data.spectator_names {
+                if *target_id == data.local_player.steam_id {
+                    spectators_watching_me.push(spectator_name.clone());
+                }
             }
 
-            if data.triggerbot_active {
+            if !spectators_watching_me.is_empty() {
+                let mut offset = 10.0;
+
                 self.text(
                     &painter,
-                    "trigger active",
-                    pos2(
-                        data.window_size.x / 2.0 + 8.0,
-                         data.window_size.y / 2.0 + 8.0,
-                    ),
+                    format!("{} watching you", spectators_watching_me.len()),
+                    pos2(data.window_size.x - 300.0, offset),
                     Align2::LEFT_TOP,
-                    None,
+                    Some(Color32::from_rgb(255, 100, 100)),
                 );
-            }
+                offset += self.config.hud.font_size + 5.0;
 
-            if self.config.hud.spectators {
-                let mut spectators_watching_me = Vec::new();
-                for (spectator_name, target_id) in &data.spectator_names {
-                    if *target_id == data.local_player.steam_id {
-                        spectators_watching_me.push(spectator_name.clone());
-                    }
-                }
-
-                if !spectators_watching_me.is_empty() {
-                    let mut offset = 10.0;
-
+                for spectator_name in spectators_watching_me {
                     self.text(
                         &painter,
-                        format!("{} watching you", spectators_watching_me.len()),
-                            pos2(data.window_size.x - 300.0, offset),
-                              Align2::LEFT_TOP,
-                              Some(Color32::from_rgb(255, 100, 100)),
+                        format!("• {}", spectator_name),
+                        pos2(data.window_size.x - 290.0, offset),
+                        Align2::LEFT_TOP,
+                        Some(Color32::WHITE),
                     );
-                    offset += self.config.hud.font_size + 5.0;
-
-                    for spectator_name in spectators_watching_me {
-                        self.text(
-                            &painter,
-                            format!("• {}", spectator_name),
-                                pos2(data.window_size.x - 290.0, offset),
-                                  Align2::LEFT_TOP,
-                                  Some(Color32::WHITE),
-                        );
-                        offset += self.config.hud.font_size;
-                    }
+                    offset += self.config.hud.font_size;
                 }
             }
+        }
     }
 
     #[allow(unused)]
@@ -1396,7 +1396,7 @@ impl App {
         ];
 
         let screen_points: Vec<Option<Pos2>> =
-        corners.iter().map(|p| world_to_screen(p, data)).collect();
+            corners.iter().map(|p| world_to_screen(p, data)).collect();
 
         let edges = [
             (0, 1),
@@ -1465,27 +1465,27 @@ impl App {
             if self.config.player.box_mode == BoxMode::Gap {
                 painter.line(
                     vec![pos2(tl.x + ew, tl.y), tl, pos2(tl.x, tl.y + qw)],
-                             stroke,
+                    stroke,
                 );
                 painter.line(
                     vec![pos2(tr.x - ew, tl.y), tr, pos2(tr.x, tr.y + qw)],
-                             stroke,
+                    stroke,
                 );
                 painter.line(
                     vec![pos2(bl.x + ew, bl.y), bl, pos2(bl.x, bl.y - qw)],
-                             stroke,
+                    stroke,
                 );
                 painter.line(
                     vec![pos2(br.x - ew, bl.y), br, pos2(br.x, br.y - qw)],
-                             stroke,
+                    stroke,
                 );
             } else {
                 painter.rect(
                     egui::Rect::from_min_max(tl, br),
-                             0,
-                             Color32::TRANSPARENT,
-                             stroke,
-                             egui::StrokeKind::Middle,
+                    0,
+                    Color32::TRANSPARENT,
+                    stroke,
+                    egui::StrokeKind::Middle,
                 );
             }
         }
@@ -1497,7 +1497,7 @@ impl App {
             painter.line(
                 vec![
                     pos2(x, bl.y),
-                         pos2(x, bl.y - (delta * player.health as f32 / 100.0)),
+                    pos2(x, bl.y - (delta * player.health as f32 / 100.0)),
                 ],
                 Stroke::new(self.config.hud.line_width, health_color),
             );
@@ -1505,17 +1505,17 @@ impl App {
 
         if self.config.player.armor_bar && player.armor > 0 {
             let x = bl.x
-            - self.config.hud.line_width
-            * if self.config.player.health_bar {
-                4.0
-            } else {
-                2.0
-            };
+                - self.config.hud.line_width
+                    * if self.config.player.health_bar {
+                        4.0
+                    } else {
+                        2.0
+                    };
             let delta = bl.y - tl.y;
             painter.line(
                 vec![
                     pos2(x, bl.y),
-                         pos2(x, bl.y - (delta * player.armor as f32 / 100.0)),
+                    pos2(x, bl.y - (delta * player.armor as f32 / 100.0)),
                 ],
                 Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::BLUE)),
             );
@@ -1529,8 +1529,8 @@ impl App {
                 painter,
                 &player.name,
                 pos2(tr.x + ew, tr.y + offset),
-                      Align2::LEFT_TOP,
-                      None,
+                Align2::LEFT_TOP,
+                None,
             );
             offset += font_size;
         }
@@ -1538,10 +1538,10 @@ impl App {
         if self.config.player.tags && player.has_defuser {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
-                         Align2::LEFT_TOP,
-                         "r",
-                         icon_font.clone(),
-                         text_color,
+                Align2::LEFT_TOP,
+                "r",
+                icon_font.clone(),
+                text_color,
             );
             offset += font_size;
         }
@@ -1549,10 +1549,10 @@ impl App {
         if self.config.player.tags && player.has_helmet {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
-                         Align2::LEFT_TOP,
-                         "q",
-                         icon_font.clone(),
-                         text_color,
+                Align2::LEFT_TOP,
+                "q",
+                icon_font.clone(),
+                text_color,
             );
             offset += font_size;
         }
@@ -1560,20 +1560,20 @@ impl App {
         if self.config.player.tags && player.has_bomb {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
-                         Align2::LEFT_TOP,
-                         "o",
-                         icon_font.clone(),
-                         text_color,
+                Align2::LEFT_TOP,
+                "o",
+                icon_font.clone(),
+                text_color,
             );
         }
 
         if self.config.player.weapon_icon {
             painter.text(
                 pos2(bl.x + half_width, bl.y),
-                         Align2::CENTER_TOP,
-                         player.weapon.to_icon(),
-                         icon_font.clone(),
-                         text_color,
+                Align2::CENTER_TOP,
+                player.weapon.to_icon(),
+                icon_font.clone(),
+                text_color,
             );
         }
     }
@@ -1640,8 +1640,8 @@ impl App {
                     position,
                     Align2::CENTER_CENTER,
                     format!("{weapon}"),
-                        FontId::proportional(self.config.hud.font_size),
-                             self.config.hud.text_color,
+                    FontId::proportional(self.config.hud.font_size),
+                    self.config.hud.text_color,
                 );
             }
             EntityInfo::Inferno(inferno) => self.inferno(painter, data, inferno),
@@ -1677,7 +1677,7 @@ impl App {
             Align2::CENTER_CENTER,
             info.name,
             FontId::proportional(self.config.hud.font_size),
-                     self.config.hud.text_color,
+            self.config.hud.text_color,
         );
 
         if !self.config.hud.grenade_trails {
@@ -1706,12 +1706,12 @@ impl App {
             return;
         }
         let hull: Vec<Pos2> = convex_hull(&inferno.hull)
-        .iter()
-        .filter_map(|p| {
-            let p = p + (p - inferno.position).clamp_length(60.0, 60.0);
-            world_to_screen(&p, data)
-        })
-        .collect();
+            .iter()
+            .filter_map(|p| {
+                let p = p + (p - inferno.position).clamp_length(60.0, 60.0);
+                world_to_screen(&p, data)
+            })
+            .collect();
         if hull.len() < 3 {
             return;
         }
@@ -1719,7 +1719,7 @@ impl App {
         let shape = Shape::convex_polygon(
             hull,
             Color32::from_rgba_premultiplied(255, 0, 0, 127),
-                                          Stroke::NONE,
+            Stroke::NONE,
         );
         painter.add(shape);
 
@@ -1734,7 +1734,7 @@ impl App {
             painter,
             data,
             &smoke.grenade(),
-                          self.config.hud.smoke_trail_color,
+            self.config.hud.smoke_trail_color,
         );
     }
 
@@ -1747,14 +1747,14 @@ impl App {
                 painter,
                 data,
                 &molotov.grenade(),
-                              self.config.hud.incendiary_trail_color,
+                self.config.hud.incendiary_trail_color,
             );
         } else {
             self.draw_grenade(
                 painter,
                 data,
                 &molotov.grenade(),
-                              self.config.hud.molotov_trail_color,
+                self.config.hud.molotov_trail_color,
             );
         }
     }
@@ -1872,8 +1872,8 @@ impl App {
 
 fn collapsing_open(ui: &mut Ui, title: &str, add_body: impl FnOnce(&mut Ui)) {
     CollapsingHeader::new(title)
-    .default_open(true)
-    .show(ui, add_body);
+        .default_open(true)
+        .show(ui, add_body);
 }
 
 fn convex_hull(points: &[Vec3]) -> Vec<Vec3> {
@@ -1884,8 +1884,8 @@ fn convex_hull(points: &[Vec3]) -> Vec<Vec3> {
     let mut sorted_points = points.to_vec();
     sorted_points.sort_by(|a, b| {
         a.x.partial_cmp(&b.x)
-        .unwrap()
-        .then(a.y.partial_cmp(&b.y).unwrap())
+            .unwrap()
+            .then(a.y.partial_cmp(&b.y).unwrap())
     });
 
     let mut deduped: Vec<Vec3> = Vec::new();
@@ -1893,9 +1893,9 @@ fn convex_hull(points: &[Vec3]) -> Vec<Vec3> {
         if deduped.is_empty()
             || point.x != deduped.last().unwrap().x
             || point.y != deduped.last().unwrap().y
-            {
-                deduped.push(point);
-            }
+        {
+            deduped.push(point);
+        }
     }
 
     if deduped.len() <= 2 {
@@ -1906,20 +1906,20 @@ fn convex_hull(points: &[Vec3]) -> Vec<Vec3> {
     for point in &deduped {
         while lower.len() >= 2
             && cross(&lower[lower.len() - 2], &lower[lower.len() - 1], point) <= 0.0
-            {
-                lower.pop();
-            }
-            lower.push(*point);
+        {
+            lower.pop();
+        }
+        lower.push(*point);
     }
 
     let mut upper = Vec::new();
     for point in deduped.iter().rev() {
         while upper.len() >= 2
             && cross(&upper[upper.len() - 2], &upper[upper.len() - 1], point) <= 0.0
-            {
-                upper.pop();
-            }
-            upper.push(*point);
+        {
+            upper.pop();
+        }
+        upper.push(*point);
     }
 
     upper.pop();
