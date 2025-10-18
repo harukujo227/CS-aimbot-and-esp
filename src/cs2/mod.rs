@@ -266,6 +266,7 @@ impl Game for CS2 {
             data.bomb.timer = bomb.time_to_explosion(self);
             data.bomb.position = bomb.position(self);
             data.bomb.being_defused = bomb.is_being_defused(self);
+            data.bomb.defuse_remain_time = bomb.time_to_defuse(self);
         } else {
             data.bomb.planted = false;
         }
@@ -517,6 +518,7 @@ impl CS2 {
         offsets.planted_c4.being_defused = client.get("C_PlantedC4", "m_bBeingDefused")?;
         offsets.planted_c4.is_defused = client.get("C_PlantedC4", "m_bBombDefused")?;
         offsets.planted_c4.has_exploded = client.get("C_PlantedC4", "m_bHasExploded")?;
+        offsets.planted_c4.defuse_time_left = client.get("C_PlantedC4", "m_flDefuseCountDown")?;
 
         offsets.entity_identity.size = client.get_class("CEntityIdentity")?.size();
 

@@ -1253,18 +1253,18 @@ impl App {
             if let Some(pos) = world_to_screen(&data.bomb.position, data) {
                 self.text(
                     &painter,
-                    format!("{:.1}", data.bomb.timer),
-                    pos,
-                    Align2::CENTER_CENTER,
-                    None,
+                    format!("{:.3}", data.bomb.timer),
+                        pos,
+                        Align2::CENTER_CENTER,
+                        None,
                 );
                 if data.bomb.being_defused {
                     self.text(
                         &painter,
-                        "defusing",
-                        pos2(pos.x, pos.y + self.config.hud.font_size),
-                        Align2::CENTER_CENTER,
-                        None,
+                        format!("defusing {:.3}", data.bomb.defuse_remain_time),
+                            pos2(pos.x, pos.y + self.config.hud.font_size),
+                              Align2::CENTER_CENTER,
+                              None,
                     );
                 }
             }
