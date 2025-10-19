@@ -347,10 +347,14 @@ impl Default for UnsafeConfig {
 
 pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     let path = std::env::var_os("XDG_CONFIG_HOME")
-        .and_then(|p| if p.is_empty() { None } else { Some(PathBuf::from(p)) })
-        .or_else(|| {
-            std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config"))
+        .and_then(|p| {
+            if p.is_empty() {
+                None
+            } else {
+                Some(PathBuf::from(p))
+            }
         })
+        .or_else(|| std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config")))
         .map(|base| base.join("deadlocked"))
         .unwrap_or_else(|| {
             std::env::current_exe()

@@ -15,7 +15,11 @@ use crate::{
     crash,
 };
 
-pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, mut force_reparse: bool, use_system_binary: bool) {
+pub fn parse_maps(
+    bvh: Arc<Mutex<HashMap<String, Bvh>>>,
+    mut force_reparse: bool,
+    use_system_binary: bool,
+) {
     crash::info();
     let source2viewer = exe_path().join("source2viewer/Source2Viewer-CLI");
 
@@ -90,13 +94,11 @@ pub fn parse_maps(bvh: Arc<Mutex<HashMap<String, Bvh>>>, mut force_reparse: bool
             continue;
         }
 
-        let mut s2v_cmd = Command::new(
-            if use_system_binary {
-                std::ffi::OsStr::new("Source2Viewer-CLI")
-            } else {
-                source2viewer.as_os_str()
-            }
-        );
+        let mut s2v_cmd = Command::new(if use_system_binary {
+            std::ffi::OsStr::new("Source2Viewer-CLI")
+        } else {
+            source2viewer.as_os_str()
+        });
         s2v_cmd.args([
             "-i",
             path.to_str().unwrap(),
