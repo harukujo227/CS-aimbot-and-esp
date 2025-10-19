@@ -116,7 +116,7 @@ cargo run --release
 
 ### Where are my configs saved?
 
-Configs are saved in `$XDG_CONFIG_HOME` if set (usually `$HOME/.config`). Otherwise they're saved alongside the executable.
+Configs are saved in `$XDG_CONFIG_HOME` with fallback to `$HOME/.config`. Otherwise they're saved alongside the executable.
 
 ### How do I configure the radar?
 
