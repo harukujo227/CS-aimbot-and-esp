@@ -29,22 +29,16 @@ impl CS2 {
         }
 
         let button_state = self.is_button_down(&hotkey);
-
-        let should_trigger = match config.mode {
-            TriggerbotMode::Hold => {
-                button_state
-            }
-            TriggerbotMode::Toggle => {
-                if button_state && !self.trigger.previous_button_state {
-                    self.trigger.active = !self.trigger.active;
-                }
-                self.trigger.previous_button_state = button_state;
-                self.trigger.active
-            }
-        };
-
-        if !should_trigger {
+        if config.mode == TriggerbotMode::Hold && !button_state {
             return;
+        } else {
+            if button_state && !self.trigger.previous_button_state {
+                self.trigger.active = !self.trigger.active;
+            }
+            self.trigger.previous_button_state = button_state;
+            if !self.trigger.active {
+                return;
+            }
         }
 
         let Some(local_player) = Player::local_player(self) else {
@@ -62,7 +56,8 @@ impl CS2 {
             return;
         }
 
-        if config.velocity_check && local_player.velocity(self).length() > config.velocity_threshold {
+        if config.velocity_check && local_player.velocity(self).length() > config.velocity_threshold
+        {
             return;
         }
 
