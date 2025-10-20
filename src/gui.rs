@@ -1331,20 +1331,57 @@ impl App {
         // fov circle
         if self.config.hud.fov_circle && data.in_game {
             let weapon_config = self.aimbot_config(&data.weapon);
-            let aim_fov = weapon_config.fov*self.config.hud.fov_circle_scale;
+            let aim_fov = weapon_config.fov * 1.5 * self.config.hud.fov_circle_scale;
             let fov = if self.config.misc.fov_changer {
                 self.config.misc.desired_fov
             } else {
                 cs2::DEFAULT_FOV
             } as f32;
-            let radius = (aim_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
-                * data.window_size.x
-                / 2.0;
-            painter.circle_stroke(
-                pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
-                radius,
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
-            );
+
+            if weapon_config.distancebased_fov {
+                // Close range (0-125 units): scale = 5.0 - (125/125) = 4.0
+                let close_distance = 125.0;
+                let close_scale = 5.0 - (close_distance / 125.0);
+                let close_fov = aim_fov * close_scale;
+                let close_radius = (close_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
+                    * data.window_size.x / 2.0;
+                painter.circle_stroke(
+                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
+                    close_radius,
+                    Stroke::new(self.config.hud.line_width, self.apply_alpha(Colors::GREEN)),
+                );
+
+                // Mid range (250 units): scale = 5.0 - (250/125) = 3.0
+                let mid_distance = 250.0;
+                let mid_scale = 5.0 - (mid_distance / 125.0);
+                let mid_fov = aim_fov * mid_scale;
+                let mid_radius = (mid_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
+                    * data.window_size.x / 2.0;
+                painter.circle_stroke(
+                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
+                    mid_radius,
+                    Stroke::new(self.config.hud.line_width, self.apply_alpha(Colors::YELLOW)),
+                );
+
+                // Far range (500+ units): scale = 1.0
+                let far_fov = aim_fov * 1.0;
+                let far_radius = (far_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
+                    * data.window_size.x / 2.0;
+                painter.circle_stroke(
+                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
+                    far_radius,
+                    Stroke::new(self.config.hud.line_width, self.apply_alpha(Colors::RED)),
+                );
+            } else
+            {
+                let radius = (aim_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
+                    * data.window_size.x / 2.0;
+                painter.circle_stroke(
+                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
+                    radius,
+                    Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+                );
+            }
         }
 
         if self.config.hud.sniper_crosshair
