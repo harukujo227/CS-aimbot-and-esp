@@ -1332,14 +1332,14 @@ impl App {
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 - 50.0),
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 + 50.0),
                 ],
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(self.config.hud.crosshair_color)),
             );
             painter.line(
                 vec![
                     pos2(data.window_size.x / 2.0 - 50.0, data.window_size.y / 2.0),
                     pos2(data.window_size.x / 2.0 + 50.0, data.window_size.y / 2.0),
                 ],
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(self.config.hud.crosshair_color)),
             );
         }
 
