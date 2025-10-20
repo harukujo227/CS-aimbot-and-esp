@@ -220,11 +220,14 @@ impl App {
                 self.send_config();
             }
 
-            if ui
-                .checkbox(&mut self.weapon_config().aimbot.target_friendlies, "Target Friendlies")
-                .changed()
-            {
-                self.send_config();
+            if self.data.lock().unwrap().is_custom_mode {
+                if ui
+                    .checkbox(&mut self.weapon_config().aimbot.target_friendlies, "Target Friendlies")
+                    .on_hover_text("Only active in custom game modes (workshop/custom maps)")
+                    .changed()
+                {
+                    self.send_config();
+                }
             }
 
             ui.horizontal(|ui| {
@@ -580,11 +583,14 @@ impl App {
                     }
                 });
 
-            if ui
-                .checkbox(&mut self.config.player.show_friendlies, "Show Friendlies")
-                .changed()
-            {
-                self.send_config();
+            if self.data.lock().unwrap().is_custom_mode {
+                if ui
+                    .checkbox(&mut self.config.player.show_friendlies, "Show Friendlies")
+                    .on_hover_text("Only active in custom game modes (workshop/custom maps)")
+                    .changed()
+                {
+                    self.send_config();
+                }
             }
 
             egui::ComboBox::new("draw_box", "Box")
@@ -1251,7 +1257,7 @@ impl App {
                 self.skeleton(&painter, player, data);
             }
 
-            if self.config.player.show_friendlies {
+            if self.config.player.show_friendlies && data.is_custom_mode {
                 for player in &data.friendlies {
                     self.player_box(&painter, player, data);
                     self.skeleton(&painter, player, data);
