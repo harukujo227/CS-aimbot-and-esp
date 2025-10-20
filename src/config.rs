@@ -264,6 +264,7 @@ impl Default for PlayerConfig {
 pub struct HudConfig {
     pub bomb_timer: bool,
     pub fov_circle: bool,
+    pub fov_circle_scale: f32,
     pub sniper_crosshair: bool,
     pub crosshair_color: Color32,
     pub dropped_weapons: bool,
@@ -287,6 +288,7 @@ impl Default for HudConfig {
         Self {
             bomb_timer: true,
             fov_circle: false,
+            fov_circle_scale: 1.0,
             sniper_crosshair: true,
             crosshair_color: Color32::WHITE,
             dropped_weapons: true,
