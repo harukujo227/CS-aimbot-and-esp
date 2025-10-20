@@ -91,7 +91,7 @@ impl App {
 
     fn gui(&mut self, ctx: &Context) {
         ctx.set_pixels_per_point(self.display_scale);
-        //ctx.style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
+        ctx.style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
         egui::SidePanel::left("sidebar")
             .resizable(false)
             .show(ctx, |ui| {
@@ -1116,7 +1116,7 @@ impl App {
             self.config = parse_config(&config_path);
             self.current_config = config_path;
             self.send_config();
-            ui.ctx().style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
+            //ui.ctx().style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
         }
 
         if let Some(config) = delete {
