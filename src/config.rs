@@ -77,6 +77,7 @@ impl WeaponConfig {
 pub struct AimbotConfig {
     pub enable_override: bool,
     pub enabled: bool,
+    pub target_friendlies: bool,
     pub start_bullet: i32,
     pub visibility_check: bool,
     pub flash_check: bool,
@@ -91,6 +92,7 @@ impl Default for AimbotConfig {
         Self {
             enable_override: false,
             enabled: true,
+            target_friendlies: false,
             start_bullet: 2,
             visibility_check: true,
             flash_check: true,
@@ -218,6 +220,7 @@ pub enum BoxMode {
 pub struct PlayerConfig {
     pub enabled: bool,
     pub esp_hotkey: KeyCode,
+    pub show_friendlies: bool,
     pub draw_box: DrawMode,
     pub box_mode: BoxMode,
     pub box_visible_color: Color32,
@@ -238,6 +241,7 @@ impl Default for PlayerConfig {
         Self {
             enabled: true,
             esp_hotkey: KeyCode::KeyX,
+            show_friendlies: false,
             draw_box: DrawMode::Color,
             box_mode: BoxMode::Gap,
             box_visible_color: Color32::WHITE,

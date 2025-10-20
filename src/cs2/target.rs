@@ -73,8 +73,10 @@ impl CS2 {
             self.target.reset();
         }
 
+        let target_friendlies = aimbot_config.target_friendlies;
+
         for player in &self.players {
-            if !ffa && team == player.team(self) {
+            if !ffa && !target_friendlies && team == player.team(self) {
                 continue;
             }
 
