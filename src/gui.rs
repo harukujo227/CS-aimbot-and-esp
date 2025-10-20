@@ -248,7 +248,7 @@ impl App {
                 if ui
                     .add(
                         DragValue::new(&mut self.weapon_config().aimbot.smooth)
-                            .range(0.0..=10.0)
+                            .range(0.0..=20.0)
                             .speed(0.02)
                             .max_decimals(1),
                     )
