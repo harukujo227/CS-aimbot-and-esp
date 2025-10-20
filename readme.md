@@ -1,4 +1,5 @@
 # deadlocked
+
 simple cs2 aimbot and esp, for linux only.
 
 [![Open Source CS2 Hacking](https://badgen.net/discord/members/eXjG4Ar9Sx)](https://discord.gg/eXjG4Ar9Sx)
@@ -6,26 +7,35 @@ simple cs2 aimbot and esp, for linux only.
 ## Features
 
 ### Aimbot
+
+- Hotkey
 - FOV
-- Smoothing
+- Smooth
+- Start bullet
+- Targeting mode
 - Visibility check (VPK parsing)
 - Head only/whole body
 - Flash check
 - FOV circle
 
 ### ESP
+
+- Hotkey
 - Box
 - Skeleton
 - Health bar
 - Armor bar
 - Player name
-- Weapon name
+- Weapon icon
 - Player tags (helmet, defuser, bomb)
 - Dropped weapons
 - Bomb timer
 
 ### Triggerbot
+
+- Activation mode
 - Min/max delay
+- Additional Duration
 - Visibility check
 - Flash check
 - Scope check
@@ -33,15 +43,20 @@ simple cs2 aimbot and esp, for linux only.
 - Head only mode
 
 ### Standalone RCS
+
 - Smoothing
 
 ### Per-Weapon Overrides
+
 - Aimbot
 - Triggerbot
 - RCS
 
 ### Misc
+
 - Sniper crosshair
+- Bomb timer
+- Spectator list
 
 ### Unsafe
 
@@ -130,19 +145,23 @@ See [radar.md](radar.md)
 ### Which desktop environments and window managers are supported?
 
 **Best support:**
+
 - GNOME (Mutter)
 - KDE (KWin)
 
 **Good support:**
+
 - SwayWM
 - Weston
 
 **Fair support:**
+
 - i3
 - OpenBox
 - XFCE
 
 **Limited/No support:**
+
 - Hyprland (poor X11 support)
 - Other Wayland-only compositors
 
