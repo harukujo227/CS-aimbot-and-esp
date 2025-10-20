@@ -215,7 +215,6 @@ impl Game for CS2 {
             rotation: local_player.rotation(self),
         };
         data.local_player = local_player_data.clone();
-        data.friendlies.push(local_player_data);
 
         data.entities = self
             .entities
