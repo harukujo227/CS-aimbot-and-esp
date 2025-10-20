@@ -791,21 +791,6 @@ impl App {
                 self.send_config();
             }
 
-            ui.horizontal(|ui| {
-                if ui
-                    .add(
-                        DragValue::new(&mut self.config.hud.fov_circle_scale)
-                            .range(0.1..=5.0)
-                            .speed(0.05)
-                            .max_decimals(2),
-                    )
-                    .changed()
-                {
-                    self.send_config();
-                }
-            ui.label("FOV Circle Scale");
-            });
-
             if ui
                 .checkbox(&mut self.config.hud.sniper_crosshair, "Sniper Crosshair")
                 .changed()
@@ -1331,7 +1316,7 @@ impl App {
         // fov circle
         if self.config.hud.fov_circle && data.in_game {
             let weapon_config = self.aimbot_config(&data.weapon);
-            let aim_fov = weapon_config.fov * 1.5 * self.config.hud.fov_circle_scale;
+            let aim_fov = weapon_config.fov * 1.5;
             let fov = if self.config.misc.fov_changer {
                 self.config.misc.desired_fov
             } else {
