@@ -1224,9 +1224,19 @@ impl App {
         Color32::from_rgba_unmultiplied(r, g, b, alpha)
     }
 
-    fn calculate_fov_radius(&self, target_fov: f32, current_fov: f32, screen_width: f32) -> f32 {
-        let current_fov_tan = (current_fov.to_radians() / 2.0).tan();
+    fn get_current_fov(&self) -> f32 {
+        (if self.config.misc.fov_changer {
+            self.config.misc.desired_fov
+        } else {
+            cs2::DEFAULT_FOV
+        }) as f32
+    }
 
+    fn calculate_fov_radius(&self, data: &Data, target_fov: f32) -> f32 {
+        let current_fov = self.get_current_fov();
+        let screen_width = data.window_size.x;
+
+        let current_fov_tan = (current_fov.to_radians() / 2.0).tan();
         if current_fov_tan == 0.0 {
             return 0.0;
         }
@@ -1235,7 +1245,8 @@ impl App {
         (target_fov_tan / current_fov_tan) * (screen_width / 2.0)
     }
 
-    fn draw_fov_circle(&self, painter: &Painter, center: Pos2, radius: f32, color: Color32) {
+    fn draw_fov_circle(&self, painter: &Painter, data: &Data, radius: f32, color: Color32) {
+        let center = pos2(data.window_size.x / 2.0, data.window_size.y / 2.0);
         let stroke = Stroke::new(self.config.hud.line_width, color);
         painter.circle_stroke(center, radius, stroke);
     }
@@ -1244,23 +1255,30 @@ impl App {
         (5.0 - (distance / 125.0)).max(1.0)
     }
 
+    fn draw_simple_fov_circle(
+        &self,
+        painter: &Painter,
+        data: &Data,
+        target_fov: f32,
+        color: Color32,
+    ) {
+        let radius = self.calculate_fov_radius(data, target_fov);
+        self.draw_fov_circle(painter, data, radius, color);
+    }
+
     fn draw_distance_scaled_fov_circle(
         &self,
         painter: &Painter,
-        center: Pos2,
-        screen_width: f32,
+        data: &Data,
         base_aim_fov: f32,
-        current_fov: f32,
         distance: f32,
         color: Color32,
     ) {
         let scale = self.get_distance_fov_scale(distance);
-
         let target_fov = base_aim_fov * scale;
 
-        let radius = self.calculate_fov_radius(target_fov, current_fov, screen_width);
-
-        self.draw_fov_circle(painter, center, radius, color);
+        let radius = self.calculate_fov_radius(data, target_fov);
+        self.draw_fov_circle(painter, data, radius, color);
     }
 
     fn overlay(&mut self, ctx: &Context) {
@@ -1354,47 +1372,37 @@ impl App {
         // fov circle
         if self.config.hud.fov_circle && data.in_game {
             let weapon_config = self.aimbot_config(&data.weapon);
-            let aim_fov = weapon_config.fov * 1.5;
-            let fov = if self.config.misc.fov_changer {
-                self.config.misc.desired_fov
-            } else {
-                cs2::DEFAULT_FOV
-            } as f32;
-
-            let center = pos2(data.window_size.x / 2.0, data.window_size.y / 2.0);
-            let screen_width = data.window_size.x;
+            let aim_fov = weapon_config.fov * 1.6;
 
             if weapon_config.distance_adjusted_fov {
                 self.draw_distance_scaled_fov_circle(
                     &painter,
-                    center,
-                    screen_width,
+                    &data,
                     aim_fov,
-                    fov,
                     125.0,
                     self.apply_alpha(Colors::GREEN),
                 );
                 self.draw_distance_scaled_fov_circle(
                     &painter,
-                    center,
-                    screen_width,
+                    &data,
                     aim_fov,
-                    fov,
                     250.0,
                     self.apply_alpha(Colors::YELLOW),
                 );
                 self.draw_distance_scaled_fov_circle(
                     &painter,
-                    center,
-                    screen_width,
+                    &data,
                     aim_fov,
-                    fov,
                     500.0,
                     self.apply_alpha(Colors::RED),
                 );
             } else {
-                let radius = self.calculate_fov_radius(aim_fov, fov, screen_width);
-                self.draw_fov_circle(&painter, center, radius, self.apply_alpha(Color32::WHITE));
+                self.draw_simple_fov_circle(
+                    &painter,
+                    &data,
+                    aim_fov,
+                    self.apply_alpha(Color32::WHITE)
+                );
             }
         }
 
