@@ -47,7 +47,7 @@ impl CS2 {
 
         let view_angles = local_player.view_angles(self);
         if angles_to_fov(&view_angles, &target_angle)
-            > (config.fov * self.distance_scale(self.target.distance))
+            > (config.fov * if config.distance_adjusted_fov {self.distance_scale(self.target.distance)} else { 1.0 })
         {
             return;
         }
@@ -71,7 +71,7 @@ impl CS2 {
         let mouse_angles = vec2(
             aim_angles.y / sensitivity * 50.0,
             -aim_angles.x / sensitivity * 50.0,
-        ) / (config.smooth + 1.0).clamp(1.0, 10.0);
+        ) / (config.smooth + 1.0).clamp(1.0, 20.0);
 
         mouse.move_rel(&mouse_angles);
     }

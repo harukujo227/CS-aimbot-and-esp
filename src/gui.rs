@@ -252,6 +252,14 @@ impl App {
                 self.send_config();
             }
 
+            if ui
+                .checkbox(&mut self.weapon_config().aimbot.distance_adjusted_fov, "Distance-Adjusted FOV")
+                .on_hover_text("Adjusts FOV based on target distance")
+                .changed()
+            {
+                self.send_config();
+            }
+
             ui.horizontal(|ui| {
                 if ui
                     .add(
@@ -272,7 +280,7 @@ impl App {
                 if ui
                     .add(
                         DragValue::new(&mut self.weapon_config().aimbot.smooth)
-                            .range(0.0..=10.0)
+                            .range(0.0..=20.0)
                             .speed(0.02)
                             .max_decimals(1),
                     )
@@ -1149,6 +1157,7 @@ impl App {
             self.config = parse_config(&config_path);
             self.current_config = config_path;
             self.send_config();
+            ui.ctx().style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
         }
 
         if let Some(config) = delete {
@@ -1251,7 +1260,63 @@ impl App {
         Color32::from_rgba_unmultiplied(r, g, b, alpha)
     }
 
-    #[cfg(feature = "visuals")]
+    fn get_current_fov(&self) -> f32 {
+        (if self.config.misc.fov_changer {
+            self.config.misc.desired_fov
+        } else {
+            cs2::DEFAULT_FOV
+        }) as f32
+    }
+
+    fn calculate_fov_radius(&self, data: &Data, target_fov: f32) -> f32 {
+        let current_fov = self.get_current_fov();
+        let screen_width = data.window_size.x;
+
+        let current_fov_tan = (current_fov.to_radians() / 2.0).tan();
+        if current_fov_tan == 0.0 {
+            return 0.0;
+        }
+
+        let target_fov_tan = (target_fov.to_radians() / 2.0).tan();
+        (target_fov_tan / current_fov_tan) * (screen_width / 2.0)
+    }
+
+    fn draw_fov_circle(&self, painter: &Painter, data: &Data, radius: f32, color: Color32) {
+        let center = pos2(data.window_size.x / 2.0, data.window_size.y / 2.0);
+        let stroke = Stroke::new(self.config.hud.line_width, color);
+        painter.circle_stroke(center, radius, stroke);
+    }
+
+    fn get_distance_fov_scale(&self, distance: f32) -> f32 {
+        (5.0 - (distance / 125.0)).max(1.0)
+    }
+
+    fn draw_simple_fov_circle(
+        &self,
+        painter: &Painter,
+        data: &Data,
+        target_fov: f32,
+        color: Color32,
+    ) {
+        let radius = self.calculate_fov_radius(data, target_fov);
+        self.draw_fov_circle(painter, data, radius, color);
+    }
+
+    fn draw_distance_scaled_fov_circle(
+        &self,
+        painter: &Painter,
+        data: &Data,
+        base_aim_fov: f32,
+        distance: f32,
+        color: Color32,
+    ) {
+        let scale = self.get_distance_fov_scale(distance);
+        let target_fov = base_aim_fov * scale;
+
+        let radius = self.calculate_fov_radius(data, target_fov);
+        self.draw_fov_circle(painter, data, radius, color);
+    }
+
     fn overlay(&mut self, ctx: &Context) {
         ctx.set_pixels_per_point(1.0);
         let painter = ctx.layer_painter(egui::LayerId::background());
@@ -1343,20 +1408,38 @@ impl App {
         // fov circle
         if self.config.hud.fov_circle && data.in_game {
             let weapon_config = self.aimbot_config(&data.weapon);
-            let aim_fov = weapon_config.fov;
-            let fov = if self.config.misc.fov_changer {
-                self.config.misc.desired_fov
+            let aim_fov = weapon_config.fov * 1.6;
+
+            if weapon_config.distance_adjusted_fov {
+                self.draw_distance_scaled_fov_circle(
+                    &painter,
+                    &data,
+                    aim_fov,
+                    125.0,
+                    self.apply_alpha(Colors::GREEN),
+                );
+                self.draw_distance_scaled_fov_circle(
+                    &painter,
+                    &data,
+                    aim_fov,
+                    250.0,
+                    self.apply_alpha(Colors::YELLOW),
+                );
+                self.draw_distance_scaled_fov_circle(
+                    &painter,
+                    &data,
+                    aim_fov,
+                    500.0,
+                    self.apply_alpha(Colors::RED),
+                );
             } else {
-                crate::constants::cs2::DEFAULT_FOV
-            } as f32;
-            let radius = (aim_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
-                * data.window_size.x
-                / 2.0;
-            painter.circle_stroke(
-                pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
-                radius,
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
-            );
+                self.draw_simple_fov_circle(
+                    &painter,
+                    &data,
+                    aim_fov,
+                    self.apply_alpha(Color32::WHITE)
+                );
+            }
         }
 
         if self.config.hud.sniper_crosshair
@@ -1367,14 +1450,14 @@ impl App {
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 - 50.0),
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 + 50.0),
                 ],
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(self.config.hud.crosshair_color)),
             );
             painter.line(
                 vec![
                     pos2(data.window_size.x / 2.0 - 50.0, data.window_size.y / 2.0),
                     pos2(data.window_size.x / 2.0 + 50.0, data.window_size.y / 2.0),
                 ],
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+                Stroke::new(self.config.hud.line_width, self.apply_alpha(self.config.hud.crosshair_color)),
             );
         }
 

@@ -141,7 +141,7 @@ impl App {
         let (gui_window, gui_gl) = create_display(event_loop, false);
         let gui_gl = Arc::new(gui_gl);
         let mut gui_glow = egui_glow::EguiGlow::new(event_loop, gui_gl.clone(), None, None, true);
-        prep_ctx(&mut gui_glow.egui_ctx);
+        prep_ctx(&mut gui_glow.egui_ctx, self.config.accent_color);
         self.display_scale = gui_window.window().scale_factor() as f32;
         log::info!("detected display scale: {}", self.display_scale);
 
@@ -270,7 +270,7 @@ fn create_display(
     (glutin_window_context, gl)
 }
 
-fn prep_ctx(ctx: &mut egui::Context) {
+fn prep_ctx(ctx: &mut egui::Context, accent_color: egui::Color32) {
     // add font
     let fira_sans = include_bytes!("../resources/FiraSansIcons.ttf");
     let cs2_icons = include_bytes!("../resources/CS2GunIcons.ttf");
@@ -298,10 +298,12 @@ fn prep_ctx(ctx: &mut egui::Context) {
 
     ctx.set_fonts(font_definitions);
 
-    ctx.style_mut_of(egui::Theme::Dark, gui_style);
+    ctx.style_mut_of(egui::Theme::Dark, |style| {
+        gui_style(style, accent_color);
+    });
 }
 
-fn gui_style(style: &mut Style) {
+fn gui_style(style: &mut Style, accent_color: egui::Color32) {
     style.interaction.selectable_labels = false;
     for font in style.text_styles.iter_mut() {
         font.1.size = 16.0;
@@ -316,7 +318,7 @@ fn gui_style(style: &mut Style) {
     let fg_stroke = Stroke::new(1.0, Colors::TEXT);
     let dark_stroke = Stroke::new(1.0, Colors::BASE);
 
-    style.visuals.selection.bg_fill = Colors::BLUE;
+    style.visuals.selection.bg_fill = accent_color;
     style.visuals.selection.stroke = dark_stroke;
 
     style.visuals.widgets.active.bg_fill = Colors::HIGHLIGHT;
