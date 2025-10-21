@@ -1224,6 +1224,45 @@ impl App {
         Color32::from_rgba_unmultiplied(r, g, b, alpha)
     }
 
+    fn calculate_fov_radius(&self, target_fov: f32, current_fov: f32, screen_width: f32) -> f32 {
+        let current_fov_tan = (current_fov.to_radians() / 2.0).tan();
+
+        if current_fov_tan == 0.0 {
+            return 0.0;
+        }
+
+        let target_fov_tan = (target_fov.to_radians() / 2.0).tan();
+        (target_fov_tan / current_fov_tan) * (screen_width / 2.0)
+    }
+
+    fn draw_fov_circle(&self, painter: &Painter, center: Pos2, radius: f32, color: Color32) {
+        let stroke = Stroke::new(self.config.hud.line_width, color);
+        painter.circle_stroke(center, radius, stroke);
+    }
+
+    fn get_distance_fov_scale(&self, distance: f32) -> f32 {
+        (5.0 - (distance / 125.0)).max(1.0)
+    }
+
+    fn draw_distance_scaled_fov_circle(
+        &self,
+        painter: &Painter,
+        center: Pos2,
+        screen_width: f32,
+        base_aim_fov: f32,
+        current_fov: f32,
+        distance: f32,
+        color: Color32,
+    ) {
+        let scale = self.get_distance_fov_scale(distance);
+
+        let target_fov = base_aim_fov * scale;
+
+        let radius = self.calculate_fov_radius(target_fov, current_fov, screen_width);
+
+        self.draw_fov_circle(painter, center, radius, color);
+    }
+
     fn overlay(&mut self, ctx: &Context) {
         ctx.set_pixels_per_point(1.0);
         let painter = ctx.layer_painter(egui::LayerId::background());
@@ -1322,49 +1361,40 @@ impl App {
                 cs2::DEFAULT_FOV
             } as f32;
 
+            let center = pos2(data.window_size.x / 2.0, data.window_size.y / 2.0);
+            let screen_width = data.window_size.x;
+
             if weapon_config.distance_adjusted_fov {
-                // Close range (0-125 units): scale = 5.0 - (125/125) = 4.0
-                let close_distance = 125.0;
-                let close_scale = 5.0 - (close_distance / 125.0);
-                let close_fov = aim_fov * close_scale;
-                let close_radius = (close_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
-                    * data.window_size.x / 2.0;
-                painter.circle_stroke(
-                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
-                    close_radius,
-                    Stroke::new(self.config.hud.line_width, self.apply_alpha(Colors::GREEN)),
+                self.draw_distance_scaled_fov_circle(
+                    &painter,
+                    center,
+                    screen_width,
+                    aim_fov,
+                    fov,
+                    125.0,
+                    self.apply_alpha(Colors::GREEN),
                 );
-
-                // Mid range (250 units): scale = 5.0 - (250/125) = 3.0
-                let mid_distance = 250.0;
-                let mid_scale = 5.0 - (mid_distance / 125.0);
-                let mid_fov = aim_fov * mid_scale;
-                let mid_radius = (mid_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
-                    * data.window_size.x / 2.0;
-                painter.circle_stroke(
-                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
-                    mid_radius,
-                    Stroke::new(self.config.hud.line_width, self.apply_alpha(Colors::YELLOW)),
+                self.draw_distance_scaled_fov_circle(
+                    &painter,
+                    center,
+                    screen_width,
+                    aim_fov,
+                    fov,
+                    250.0,
+                    self.apply_alpha(Colors::YELLOW),
                 );
-
-                // Far range (500+ units): scale = 1.0
-                let far_fov = aim_fov * 1.0;
-                let far_radius = (far_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
-                    * data.window_size.x / 2.0;
-                painter.circle_stroke(
-                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
-                    far_radius,
-                    Stroke::new(self.config.hud.line_width, self.apply_alpha(Colors::RED)),
+                self.draw_distance_scaled_fov_circle(
+                    &painter,
+                    center,
+                    screen_width,
+                    aim_fov,
+                    fov,
+                    500.0,
+                    self.apply_alpha(Colors::RED),
                 );
-            } else
-            {
-                let radius = (aim_fov.to_radians() / 2.0).tan() / (fov.to_radians() / 2.0).tan()
-                    * data.window_size.x / 2.0;
-                painter.circle_stroke(
-                    pos2(data.window_size.x / 2.0, data.window_size.y / 2.0),
-                    radius,
-                    Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
-                );
+            } else {
+                let radius = self.calculate_fov_radius(aim_fov, fov, screen_width);
+                self.draw_fov_circle(&painter, center, radius, self.apply_alpha(Color32::WHITE));
             }
         }
 
