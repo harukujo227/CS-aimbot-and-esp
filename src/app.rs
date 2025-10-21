@@ -323,4 +323,6 @@ fn gui_style(style: &mut Style) {
     style.visuals.widgets.open.bg_stroke = bg_stroke;
     style.visuals.widgets.open.fg_stroke = fg_stroke;
     style.visuals.widgets.open.weak_bg_fill = Colors::HIGHLIGHT;
+
+    ctx.style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
 }

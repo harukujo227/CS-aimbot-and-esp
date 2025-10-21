@@ -91,7 +91,6 @@ impl App {
 
     fn gui(&mut self, ctx: &Context) {
         ctx.set_pixels_per_point(self.display_scale);
-        ctx.style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
         egui::SidePanel::left("sidebar")
             .resizable(false)
             .show(ctx, |ui| {
