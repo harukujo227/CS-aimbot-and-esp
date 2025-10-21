@@ -230,7 +230,7 @@ impl App {
             }
 
             if ui
-                .checkbox(&mut self.weapon_config().aimbot.distancebased_fov, "Distance-based FOV")
+                .checkbox(&mut self.weapon_config().aimbot.distancebased_fov, "Distance-Adjusted FOV")
                 .on_hover_text("Adjusts FOV based on target distance")
                 .changed()
             {
