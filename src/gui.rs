@@ -253,7 +253,10 @@ impl App {
             }
 
             if ui
-                .checkbox(&mut self.weapon_config().aimbot.distance_adjusted_fov, "Distance-Adjusted FOV")
+                .checkbox(
+                    &mut self.weapon_config().aimbot.distance_adjusted_fov,
+                    "Distance-Adjusted FOV",
+                )
                 .on_hover_text("Adjusts FOV based on target distance")
                 .changed()
             {
@@ -1157,7 +1160,8 @@ impl App {
             self.config = parse_config(&config_path);
             self.current_config = config_path;
             self.send_config();
-            ui.ctx().style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
+            ui.ctx()
+                .style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
         }
 
         if let Some(config) = delete {
@@ -1260,14 +1264,16 @@ impl App {
         Color32::from_rgba_unmultiplied(r, g, b, alpha)
     }
 
+    #[cfg(feature = "visuals")]
     fn get_current_fov(&self) -> f32 {
         (if self.config.misc.fov_changer {
             self.config.misc.desired_fov
         } else {
-            cs2::DEFAULT_FOV
+            crate::constants::cs2::DEFAULT_FOV
         }) as f32
     }
 
+    #[cfg(feature = "visuals")]
     fn calculate_fov_radius(&self, data: &Data, target_fov: f32) -> f32 {
         let current_fov = self.get_current_fov();
         let screen_width = data.window_size.x;
@@ -1281,16 +1287,19 @@ impl App {
         (target_fov_tan / current_fov_tan) * (screen_width / 2.0)
     }
 
+    #[cfg(feature = "visuals")]
     fn draw_fov_circle(&self, painter: &Painter, data: &Data, radius: f32, color: Color32) {
         let center = pos2(data.window_size.x / 2.0, data.window_size.y / 2.0);
         let stroke = Stroke::new(self.config.hud.line_width, color);
         painter.circle_stroke(center, radius, stroke);
     }
 
+    #[cfg(feature = "visuals")]
     fn get_distance_fov_scale(&self, distance: f32) -> f32 {
         (5.0 - (distance / 125.0)).max(1.0)
     }
 
+    #[cfg(feature = "visuals")]
     fn draw_simple_fov_circle(
         &self,
         painter: &Painter,
@@ -1302,6 +1311,7 @@ impl App {
         self.draw_fov_circle(painter, data, radius, color);
     }
 
+    #[cfg(feature = "visuals")]
     fn draw_distance_scaled_fov_circle(
         &self,
         painter: &Painter,
@@ -1317,6 +1327,7 @@ impl App {
         self.draw_fov_circle(painter, data, radius, color);
     }
 
+    #[cfg(feature = "visuals")]
     fn overlay(&mut self, ctx: &Context) {
         ctx.set_pixels_per_point(1.0);
         let painter = ctx.layer_painter(egui::LayerId::background());
@@ -1413,21 +1424,21 @@ impl App {
             if weapon_config.distance_adjusted_fov {
                 self.draw_distance_scaled_fov_circle(
                     &painter,
-                    &data,
+                    data,
                     aim_fov,
                     125.0,
                     self.apply_alpha(Colors::GREEN),
                 );
                 self.draw_distance_scaled_fov_circle(
                     &painter,
-                    &data,
+                    data,
                     aim_fov,
                     250.0,
                     self.apply_alpha(Colors::YELLOW),
                 );
                 self.draw_distance_scaled_fov_circle(
                     &painter,
-                    &data,
+                    data,
                     aim_fov,
                     500.0,
                     self.apply_alpha(Colors::RED),
@@ -1435,9 +1446,9 @@ impl App {
             } else {
                 self.draw_simple_fov_circle(
                     &painter,
-                    &data,
+                    data,
                     aim_fov,
-                    self.apply_alpha(Color32::WHITE)
+                    self.apply_alpha(Color32::WHITE),
                 );
             }
         }
@@ -1450,14 +1461,20 @@ impl App {
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 - 50.0),
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 + 50.0),
                 ],
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(self.config.hud.crosshair_color)),
+                Stroke::new(
+                    self.config.hud.line_width,
+                    self.apply_alpha(self.config.hud.crosshair_color),
+                ),
             );
             painter.line(
                 vec![
                     pos2(data.window_size.x / 2.0 - 50.0, data.window_size.y / 2.0),
                     pos2(data.window_size.x / 2.0 + 50.0, data.window_size.y / 2.0),
                 ],
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(self.config.hud.crosshair_color)),
+                Stroke::new(
+                    self.config.hud.line_width,
+                    self.apply_alpha(self.config.hud.crosshair_color),
+                ),
             );
         }
 

@@ -155,7 +155,7 @@ impl App {
             let overlay_gl = Arc::new(overlay_gl);
             let mut overlay_glow =
                 egui_glow::EguiGlow::new(event_loop, overlay_gl.clone(), None, None, true);
-            prep_ctx(&mut overlay_glow.egui_ctx);
+            prep_ctx(&mut overlay_glow.egui_ctx, self.config.accent_color);
 
             self.overlay_window = Some(overlay_window);
             self.overlay_gl = Some(overlay_gl);
