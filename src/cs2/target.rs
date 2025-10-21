@@ -77,7 +77,7 @@ impl CS2 {
         let target_friendlies = aimbot_config.target_friendlies;
 
         for player in &self.players {
-            if !ffa && !(target_friendlies && is_custom_mode) && team == player.team(self) {
+            if !(ffa || target_friendlies && is_custom_mode) && team == player.team(self) {
                 continue;
             }
 

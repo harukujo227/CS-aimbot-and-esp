@@ -23,10 +23,12 @@ impl Aabb {
         }
     }
 
+    #[allow(unused)]
     pub fn min(&self) -> &Vec3 {
         &self.min
     }
 
+    #[allow(unused)]
     pub fn max(&self) -> &Vec3 {
         &self.max
     }

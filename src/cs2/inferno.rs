@@ -1,7 +1,7 @@
 use glam::Vec3;
 use serde::Serialize;
 
-use crate::cs2::{CS2, entity::GrenadeInfo, player::Player};
+use crate::cs2::{CS2, player::Player};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Inferno {
@@ -54,8 +54,9 @@ pub struct InfernoInfo {
 }
 
 impl InfernoInfo {
-    pub fn grenade(&self) -> GrenadeInfo {
-        GrenadeInfo {
+    #[cfg(feature = "visuals")]
+    pub fn grenade(&self) -> super::entity::GrenadeInfo {
+        super::entity::GrenadeInfo {
             entity: self.entity,
             position: self.position,
             name: "Inferno",

@@ -39,9 +39,11 @@ mod aimbot;
 pub mod bones;
 pub mod entity;
 mod esp_toggle;
+#[cfg(feature = "unsafe")]
 mod fov_changer;
 pub mod inferno;
 pub mod molotov;
+#[cfg(feature = "unsafe")]
 mod no_flash;
 mod offsets;
 mod planted_c4;
@@ -107,6 +109,7 @@ impl Game for CS2 {
         // self.cache_players();
         self.cache_entities();
 
+        #[cfg(feature = "unsafe")]
         for entity in &self.entities {
             if let Entity::Smoke(smoke) = entity {
                 if config.misc.no_smoke {
@@ -119,8 +122,11 @@ impl Game for CS2 {
             }
         }
 
-        self.no_flash(config);
-        self.fov_changer(config);
+        #[cfg(feature = "unsafe")]
+        {
+            self.no_flash(config);
+            self.fov_changer(config);
+        }
         self.esp_toggle(config);
 
         self.rcs(config, mouse);
@@ -543,7 +549,9 @@ impl CS2 {
 
     fn is_custom_game_mode(&self) -> bool {
         let map = self.current_map();
-        map.starts_with("workshop/") || map.starts_with("custom/") || !map.starts_with("de_") && !map.starts_with("cs_")
+        map.starts_with("workshop/")
+            || map.starts_with("custom/")
+            || !map.starts_with("de_") && !map.starts_with("cs_")
     }
 
     // misc

@@ -1,7 +1,4 @@
-use egui::{Pos2, pos2};
 use glam::{Vec2, Vec3};
-
-use crate::data::Data;
 
 pub fn angles_from_vector(forward: &Vec3) -> Vec2 {
     let mut yaw;
@@ -55,7 +52,8 @@ pub fn vec2_clamp(vec: &mut Vec2) {
     vec.y = (vec.y + 180.0) % 360.0 - 180.0;
 }
 
-pub fn world_to_screen(position: &Vec3, data: &Data) -> Option<Pos2> {
+#[cfg(feature = "visuals")]
+pub fn world_to_screen(position: &Vec3, data: &crate::data::Data) -> Option<egui::Pos2> {
     let vm = &data.view_matrix;
     let mut screen_position = Vec2::new(
         vm.x_axis.x * position.x
@@ -92,5 +90,5 @@ pub fn world_to_screen(position: &Vec3, data: &Data) -> Option<Pos2> {
         return None;
     }
 
-    Some(pos2(screen_position.x, screen_position.y))
+    Some(egui::pos2(screen_position.x, screen_position.y))
 }
