@@ -12,7 +12,7 @@ use glam::{Mat4, Quat, Vec2, Vec3, Vec4};
 
 use crate::{
     bvh::{Bvh, Triangle},
-    crash,
+    os::crash,
 };
 
 pub fn parse_maps(

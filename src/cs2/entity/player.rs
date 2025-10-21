@@ -4,7 +4,7 @@ use glam::{Vec2, Vec3};
 
 use crate::{
     constants::cs2,
-    cs2::{bones::Bones, weapon::Weapon},
+    cs2::{bones::Bones, entity::weapon::Weapon},
 };
 
 use super::{CS2, weapon_class::WeaponClass};

@@ -16,7 +16,7 @@ use crate::{
     cs2::CS2,
     data::Data,
     message::{Envelope, GameStatus, Message, Target},
-    mouse::{DeviceStatus, Mouse, discover_mice},
+    os::mouse::{DeviceStatus, Mouse, discover_mice, get_mouse_by_name},
 };
 
 pub trait Game: std::fmt::Debug {
@@ -63,7 +63,7 @@ impl GameManager {
         }
 
         if let Some(ref name) = game.config.preferred_mouse
-            && let Some(device) = crate::mouse::get_mouse_by_name(name)
+            && let Some(device) = get_mouse_by_name(name)
         {
             let candidate = device.try_open();
             if let DeviceStatus::Working(_) = candidate.status {

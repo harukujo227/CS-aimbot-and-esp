@@ -2,11 +2,10 @@ use glam::vec2;
 
 use crate::{
     config::Config,
+    cs2::{CS2, entity::player::Player},
     math::{angles_to_fov, vec2_clamp},
-    mouse::Mouse,
+    os::mouse::Mouse,
 };
-
-use super::{CS2, player::Player};
 
 impl CS2 {
     pub fn aimbot(&mut self, config: &Config, mouse: &mut Mouse) {
@@ -47,7 +46,12 @@ impl CS2 {
 
         let view_angles = local_player.view_angles(self);
         if angles_to_fov(&view_angles, &target_angle)
-            > (config.fov * if config.distance_adjusted_fov {self.distance_scale(self.target.distance)} else { 1.0 })
+            > (config.fov
+                * if config.distance_adjusted_fov {
+                    self.distance_scale(self.target.distance)
+                } else {
+                    1.0
+                })
         {
             return;
         }

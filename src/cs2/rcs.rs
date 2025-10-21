@@ -1,8 +1,13 @@
 use glam::Vec2;
 
-use crate::{config::Config, mouse::Mouse};
-
-use super::{CS2, player::Player, weapon_class::WeaponClass};
+use crate::{
+    config::Config,
+    cs2::{
+        CS2,
+        entity::{player::Player, weapon_class::WeaponClass},
+    },
+    os::mouse::Mouse,
+};
 
 #[derive(Debug, Default)]
 pub struct Recoil {

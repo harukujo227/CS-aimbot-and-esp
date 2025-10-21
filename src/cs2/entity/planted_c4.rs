@@ -1,6 +1,6 @@
 use glam::Vec3;
 
-use crate::cs2::{CS2, player::Player};
+use crate::cs2::{CS2, entity::player::Player};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PlantedC4 {

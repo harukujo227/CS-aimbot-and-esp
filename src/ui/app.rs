@@ -9,7 +9,6 @@ use arboard::Clipboard;
 use crossbeam::channel::{Receiver, Sender};
 use egui::{FontData, FontDefinitions, Stroke, Style};
 use egui_glow::glow;
-use glam::Vec3;
 use winit::{
     application::ApplicationHandler,
     event::{StartCause, WindowEvent},
@@ -17,27 +16,23 @@ use winit::{
 
 use crate::{
     bvh::Bvh,
-    color::Colors,
     config::{
         CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, available_configs, parse_config, write_config,
     },
-    cs2::weapon::Weapon,
+    cs2::entity::weapon::Weapon,
     data::Data,
-    gui::{AimbotTab, Tab},
     message::{Envelope, GameStatus, Message, RadarStatus, Target},
-    mouse::DeviceStatus,
-    window_context::WindowContext,
+    os::mouse::DeviceStatus,
+    ui::{
+        color::Colors,
+        gui::{AimbotTab, Tab},
+        trail::Trail,
+        window_context::WindowContext,
+    },
 };
 
 const FRAME_RATE: u64 = 120;
 const FRAME_DURATION: Duration = Duration::from_micros(1_000_000 / FRAME_RATE);
-
-#[derive(Debug)]
-#[allow(unused)]
-pub struct Trail {
-    pub trail: Vec<Vec3>,
-    pub last_update: Instant,
-}
 
 pub struct App {
     pub gui_window: Option<WindowContext>,
@@ -272,8 +267,8 @@ fn create_display(
 
 fn prep_ctx(ctx: &mut egui::Context, accent_color: egui::Color32) {
     // add font
-    let fira_sans = include_bytes!("../resources/FiraSansIcons.ttf");
-    let cs2_icons = include_bytes!("../resources/CS2GunIcons.ttf");
+    let fira_sans = include_bytes!("../../resources/FiraSansIcons.ttf");
+    let cs2_icons = include_bytes!("../../resources/CS2GunIcons.ttf");
     let mut font_definitions = FontDefinitions::default();
     font_definitions.font_data.insert(
         String::from("fira_sans"),

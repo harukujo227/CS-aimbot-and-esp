@@ -1,6 +1,7 @@
-use crate::config::Config;
-
-use super::{CS2, player::Player};
+use crate::{
+    config::Config,
+    cs2::{CS2, entity::player::Player},
+};
 
 impl CS2 {
     pub fn no_flash(&self, config: &Config) {

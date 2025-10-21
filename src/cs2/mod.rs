@@ -6,8 +6,6 @@ use std::{
 };
 
 use glam::{IVec2, Mat4, Vec2, Vec3};
-use player::Player;
-use rcs::Recoil;
 
 use crate::{
     bvh::Bvh,
@@ -15,24 +13,22 @@ use crate::{
     constants::cs2::{self, TEAM_CT, TEAM_T, class},
     cs2::{
         bones::Bones,
-        entity::{Entity, EntityInfo, GrenadeInfo},
+        entity::{
+            Entity, EntityInfo, GrenadeInfo, inferno::Inferno, molotov::Molotov,
+            planted_c4::PlantedC4, player::Player, smoke::Smoke, weapon::Weapon,
+        },
         esp_toggle::EspToggle,
-        inferno::Inferno,
-        molotov::Molotov,
         offsets::Offsets,
-        planted_c4::PlantedC4,
-        smoke::Smoke,
+        rcs::Recoil,
+        schema::Schema,
         target::Target,
         triggerbot::Triggerbot,
-        weapon::Weapon,
     },
     data::{Data, PlayerData},
     game::Game,
     key_codes::KeyCode,
     math::{angles_from_vector, vec2_clamp},
-    mouse::Mouse,
-    process::Process,
-    schema::Schema,
+    os::{mouse::Mouse, process::Process},
 };
 
 mod aimbot;
@@ -41,19 +37,13 @@ pub mod entity;
 mod esp_toggle;
 #[cfg(feature = "unsafe")]
 mod fov_changer;
-pub mod inferno;
-pub mod molotov;
 #[cfg(feature = "unsafe")]
 mod no_flash;
 mod offsets;
-mod planted_c4;
-pub mod player;
 mod rcs;
-pub mod smoke;
+mod schema;
 mod target;
 mod triggerbot;
-pub mod weapon;
-pub mod weapon_class;
 
 #[derive(Debug)]
 pub struct CS2 {

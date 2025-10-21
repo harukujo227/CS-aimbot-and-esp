@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use glam::{Mat4, Vec2, Vec3};
 use serde::Serialize;
 
-use crate::cs2::{bones::Bones, entity::EntityInfo, weapon::Weapon};
+use crate::cs2::{
+    bones::Bones,
+    entity::{EntityInfo, weapon::Weapon},
+};
 
 #[derive(Debug, Default, Serialize)]
 pub struct Data {

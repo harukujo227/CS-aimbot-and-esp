@@ -6,29 +6,23 @@ use std::{
 
 use crossbeam::channel::{bounded, unbounded};
 
-use crate::{app::App, data::Data, parser::parse_maps};
+use crate::{data::Data, parser::parse_maps, ui::app::App};
 
-mod app;
 mod bvh;
-mod color;
 mod config;
 mod constants;
-mod crash;
 mod cs2;
 mod data;
 mod drag_range;
 mod game;
-mod gui;
 mod key_codes;
 mod math;
 mod message;
-mod mouse;
+mod os;
 mod parser;
-mod process;
 mod radar;
 mod router;
-mod schema;
-mod window_context;
+mod ui;
 
 #[cfg(not(target_os = "linux"))]
 compile_error!("only linux is supported.");
@@ -43,7 +37,7 @@ fn main() {
         .init();
 
     let args: Vec<String> = std::env::args().collect();
-    crash::install_crash_handler();
+    os::crash::install_crash_handler();
 
     // this runs as x11 for now, because wayland decorations for winit are not good
     // and don't support disabling the maximize button
@@ -63,7 +57,7 @@ fn main() {
     let force_reparse = args.iter().any(|arg| arg == "--force-reparse");
     let use_system_binary = args.iter().any(|arg| arg == "--local-s2v");
     std::thread::spawn(move || {
-        crash::install_crash_handler();
+        os::crash::install_crash_handler();
         parse_maps(bvh, force_reparse, use_system_binary);
     });
 
@@ -76,20 +70,20 @@ fn main() {
     let data_radar = data.clone();
 
     std::thread::spawn(move || {
-        crash::install_crash_handler();
+        os::crash::install_crash_handler();
         router::router(rx, tx_gui, tx_game, tx_radar);
     });
 
     let tx_game = tx.clone();
     std::thread::spawn(move || {
-        crash::install_crash_handler();
+        os::crash::install_crash_handler();
         game::GameManager::new(tx_game, rx_game, data_game, bvh_game).run();
     });
     log::info!("started game thread");
 
     let tx_radar = tx.clone();
     std::thread::spawn(move || {
-        crash::install_crash_handler();
+        os::crash::install_crash_handler();
         radar::Radar::new(tx_radar, rx_radar, data_radar).run();
     });
 

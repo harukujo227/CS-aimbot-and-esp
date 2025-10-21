@@ -4,10 +4,13 @@ use strum::IntoEnumIterator;
 use crate::{
     config::{Config, TargetingMode},
     constants::cs2,
+    cs2::{
+        CS2,
+        bones::Bones,
+        entity::{player::Player, weapon_class::WeaponClass},
+    },
     math::angles_to_fov,
 };
-
-use super::{CS2, bones::Bones, player::Player, weapon_class::WeaponClass};
 
 #[derive(Debug, Default)]
 pub struct Target {

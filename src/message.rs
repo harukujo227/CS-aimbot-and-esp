@@ -3,7 +3,7 @@ use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{config::Config, mouse::DeviceStatus};
+use crate::{config::Config, os::mouse::DeviceStatus};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum GameStatus {

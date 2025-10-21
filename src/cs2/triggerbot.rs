@@ -5,9 +5,13 @@ use rand::{Rng, rng};
 
 use crate::{
     config::{Config, TriggerbotMode},
-    cs2::{CS2, bones::Bones, player::Player, weapon_class::WeaponClass},
+    cs2::{
+        CS2,
+        bones::Bones,
+        entity::{player::Player, weapon_class::WeaponClass},
+    },
     math::angles_to_fov,
-    mouse::Mouse,
+    os::mouse::Mouse,
 };
 
 #[derive(Debug, Default)]

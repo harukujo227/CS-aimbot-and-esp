@@ -3,12 +3,22 @@ use serde::Serialize;
 
 use crate::cs2::{
     CS2,
-    inferno::{Inferno, InfernoInfo},
-    molotov::{Molotov, MolotovInfo},
-    player::Player,
-    smoke::{Smoke, SmokeInfo},
-    weapon::Weapon,
+    entity::{
+        inferno::{Inferno, InfernoInfo},
+        molotov::{Molotov, MolotovInfo},
+        player::Player,
+        smoke::{Smoke, SmokeInfo},
+        weapon::Weapon,
+    },
 };
+
+pub mod inferno;
+pub mod molotov;
+pub mod planted_c4;
+pub mod player;
+pub mod smoke;
+pub mod weapon;
+pub mod weapon_class;
 
 #[derive(Debug, Clone)]
 pub enum Entity {

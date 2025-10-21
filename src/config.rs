@@ -12,9 +12,9 @@ use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoEnumIterator};
 
 use crate::{
-    color::Colors,
-    cs2::{bones::Bones, weapon::Weapon},
+    cs2::{bones::Bones, entity::weapon::Weapon},
     key_codes::KeyCode,
+    ui::color::Colors,
 };
 
 const REFRESH_RATE: u64 = 100;
