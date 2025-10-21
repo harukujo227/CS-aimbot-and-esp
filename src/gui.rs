@@ -1,45 +1,56 @@
+#[cfg(feature = "visuals")]
 use std::time::{Duration, Instant};
 
-use egui::{
-    Align, Align2, Button, CollapsingHeader, Color32, Context, DragValue, FontId, Painter, Pos2,
-    Sense, Shape, Stroke, Ui, pos2,
-};
+use egui::{Align, Button, CollapsingHeader, Context, DragValue, Ui};
+#[cfg(feature = "visuals")]
+use egui::{Align2, FontId, Painter, Pos2, Shape, Stroke, pos2};
 use egui_glow::glow;
+#[cfg(feature = "visuals")]
 use glam::{Vec3, vec3};
 use strum::IntoEnumIterator;
 
 use crate::{
-    app::{App, Trail},
-    bvh::{Aabb, Triangle},
+    app::App,
     color::Colors,
     config::{
-        AimbotConfig, BoxMode, CONFIG_PATH, Config, DrawMode, TargetingMode, TriggerbotMode,
-        VERSION, WeaponConfig, available_configs, delete_config, parse_config, write_config,
+        CONFIG_PATH, Config, TargetingMode, TriggerbotMode, VERSION, WeaponConfig,
+        available_configs, delete_config, parse_config, write_config,
     },
-    constants::cs2,
-    cs2::{
-        bones::Bones,
-        entity::{EntityInfo, GrenadeInfo},
-        inferno::InfernoInfo,
-        molotov::MolotovInfo,
-        smoke::SmokeInfo,
-        weapon::Weapon,
-        weapon_class::WeaponClass,
-    },
-    data::{Data, PlayerData},
+    cs2::{bones::Bones, weapon::Weapon},
     drag_range::DragRange,
     key_codes::KeyCode,
-    math::world_to_screen,
     message::{Envelope, GameStatus, Message, RadarStatus, Target},
     mouse::{DeviceStatus, discover_mice},
 };
 
+#[cfg(feature = "visuals")]
+use crate::{
+    app::Trail,
+    bvh::{Aabb, Triangle},
+    config::{AimbotConfig, BoxMode, DrawMode},
+    cs2::{
+        entity::{EntityInfo, GrenadeInfo},
+        inferno::InfernoInfo,
+        molotov::MolotovInfo,
+        smoke::SmokeInfo,
+        weapon_class::WeaponClass,
+    },
+    data::{Data, PlayerData},
+    math::world_to_screen,
+};
+
+#[cfg(any(feature = "unsafe", feature = "visuals"))]
+use egui::Color32;
+
 #[derive(PartialEq)]
 pub enum Tab {
     Aimbot,
+    #[cfg(feature = "visuals")]
     Player,
+    #[cfg(feature = "visuals")]
     Hud,
     Radar,
+    #[cfg(feature = "unsafe")]
     Unsafe,
     Config,
 }
@@ -50,7 +61,9 @@ pub enum AimbotTab {
     Weapon,
 }
 
+#[cfg(feature = "visuals")]
 const OUTLINE_WIDTH: f32 = 1.0;
+#[cfg(feature = "visuals")]
 fn outline(pos: Pos2, color: Color32) -> [(Pos2, Color32); 5] {
     [
         (
@@ -95,9 +108,13 @@ impl App {
             .resizable(false)
             .show(ctx, |ui| {
                 ui.selectable_value(&mut self.current_tab, Tab::Aimbot, "\u{f04fe} Aimbot");
-                ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
-                ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
+                #[cfg(feature = "visuals")]
+                {
+                    ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
+                    ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
+                }
                 ui.selectable_value(&mut self.current_tab, Tab::Radar, "\u{f0437} Radar");
+                #[cfg(feature = "unsafe")]
                 ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
                 ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
 
@@ -118,15 +135,19 @@ impl App {
 
             match self.current_tab {
                 Tab::Aimbot => self.aimbot_settings(ui),
+                #[cfg(feature = "visuals")]
                 Tab::Player => self.player_settings(ui),
+                #[cfg(feature = "visuals")]
                 Tab::Hud => self.hud_settings(ui),
                 Tab::Radar => self.radar_settings(ui),
+                #[cfg(feature = "unsafe")]
                 Tab::Unsafe => self.unsafe_settings(ui),
                 Tab::Config => self.config_settings(ui, ctx),
             }
         });
     }
 
+    #[cfg(feature = "visuals")]
     fn aimbot_config(&self, weapon: &Weapon) -> &AimbotConfig {
         if let Some(weapon_config) = self.config.aim.weapons.get(weapon)
             && weapon_config.aimbot.enable_override
@@ -221,7 +242,10 @@ impl App {
             }
 
             if ui
-                .checkbox(&mut self.weapon_config().aimbot.target_friendlies, "Target Friendlies")
+                .checkbox(
+                    &mut self.weapon_config().aimbot.target_friendlies,
+                    "Target Friendlies",
+                )
                 .on_hover_text("Only active in custom game modes (workshop/custom maps)")
                 .changed()
             {
@@ -510,6 +534,7 @@ impl App {
         });
     }
 
+    #[cfg(feature = "visuals")]
     fn player_settings(&mut self, ui: &mut Ui) {
         egui::ScrollArea::vertical()
             .auto_shrink([false, true])
@@ -566,6 +591,7 @@ impl App {
             });
     }
 
+    #[cfg(feature = "visuals")]
     fn player_left(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Players", |ui| {
             if ui
@@ -648,6 +674,7 @@ impl App {
         });
     }
 
+    #[cfg(feature = "visuals")]
     fn player_right(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Info", |ui| {
             if ui
@@ -687,6 +714,7 @@ impl App {
         });
     }
 
+    #[cfg(feature = "visuals")]
     fn hud_settings(&mut self, ui: &mut Ui) {
         egui::ScrollArea::vertical()
             .auto_shrink([false, true])
@@ -774,6 +802,7 @@ impl App {
         });
     }
 
+    #[cfg(feature = "visuals")]
     fn hud_left(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "HUD", |ui| {
             if ui
@@ -813,6 +842,7 @@ impl App {
         });
     }
 
+    #[cfg(feature = "visuals")]
     fn hud_right(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Appearance", |ui| {
             if ui
@@ -923,6 +953,7 @@ impl App {
             });
     }
 
+    #[cfg(feature = "unsafe")]
     fn unsafe_settings(&mut self, ui: &mut Ui) {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
@@ -968,6 +999,7 @@ impl App {
         });
     }
 
+    #[cfg(feature = "unsafe")]
     fn unsafe_left(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "No Flash", |ui| {
             if ui
@@ -994,6 +1026,7 @@ impl App {
         });
     }
 
+    #[cfg(feature = "unsafe")]
     fn unsafe_right(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "FOV Changer", |ui| {
             if ui
@@ -1017,7 +1050,7 @@ impl App {
                 ui.label("Desired FOV");
 
                 if ui.button("Reset").clicked() {
-                    self.config.misc.desired_fov = cs2::DEFAULT_FOV;
+                    self.config.misc.desired_fov = crate::constants::cs2::DEFAULT_FOV;
                     self.send_config();
                 }
             });
@@ -1090,6 +1123,7 @@ impl App {
                         {
                             self.config.accent_color = color;
                             ctx.style_mut(|style| style.visuals.selection.bg_fill = color);
+                            self.send_config();
                         }
                     }
                 });
@@ -1192,12 +1226,13 @@ impl App {
         });
     }
 
+    #[cfg(any(feature = "unsafe", feature = "visuals"))]
     fn color_picker(&self, ui: &mut Ui, color: &Color32, label: &str) -> Option<Color32> {
         let [mut r, mut g, mut b, _] = color.to_array();
         let res = ui
             .horizontal(|ui| {
                 let (response, painter) =
-                    ui.allocate_painter(ui.spacing().interact_size, Sense::hover());
+                    ui.allocate_painter(ui.spacing().interact_size, egui::Sense::hover());
                 painter.rect_filled(
                     response.rect,
                     ui.style().visuals.widgets.inactive.corner_radius,
@@ -1218,6 +1253,7 @@ impl App {
         }
     }
 
+    #[cfg(feature = "visuals")]
     fn apply_alpha(&self, color: Color32) -> Color32 {
         let [r, g, b, _] = color.to_array();
         let alpha = (255.0 * self.config.player.alpha) as u8;
@@ -1472,6 +1508,7 @@ impl App {
         }
     }
 
+    #[cfg(feature = "visuals")]
     #[allow(unused)]
     fn triangle(&self, triangle: &Triangle, data: &Data, painter: &Painter) {
         let Some(v1) = world_to_screen(&triangle.v0, data) else {
@@ -1486,6 +1523,7 @@ impl App {
         painter.line(vec![v1, v2, v3], Stroke::new(1.0, Color32::WHITE));
     }
 
+    #[cfg(feature = "visuals")]
     #[allow(unused)]
     fn aabb_box(&self, aabb: &Aabb, data: &Data, painter: &Painter) {
         let min = aabb.min();
@@ -1527,6 +1565,7 @@ impl App {
         }
     }
 
+    #[cfg(feature = "visuals")]
     fn player_box(&self, painter: &Painter, player: &PlayerData, data: &Data) {
         let health_color = self.apply_alpha(self.health_color(player.health));
         let color = match &self.config.player.draw_box {
@@ -1685,6 +1724,7 @@ impl App {
         }
     }
 
+    #[cfg(feature = "visuals")]
     fn skeleton(&self, painter: &Painter, player: &PlayerData, data: &Data) {
         let color = match &self.config.player.draw_skeleton {
             DrawMode::None => return,
@@ -1734,6 +1774,7 @@ impl App {
         painter.circle_stroke(pos, height / 2.0, stroke);
     }
 
+    #[cfg(feature = "visuals")]
     fn entity(&self, painter: &Painter, entity: &EntityInfo, data: &Data) {
         match entity {
             EntityInfo::Weapon { weapon, position } => {
@@ -1766,6 +1807,7 @@ impl App {
         };
     }
 
+    #[cfg(feature = "visuals")]
     fn draw_grenade(
         &self,
         painter: &Painter,
@@ -1808,6 +1850,7 @@ impl App {
         }
     }
 
+    #[cfg(feature = "visuals")]
     fn inferno(&self, painter: &Painter, data: &Data, inferno: &InfernoInfo) {
         if !self.config.hud.grenade_trails {
             return;
@@ -1833,6 +1876,7 @@ impl App {
         self.draw_grenade(painter, data, &inferno.grenade(), Color32::TRANSPARENT);
     }
 
+    #[cfg(feature = "visuals")]
     fn smoke(&self, painter: &Painter, data: &Data, smoke: &SmokeInfo) {
         if !self.config.hud.grenade_trails {
             return;
@@ -1845,6 +1889,7 @@ impl App {
         );
     }
 
+    #[cfg(feature = "visuals")]
     fn molotov(&self, painter: &Painter, data: &Data, molotov: &MolotovInfo) {
         if !self.config.hud.grenade_trails {
             return;
@@ -1866,6 +1911,7 @@ impl App {
         }
     }
 
+    #[cfg(feature = "visuals")]
     fn add_trails(&mut self) {
         let data = self.data.lock().unwrap();
         for entity in &data.entities {
@@ -1896,6 +1942,7 @@ impl App {
         }
     }
 
+    #[cfg(feature = "visuals")]
     fn health_color(&self, health: i32) -> Color32 {
         let health = health.clamp(0, 100);
 
@@ -1910,6 +1957,7 @@ impl App {
         Color32::from_rgb(r, g, 0)
     }
 
+    #[cfg(feature = "visuals")]
     fn text(
         &self,
         painter: &Painter,
@@ -1940,9 +1988,6 @@ impl App {
         let gui_window = self.gui_window.as_ref().unwrap();
         let gui_glow = self.gui_glow.as_mut().unwrap();
 
-        let overlay_window = self.overlay_window.as_ref().unwrap();
-        let overlay_glow = self.overlay_glow.as_mut().unwrap();
-
         gui_window.make_current().unwrap();
         gui_glow.run(gui_window.window(), |ctx| {
             (unsafe { &mut *self_ptr }).gui(ctx)
@@ -1958,22 +2003,28 @@ impl App {
 
         gui_window.swap_buffers().unwrap();
 
-        overlay_window.window().set_cursor_hittest(false).unwrap();
-        overlay_window.make_current().unwrap();
+        #[cfg(feature = "visuals")]
+        {
+            let overlay_window = self.overlay_window.as_ref().unwrap();
+            let overlay_glow = self.overlay_glow.as_mut().unwrap();
 
-        overlay_glow.run(overlay_window.window(), move |egui_ctx| {
-            (unsafe { &mut *self_ptr }).overlay(egui_ctx);
-        });
+            overlay_window.window().set_cursor_hittest(false).unwrap();
+            overlay_window.make_current().unwrap();
 
-        unsafe {
-            let overlay_gl = self.overlay_gl.as_ref().unwrap();
-            overlay_gl.clear_color(0.0, 0.0, 0.0, 0.0);
-            overlay_gl.clear(glow::COLOR_BUFFER_BIT);
+            overlay_glow.run(overlay_window.window(), move |egui_ctx| {
+                (unsafe { &mut *self_ptr }).overlay(egui_ctx);
+            });
+
+            unsafe {
+                let overlay_gl = self.overlay_gl.as_ref().unwrap();
+                overlay_gl.clear_color(0.0, 0.0, 0.0, 0.0);
+                overlay_gl.clear(glow::COLOR_BUFFER_BIT);
+            }
+
+            overlay_glow.paint(overlay_window.window());
+
+            overlay_window.swap_buffers().unwrap();
         }
-
-        overlay_glow.paint(overlay_window.window());
-
-        overlay_window.swap_buffers().unwrap();
     }
 }
 
@@ -1983,6 +2034,7 @@ fn collapsing_open(ui: &mut Ui, title: &str, add_body: impl FnOnce(&mut Ui)) {
         .show(ui, add_body);
 }
 
+#[cfg(feature = "visuals")]
 fn convex_hull(points: &[Vec3]) -> Vec<Vec3> {
     if points.len() <= 2 {
         return points.to_vec();
@@ -2036,6 +2088,7 @@ fn convex_hull(points: &[Vec3]) -> Vec<Vec3> {
     lower
 }
 
+#[cfg(feature = "visuals")]
 fn cross(o: &Vec3, a: &Vec3, b: &Vec3) -> f32 {
     (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x)
 }

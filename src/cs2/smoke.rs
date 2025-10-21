@@ -1,8 +1,9 @@
+#[cfg(feature = "unsafe")]
 use egui::{Color32, Rgba};
 use glam::Vec3;
 use serde::Serialize;
 
-use crate::cs2::{CS2, entity::GrenadeInfo, player::Player};
+use crate::cs2::{CS2, player::Player};
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Smoke {
@@ -21,6 +22,7 @@ impl Smoke {
         }
     }
 
+    #[cfg(feature = "unsafe")]
     pub fn disable(&self, cs2: &CS2) {
         let disabled = cs2
             .process
@@ -28,10 +30,11 @@ impl Smoke {
             != 0;
         if !disabled {
             cs2.process
-                .write(self.controller + cs2.offsets.smoke.did_smoke_effect, true);
+                .write(self.controller + cs2.offsets.smoke.did_smoke_effect, 1u8);
         }
     }
 
+    #[cfg(feature = "unsafe")]
     pub fn color(&self, cs2: &CS2, color: &Color32) {
         let offset = self.controller + cs2.offsets.smoke.smoke_color;
         let current_color: [f32; 3] = cs2.process.read(offset);
@@ -50,8 +53,9 @@ pub struct SmokeInfo {
 }
 
 impl SmokeInfo {
-    pub fn grenade(&self) -> GrenadeInfo {
-        GrenadeInfo {
+    #[cfg(feature = "visuals")]
+    pub fn grenade(&self) -> super::entity::GrenadeInfo {
+        super::entity::GrenadeInfo {
             entity: self.entity,
             position: self.position,
             name: "Smoke",

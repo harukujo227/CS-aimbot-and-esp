@@ -7,8 +7,11 @@ use std::{
     path::PathBuf,
 };
 
-use bytemuck::{NoUninit, Pod};
-use nix::libc::{self, iovec, process_vm_readv, process_vm_writev};
+use bytemuck::Pod;
+use nix::libc::{self, iovec, process_vm_readv};
+
+#[cfg(feature = "unsafe")]
+use nix::libc::process_vm_writev;
 
 use crate::constants::{cs2, elf};
 
@@ -174,7 +177,8 @@ impl Process {
         result
     }
 
-    pub fn write<T: NoUninit>(&self, address: u64, value: T) {
+    #[cfg(feature = "unsafe")]
+    pub fn write<T: Pod>(&self, address: u64, value: T) {
         let mut buffer = bytemuck::bytes_of(&value).to_vec();
 
         let local_iov = iovec {

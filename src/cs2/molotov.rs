@@ -1,7 +1,7 @@
 use glam::Vec3;
 use serde::Serialize;
 
-use crate::cs2::{CS2, entity::GrenadeInfo, player::Player};
+use crate::cs2::{CS2, player::Player};
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Molotov {
@@ -36,8 +36,9 @@ pub struct MolotovInfo {
 }
 
 impl MolotovInfo {
-    pub fn grenade(&self) -> GrenadeInfo {
-        GrenadeInfo {
+    #[cfg(feature = "visuals")]
+    pub fn grenade(&self) -> super::entity::GrenadeInfo {
+        super::entity::GrenadeInfo {
             entity: self.entity,
             position: self.position,
             name: if self.is_incendiary {

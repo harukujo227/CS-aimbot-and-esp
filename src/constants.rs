@@ -15,6 +15,7 @@ pub mod cs2 {
     pub const TEAM_CT: u8 = 3;
 
     pub const WEAPON_UNKNOWN: &str = "unknown";
+    #[cfg(any(feature = "visuals", feature = "unsafe"))]
     pub const DEFAULT_FOV: u32 = 90;
 
     pub mod class {

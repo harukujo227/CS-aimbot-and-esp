@@ -158,6 +158,7 @@ impl Weapon {
         }
     }
 
+    #[cfg(feature = "visuals")]
     pub fn to_icon(&self) -> &'static str {
         match self {
             // font source: https://www.unknowncheats.me/forum/counter-strike-2-a/609986-cs2-icons-weapon-esp-icons.html
