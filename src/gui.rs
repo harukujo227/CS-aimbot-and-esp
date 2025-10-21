@@ -1124,7 +1124,6 @@ impl App {
             self.config = parse_config(&config_path);
             self.current_config = config_path;
             self.send_config();
-            //ui.ctx().style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
         }
 
         if let Some(config) = delete {
