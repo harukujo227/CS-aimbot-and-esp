@@ -230,7 +230,7 @@ impl App {
             }
 
             if ui
-                .checkbox(&mut self.weapon_config().aimbot.distancebased_fov, "Distance-Adjusted FOV")
+                .checkbox(&mut self.weapon_config().aimbot.distance_adjusted_fov, "Distance-Adjusted FOV")
                 .on_hover_text("Adjusts FOV based on target distance")
                 .changed()
             {
@@ -1322,7 +1322,7 @@ impl App {
                 cs2::DEFAULT_FOV
             } as f32;
 
-            if weapon_config.distancebased_fov {
+            if weapon_config.distance_adjusted_fov {
                 // Close range (0-125 units): scale = 5.0 - (125/125) = 4.0
                 let close_distance = 125.0;
                 let close_scale = 5.0 - (close_distance / 125.0);
