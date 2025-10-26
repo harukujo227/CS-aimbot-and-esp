@@ -7,12 +7,17 @@ use crate::{
         CONFIG_PATH, Config, TargetingMode, TriggerbotMode, VERSION, WeaponConfig,
         available_configs, delete_config, parse_config, write_config,
     },
+    constants::cs2::GRENADES,
     cs2::{bones::Bones, entity::weapon::Weapon},
     drag_range::DragRange,
     key_codes::KeyCode,
     message::{Envelope, GameStatus, Message, RadarStatus, Target},
     os::mouse::{DeviceStatus, discover_mice},
-    ui::{app::App, color::Colors},
+    ui::{
+        app::App,
+        color::Colors,
+        grenades::{Grenade, write_grenades},
+    },
 };
 
 #[cfg(any(feature = "unsafe", feature = "visuals"))]
@@ -26,6 +31,7 @@ pub enum Tab {
     #[cfg(feature = "visuals")]
     Hud,
     Radar,
+    Grenades,
     #[cfg(feature = "unsafe")]
     Unsafe,
     Config,
@@ -65,6 +71,7 @@ impl App {
                     ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
                 }
                 ui.selectable_value(&mut self.current_tab, Tab::Radar, "\u{f0437} Radar");
+                ui.selectable_value(&mut self.current_tab, Tab::Grenades, "\u{f0691} Grenades");
                 #[cfg(feature = "unsafe")]
                 ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
                 ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
@@ -91,6 +98,7 @@ impl App {
                 #[cfg(feature = "visuals")]
                 Tab::Hud => self.hud_settings(ui),
                 Tab::Radar => self.radar_settings(ui),
+                Tab::Grenades => self.grenade_settings(ui),
                 #[cfg(feature = "unsafe")]
                 Tab::Unsafe => self.unsafe_settings(ui),
                 Tab::Config => self.config_settings(ui, ctx),
@@ -901,6 +909,145 @@ impl App {
                     }
                 });
             });
+    }
+
+    fn grenade_settings(&mut self, ui: &mut Ui) {
+        if self.current_grenade.is_some() {
+            self.edit_grenade(ui);
+        } else {
+            self.record_grenade(ui);
+        }
+
+        // grenade list
+        ui.collapsing("Grenade List", |ui| {
+            self.grenade_list(ui);
+        });
+    }
+
+    fn grenade_list(&mut self, ui: &mut Ui) {
+        let mut should_write = false;
+
+        for (map, grenades) in &mut self.grenades {
+            let mut delete_grenade_index = None;
+
+            ui.collapsing(map, |ui| {
+                for (index, grenade) in grenades.iter().enumerate() {
+                    let active = match &self.current_grenade {
+                        Some(grenade) => &grenade.0 == map && grenade.1 == index,
+                        None => false,
+                    };
+                    ui.horizontal(|ui| {
+                        if ui.selectable_label(active, &grenade.name).clicked() {
+                            self.current_grenade = match self.current_grenade {
+                                Some((ref g_map, ref g_index))
+                                    if g_map == map && *g_index == index =>
+                                {
+                                    None
+                                }
+                                _ => Some((map.to_owned(), index)),
+                            };
+                        }
+                        if ui.button("\u{f0a7a}").clicked() {
+                            delete_grenade_index = Some(index);
+                        }
+                    });
+                }
+                if let Some(index) = delete_grenade_index {
+                    grenades.remove(index);
+                    should_write = true;
+                }
+            });
+        }
+
+        if should_write {
+            write_grenades(&self.grenades);
+        }
+    }
+
+    fn record_grenade(&mut self, ui: &mut Ui) {
+        collapsing_open(ui, "Record Grenade", |ui| {
+            let data = self.data.lock().unwrap();
+
+            if !data.in_game {
+                ui.label("Not in game.");
+                return;
+            }
+
+            let grenade = if !GRENADES.contains(&data.local_player.weapon) {
+                ui.colored_label(Colors::YELLOW, "Invalid Weapon");
+                None
+            } else {
+                Some(data.local_player.weapon.clone())
+            };
+
+            ui.horizontal(|ui| {
+                ui.text_edit_singleline(&mut self.new_grenade.name);
+                ui.label("Name");
+            });
+
+            ui.horizontal(|ui| {
+                ui.text_edit_multiline(&mut self.new_grenade.description);
+                ui.label("Description");
+            });
+
+            ui.checkbox(&mut self.new_grenade.modifiers.jump, "Jump");
+            ui.checkbox(&mut self.new_grenade.modifiers.duck, "Duck");
+            ui.checkbox(&mut self.new_grenade.modifiers.run, "Run");
+
+            if ui.button("Record").clicked() {
+                let grenade = match grenade {
+                    Some(grenade) => grenade,
+                    None => {
+                        log::info!("no grenade in hand");
+                        return;
+                    }
+                };
+
+                let map = &data.map_name;
+                let grenade_list = match self.grenades.get_mut(map) {
+                    Some(list) => list,
+                    None => {
+                        self.grenades.insert(map.to_owned(), Vec::new());
+                        self.grenades.get_mut(map).unwrap()
+                    }
+                };
+
+                let mut new_grenade = Grenade::new();
+                std::mem::swap(&mut new_grenade, &mut self.new_grenade);
+
+                new_grenade.weapon = grenade;
+                new_grenade.position = data.local_player.position;
+                new_grenade.view_angles = data.view_angles;
+
+                grenade_list.push(new_grenade);
+                write_grenades(&self.grenades);
+            }
+        });
+    }
+
+    fn edit_grenade(&mut self, ui: &mut Ui) {
+        collapsing_open(ui, "Edit Grenade", |ui| {
+            let (map, index) = match &self.current_grenade {
+                Some(grenade) => grenade,
+                None => return,
+            };
+
+            let grenade = &mut self.grenades.get_mut(map).unwrap()[*index];
+
+            ui.horizontal(|ui| {
+                ui.text_edit_singleline(&mut grenade.name);
+                ui.label("Name");
+            });
+
+            ui.horizontal(|ui| {
+                ui.text_edit_multiline(&mut grenade.description);
+                ui.label("Description");
+            });
+
+            ui.checkbox(&mut grenade.modifiers.jump, "Jump");
+            ui.checkbox(&mut grenade.modifiers.duck, "Duck");
+            ui.checkbox(&mut grenade.modifiers.run, "Run");
+        });
     }
 
     #[cfg(feature = "unsafe")]

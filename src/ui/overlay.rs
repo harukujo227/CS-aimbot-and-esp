@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use egui::{Align2, Color32, Context, FontId, Painter, Pos2, Stroke, pos2};
+use egui::{Align2, Color32, Context, FontId, Painter, Pos2, Shape, Stroke, pos2};
 use glam::{Vec3, vec3};
 
 use crate::{
@@ -15,7 +15,7 @@ use crate::{
     },
     data::{Data, PlayerData},
     math::world_to_screen,
-    ui::{app::App, color::Colors, trail::Trail},
+    ui::{app::App, color::Colors, grenades::Grenade, trail::Trail},
 };
 
 impl App {
@@ -223,6 +223,8 @@ impl App {
                 }
             }
         }
+
+        self.grenade_manager(data, &painter);
     }
 
     #[allow(unused)]
@@ -531,21 +533,13 @@ impl App {
         info: &GrenadeInfo,
         trail_color: Color32,
     ) {
-        use egui::FontId;
-
         if !self.config.hud.grenade_trails {
             return;
         }
         let Some(position) = world_to_screen(&info.position, data) else {
             return;
         };
-        painter.text(
-            position,
-            Align2::CENTER_CENTER,
-            info.name,
-            FontId::proportional(self.config.hud.font_size),
-            self.config.hud.text_color,
-        );
+        self.text(painter, info.name, position, Align2::CENTER_CENTER, None);
 
         if !self.config.hud.grenade_trails {
             return;
@@ -659,6 +653,128 @@ impl App {
                     },
                 );
             }
+        }
+    }
+
+    fn grenade_manager(&self, data: &Data, painter: &Painter) {
+        let position = data.local_player.position;
+        let map = &data.map_name;
+
+        let Some(grenades) = self.grenades.get(map) else {
+            return;
+        };
+
+        for grenade in grenades {
+            let distance = (position - grenade.position).length();
+            if distance > 500.0 {
+                continue;
+            }
+            self.grenade_circle(data, grenade, painter);
+
+            if distance > 24.0 {
+                continue;
+            }
+            self.grenade_indicator(data, grenade, painter);
+        }
+    }
+
+    fn grenade_circle(&self, data: &Data, grenade: &Grenade, painter: &Painter) {
+        let Some(center_screen) = world_to_screen(&grenade.position, data) else {
+            return;
+        };
+        let center = &grenade.position;
+
+        // player hitbox width and length
+        const WIDTH: f32 = 24.0;
+        const HALF_WIDTH: f32 = WIDTH / 2.0;
+
+        const V1: Vec3 = vec3(WIDTH, HALF_WIDTH, 0.0);
+        const V2: Vec3 = vec3(HALF_WIDTH, WIDTH, 0.0);
+        const V3: Vec3 = vec3(-HALF_WIDTH, WIDTH, 0.0);
+        const V4: Vec3 = vec3(-WIDTH, HALF_WIDTH, 0.0);
+
+        let points: Vec<Pos2> = [
+            center + V1,
+            center + V2,
+            center + V3,
+            center + V4,
+            center - V1,
+            center - V2,
+            center - V3,
+            center - V4,
+        ]
+        .iter()
+        .filter_map(|p| world_to_screen(p, data))
+        .collect();
+
+        let shape = Shape::convex_polygon(
+            points,
+            Color32::from_rgba_premultiplied(0, 255, 0, 127),
+            Stroke::NONE,
+        );
+        painter.add(shape);
+
+        painter.circle_filled(
+            center_screen,
+            WIDTH / 8.0,
+            Color32::from_rgba_premultiplied(255, 0, 0, 127),
+        );
+    }
+
+    fn grenade_indicator(&self, data: &Data, grenade: &Grenade, painter: &Painter) {
+        let position = grenade.position + (data.local_player.head - data.local_player.position);
+        let view_angles = grenade.view_angles;
+
+        let pitch = view_angles.x.to_radians();
+        let yaw = view_angles.y.to_radians();
+
+        let forward = vec3(
+            pitch.cos() * yaw.cos(),
+            pitch.cos() * yaw.sin(),
+            -pitch.sin(),
+        )
+        .normalize();
+
+        const CROSS_DISTANCE: f32 = 1000.0;
+        let center = position + forward * CROSS_DISTANCE;
+
+        const WORLD_UP: Vec3 = vec3(0.0, 0.0, 1.0);
+        const CROSS_SIZE: f32 = 24.0;
+
+        let right = forward.cross(WORLD_UP).normalize();
+        let up = right.cross(forward).normalize();
+
+        let v1 = center + right * CROSS_SIZE + up * CROSS_SIZE;
+        let v2 = center + right * CROSS_SIZE - up * CROSS_SIZE;
+        let v3 = center - right * CROSS_SIZE + up * CROSS_SIZE;
+        let v4 = center - right * CROSS_SIZE - up * CROSS_SIZE;
+
+        let stroke = Stroke::new(self.config.hud.line_width, self.config.hud.text_color);
+        let stroke_bg = Stroke::new(self.config.hud.line_width * 2.0, Color32::BLACK);
+        if let (Some(v1), Some(v4)) = (world_to_screen(&v1, data), world_to_screen(&v4, data)) {
+            painter.line_segment([v1, v4], stroke_bg);
+            painter.line_segment([v1, v4], stroke);
+        }
+        if let (Some(v2), Some(v3)) = (world_to_screen(&v2, data), world_to_screen(&v3, data)) {
+            painter.line_segment([v2, v3], stroke_bg);
+            painter.line_segment([v2, v3], stroke);
+        }
+        let text_center = center - up * CROSS_SIZE;
+        if let Some(text_center) = world_to_screen(&text_center, data) {
+            self.text(
+                painter,
+                &grenade.name,
+                text_center,
+                Align2::CENTER_TOP,
+                None,
+            );
+            self.text(
+                painter,
+                format!("{}", grenade.weapon,),
+                text_center + egui::vec2(0.0, self.config.hud.font_size),
+                Align2::CENTER_TOP,
+                None,
+            );
         }
     }
 

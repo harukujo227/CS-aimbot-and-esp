@@ -1,4 +1,6 @@
 pub mod cs2 {
+    use crate::cs2::entity::weapon::Weapon;
+
     pub const PROCESS_NAME: &str = "cs2";
     pub const CLIENT_LIB: &str = "libclient.so";
     pub const ENGINE_LIB: &str = "libengine2.so";
@@ -17,6 +19,15 @@ pub mod cs2 {
     pub const WEAPON_UNKNOWN: &str = "unknown";
     #[cfg(any(feature = "visuals", feature = "unsafe"))]
     pub const DEFAULT_FOV: u32 = 90;
+
+    pub const GRENADES: &[Weapon] = &[
+        Weapon::Decoy,
+        Weapon::Flashbang,
+        Weapon::HeGrenade,
+        Weapon::Incendiary,
+        Weapon::Molotov,
+        Weapon::Smoke,
+    ];
 
     pub mod class {
         pub const PLAYER_CONTROLLER: &str = "CCSPlayerController";
@@ -42,3 +53,5 @@ pub mod elf {
 
     pub const DYNAMIC_SECTION_PHT_TYPE: u64 = 0x02;
 }
+
+pub const GRENADE_FILE_NAME: &str = "grenades.json";

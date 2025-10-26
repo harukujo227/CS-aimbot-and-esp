@@ -351,7 +351,7 @@ impl Default for UnsafeConfig {
     }
 }
 
-pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+pub static BASE_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     let path = std::env::var_os("XDG_CONFIG_HOME")
         .and_then(|p| {
             if p.is_empty() {
@@ -365,10 +365,20 @@ pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
         .unwrap_or_else(|| {
             std::env::current_exe()
                 .ok()
-                .and_then(|exe| exe.parent().map(|p| p.join("configs")))
-                .unwrap_or_else(|| PathBuf::from("configs"))
+                .and_then(|exe| exe.parent().map(|p| p.to_path_buf()))
+                .unwrap_or_else(|| PathBuf::from("."))
         });
-    let _ = std::fs::create_dir_all(&path);
+    if !path.exists() {
+        let _ = std::fs::create_dir_all(&path);
+    }
+    path
+});
+
+pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+    let path = BASE_PATH.join("configs");
+    if !path.exists() {
+        let _ = std::fs::create_dir_all(&path);
+    }
     path
 });
 

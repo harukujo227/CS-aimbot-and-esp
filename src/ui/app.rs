@@ -25,6 +25,7 @@ use crate::{
     os::mouse::DeviceStatus,
     ui::{
         color::Colors,
+        grenades::{Grenade, GrenadeList, read_grenades},
         gui::{AimbotTab, Tab},
         trail::Trail,
         window_context::WindowContext,
@@ -62,6 +63,10 @@ pub struct App {
     #[allow(unused)]
     pub trails: HashMap<u64, Trail>,
 
+    pub grenades: GrenadeList,
+    pub new_grenade: Grenade,
+    pub current_grenade: Option<(String, usize)>,
+
     pub config: Config,
     pub current_config: PathBuf,
     pub available_configs: Vec<PathBuf>,
@@ -83,6 +88,8 @@ impl App {
         let config = parse_config(&CONFIG_PATH.join(DEFAULT_CONFIG_NAME));
         // override config if invalid
         write_config(&config, &CONFIG_PATH.join(DEFAULT_CONFIG_NAME));
+
+        let grenades = read_grenades();
 
         let ret = Self {
             gui_window: None,
@@ -113,6 +120,10 @@ impl App {
             radar_status: RadarStatus::Disconnected,
             display_scale: 1.0,
             trails: HashMap::new(),
+
+            grenades,
+            new_grenade: Grenade::new(),
+            current_grenade: None,
 
             selected_mouse: None,
 

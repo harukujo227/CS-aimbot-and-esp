@@ -21,6 +21,7 @@ pub struct Data {
     pub bomb: BombData,
     pub map_name: String,
     pub view_matrix: Mat4,
+    pub view_angles: Vec2,
     pub window_position: Vec2,
     pub window_size: Vec2,
     pub triggerbot_active: bool,

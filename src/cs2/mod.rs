@@ -256,6 +256,7 @@ impl Game for CS2 {
         *self.previous_spectators.borrow_mut() = current_spectators;
 
         data.view_matrix = self.process.read::<Mat4>(self.offsets.direct.view_matrix);
+        data.view_angles = local_player.view_angles(self);
 
         if let Some(bomb) = &self.planted_c4 {
             data.bomb.planted = bomb.is_planted(self);
