@@ -96,6 +96,7 @@ impl CS2 {
         let delay = normal.sample(&mut rng()).max(0.0) as u64;
 
         self.trigger.next_shot = Some(Instant::now() + Duration::from_millis(delay));
+        log::debug!("scheduled triggerbot shot: {:?}", self.trigger.next_shot);
 
         if config.additional_duration_ms > 0 {
             self.trigger.additional_shooting_end_time = Some(
