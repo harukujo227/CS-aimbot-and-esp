@@ -66,7 +66,7 @@ impl Player {
         // wtf is this doing, and how?
         let bucket_ptr: u64 = cs2
             .process
-            .read(cs2.offsets.interface.entity + 0x08 * bucket_index + 0x10);
+            .read(cs2.offsets.interface.entity + 0x08 * bucket_index);
         if bucket_ptr == 0 {
             return None;
         }
