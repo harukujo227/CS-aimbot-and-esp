@@ -976,7 +976,7 @@ impl App {
     }
 
     fn record_grenade(&mut self, ui: &mut Ui) {
-        collapsing_open(ui, "Record Grenade", |ui| {
+        collapsing_open(ui, "Add Grenade", |ui| {
             let data = self.data.lock().unwrap();
 
             if !data.in_game {
@@ -986,9 +986,9 @@ impl App {
 
             let grenade = if !GRENADES.contains(&data.local_player.weapon) {
                 ui.colored_label(Colors::YELLOW, "Invalid Weapon");
-                None
+                return;
             } else {
-                Some(data.local_player.weapon.clone())
+                &data.local_player.weapon
             };
 
             ui.horizontal(|ui| {
@@ -1005,15 +1005,7 @@ impl App {
             ui.checkbox(&mut self.new_grenade.modifiers.duck, "Duck");
             ui.checkbox(&mut self.new_grenade.modifiers.run, "Run");
 
-            if ui.button("Record").clicked() {
-                let grenade = match grenade {
-                    Some(grenade) => grenade,
-                    None => {
-                        log::info!("no grenade in hand");
-                        return;
-                    }
-                };
-
+            if ui.button("Save").clicked() {
                 let map = &data.map_name;
                 let grenade_list = match self.grenades.get_mut(map) {
                     Some(list) => list,
@@ -1026,7 +1018,7 @@ impl App {
                 let mut new_grenade = Grenade::new();
                 std::mem::swap(&mut new_grenade, &mut self.new_grenade);
 
-                new_grenade.weapon = grenade;
+                new_grenade.weapon = grenade.clone();
                 new_grenade.position = data.local_player.position;
                 new_grenade.view_angles = data.view_angles;
 
