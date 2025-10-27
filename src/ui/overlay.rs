@@ -775,6 +775,28 @@ impl App {
                 Align2::CENTER_TOP,
                 None,
             );
+            let text = match (
+                grenade.modifiers.duck,
+                grenade.modifiers.jump,
+                grenade.modifiers.run,
+            ) {
+                (false, false, false) => return,
+                (true, false, false) => "Duck",
+                (true, true, false) => "Duck/Jump",
+                (true, true, true) => "Duck/Jump/Run",
+                (true, false, true) => "Duck/Run",
+                (false, true, false) => "Jump",
+                (false, true, true) => "Jump/Run",
+                (false, false, true) => "Run",
+            };
+
+            self.text(
+                painter,
+                text,
+                text_center + egui::vec2(0.0, self.config.hud.font_size * 2.0),
+                Align2::CENTER_TOP,
+                None,
+            );
         }
     }
 
