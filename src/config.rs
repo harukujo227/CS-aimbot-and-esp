@@ -95,7 +95,7 @@ impl Default for AimbotConfig {
             enabled: true,
             target_friendlies: false,
             distance_adjusted_fov: true,
-            start_bullet: 2,
+            start_bullet: 0,
             visibility_check: true,
             flash_check: true,
             fov: 2.5,
@@ -281,6 +281,7 @@ pub struct HudConfig {
     pub text_color: Color32,
     pub line_width: f32,
     pub font_size: f32,
+    pub icon_size: f32,
     pub debug: bool,
 }
 
@@ -304,6 +305,7 @@ impl Default for HudConfig {
             text_color: Colors::TEXT,
             line_width: 2.0,
             font_size: 16.0,
+            icon_size: 20.0,
             debug: false,
         }
     }

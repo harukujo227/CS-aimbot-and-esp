@@ -845,6 +845,21 @@ impl App {
                 }
                 ui.label("Font Size");
             });
+
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
+                        DragValue::new(&mut self.config.hud.icon_size)
+                            .range(1.0..=99.0)
+                            .speed(0.2)
+                            .max_decimals(1),
+                    )
+                    .changed()
+                {
+                    self.send_config();
+                }
+                ui.label("Icon Size");
+            });
         });
 
         ui.collapsing("Advanced", |ui| {

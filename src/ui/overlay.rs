@@ -119,7 +119,7 @@ impl App {
         // fov circle
         if self.config.hud.fov_circle && data.in_game {
             let weapon_config = self.aimbot_config(&data.weapon);
-            let aim_fov = weapon_config.fov * 1.6;
+            let aim_fov = weapon_config.fov;
 
             if weapon_config.distance_adjusted_fov {
                 self.draw_distance_scaled_fov_circle(
@@ -127,28 +127,28 @@ impl App {
                     data,
                     aim_fov,
                     125.0,
-                    self.apply_alpha(Colors::GREEN),
+                    self.apply_alpha(Color32::GREEN),
                 );
                 self.draw_distance_scaled_fov_circle(
                     &painter,
                     data,
                     aim_fov,
                     250.0,
-                    self.apply_alpha(Colors::YELLOW),
+                    self.apply_alpha(Color32::YELLOW),
                 );
                 self.draw_distance_scaled_fov_circle(
                     &painter,
                     data,
                     aim_fov,
                     500.0,
-                    self.apply_alpha(Colors::RED),
+                    self.apply_alpha(Color32::RED),
                 );
             } else {
                 self.draw_simple_fov_circle(
                     &painter,
                     data,
                     aim_fov,
-                    self.apply_alpha(Color32::WHITE),
+                    self.apply_alpha(Colors::TEXT),
                 );
             }
         }
@@ -298,7 +298,7 @@ impl App {
             }
         };
         let stroke = Stroke::new(self.config.hud.line_width, color);
-        let icon_font = FontId::monospace(self.config.hud.font_size * 1.5);
+        let icon_font = FontId::monospace(self.config.hud.icon_size);
 
         let midpoint = (player.position + player.head) / 2.0;
         let height = player.head.z - player.position.z + 24.0;
