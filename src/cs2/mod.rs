@@ -577,9 +577,12 @@ impl CS2 {
     fn cache_entities(&mut self) {
         self.players.clear();
         self.entities.clear();
+        self.planted_c4 = None;
+
         let Some(local_player) = Player::local_player(self) else {
             return;
         };
+        
         const NUM_BUCKETS: usize = 64;
         let bucket_pointers = self
             .process

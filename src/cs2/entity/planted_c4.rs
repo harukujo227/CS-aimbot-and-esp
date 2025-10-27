@@ -31,13 +31,13 @@ impl PlantedC4 {
     pub fn is_planted(&self, cs2: &CS2) -> bool {
         cs2.process
             .read::<u8>(self.handle + cs2.offsets.planted_c4.is_ticking)
-            == 1
+            != 0
     }
 
     pub fn is_being_defused(&self, cs2: &CS2) -> bool {
         cs2.process
             .read::<u8>(self.handle + cs2.offsets.planted_c4.being_defused)
-            == 1
+            != 0
     }
 
     pub fn time_to_explosion(&self, cs2: &CS2) -> f32 {
