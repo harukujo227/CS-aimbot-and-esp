@@ -22,6 +22,7 @@ use crate::{
 
 #[cfg(any(feature = "unsafe", feature = "visuals"))]
 use egui::Color32;
+use crate::ui::grenades::MoveMode;
 
 #[derive(PartialEq)]
 pub enum Tab {
@@ -1015,10 +1016,37 @@ impl App {
                 ui.text_edit_multiline(&mut self.new_grenade.description);
                 ui.label("Description");
             });
-
+            ui.checkbox(&mut self.new_grenade.modifiers.lmb, "Mouse 1");
+            ui.checkbox(&mut self.new_grenade.modifiers.rmb, "Mouse 2");
             ui.checkbox(&mut self.new_grenade.modifiers.jump, "Jump");
             ui.checkbox(&mut self.new_grenade.modifiers.duck, "Duck");
-            ui.checkbox(&mut self.new_grenade.modifiers.run, "Run");
+            use crate::ui::grenades::MoveMode;
+            egui::ComboBox::new("move_mode", "Movement")
+                .selected_text(format!("{:?}", self.new_grenade.modifiers.movement))
+                .show_ui(ui, |ui| {
+
+                    for mode in MoveMode::iter() {
+                        let text = format!("{:?}", &mode);
+                        ui
+                        .selectable_value(&mut self.new_grenade.modifiers.movement, mode, text)
+                        .clicked();
+                    }
+                });
+            if self.new_grenade.modifiers.movement != MoveMode::None {
+                egui::ComboBox::new("dir_mode", "Direction")
+                    .selected_text(format!("{:?}", self.new_grenade.modifiers.direction))
+                    .show_ui(ui, |ui| {
+                        use crate::ui::grenades::DirMode;
+
+                        for mode in DirMode::iter() {
+                            let text = format!("{:?}", &mode);
+                            ui
+                                .selectable_value(&mut self.new_grenade.modifiers.direction, mode, text)
+                                .clicked();
+                        }
+                    });
+            }
+
 
             if ui.button("Save").clicked() {
                 let map = &data.map_name;
@@ -1061,10 +1089,35 @@ impl App {
                 ui.text_edit_multiline(&mut grenade.description);
                 ui.label("Description");
             });
-
+            ui.checkbox(&mut grenade.modifiers.lmb, "Mouse 1");
+            ui.checkbox(&mut grenade.modifiers.rmb, "Mouse 2");
             ui.checkbox(&mut grenade.modifiers.jump, "Jump");
             ui.checkbox(&mut grenade.modifiers.duck, "Duck");
-            ui.checkbox(&mut grenade.modifiers.run, "Run");
+            egui::ComboBox::new("move_mode", "Movement")
+                .selected_text(format!("{:?}", grenade.modifiers.movement))
+                .show_ui(ui, |ui| {
+
+                    for mode in MoveMode::iter() {
+                        let text = format!("{:?}", &mode);
+                        ui
+                            .selectable_value(&mut grenade.modifiers.movement, mode, text)
+                            .clicked();
+                    }
+                });
+            if grenade.modifiers.movement != MoveMode::None {
+                egui::ComboBox::new("dir_mode", "Direction")
+                    .selected_text(format!("{:?}", grenade.modifiers.direction))
+                    .show_ui(ui, |ui| {
+                        use crate::ui::grenades::DirMode;
+
+                        for mode in DirMode::iter() {
+                            let text = format!("{:?}", &mode);
+                            ui
+                                .selectable_value(&mut grenade.modifiers.direction, mode, text)
+                                .clicked();
+                        }
+                    });
+            }
         });
     }
 

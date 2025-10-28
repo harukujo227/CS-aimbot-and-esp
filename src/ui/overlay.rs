@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 
-use egui::{Align2, Color32, Context, FontId, Painter, Pos2, Shape, Stroke, pos2};
-use glam::{Vec3, vec3};
+use egui::{pos2, Align2, Color32, Context, FontId, Painter, Pos2, Shape, Stroke};
+use glam::{vec3, Vec3};
 
 use crate::{
     bvh::{Aabb, Triangle},
@@ -9,13 +9,13 @@ use crate::{
     cs2::{
         bones::Bones,
         entity::{
-            EntityInfo, GrenadeInfo, inferno::InfernoInfo, molotov::MolotovInfo, smoke::SmokeInfo,
-            weapon::Weapon, weapon_class::WeaponClass,
+            inferno::InfernoInfo, molotov::MolotovInfo, smoke::SmokeInfo, weapon::Weapon, weapon_class::WeaponClass,
+            EntityInfo, GrenadeInfo,
         },
     },
     data::{Data, PlayerData},
     math::world_to_screen,
-    ui::{app::App, color::Colors, grenades::Grenade, trail::Trail},
+    ui::{app::App, color::Colors, grenades::{Grenade, MoveMode, DirMode}, trail::Trail},
 };
 
 impl App {
@@ -775,20 +775,42 @@ impl App {
                 Align2::CENTER_TOP,
                 None,
             );
-            let text = match (
-                grenade.modifiers.duck,
-                grenade.modifiers.jump,
-                grenade.modifiers.run,
-            ) {
-                (false, false, false) => return,
-                (true, false, false) => "Duck",
-                (true, true, false) => "Duck/Jump",
-                (true, true, true) => "Duck/Jump/Run",
-                (true, false, true) => "Duck/Run",
-                (false, true, false) => "Jump",
-                (false, true, true) => "Jump/Run",
-                (false, false, true) => "Run",
-            };
+            let mut text = String::from("");
+
+            if grenade.modifiers.movement == MoveMode::Run {
+                text += "Run"
+            } else if grenade.modifiers.movement == MoveMode::Walk {
+                text+= "Walk"
+            } else if grenade.modifiers.movement == MoveMode::Step {
+                text+= "Step"
+            }
+            if grenade.modifiers.movement != MoveMode::None {
+                if grenade.modifiers.direction == DirMode::Forwards {
+                    text+="/"
+                } else if grenade.modifiers.direction == DirMode::Right {
+                    text+=" Right/"
+                } else if grenade.modifiers.direction == DirMode::Left {
+                    text+=" Left/"
+                } else if grenade.modifiers.direction == DirMode::Backwards {
+                    text+= " Backwards/"
+                }
+            }
+            if grenade.modifiers.duck {
+                text += "Duck/"
+            }
+            if grenade.modifiers.jump {
+                text +=  "Jump/"
+            }
+            if grenade.modifiers.lmb && grenade.modifiers.rmb {
+                text+="M1+M2"
+            } else if grenade.modifiers.lmb {
+                text+="M1"
+            } else if grenade.modifiers.rmb {
+                text+="M2"
+            }
+            if text=="" {
+                return
+            }
 
             self.text(
                 painter,

@@ -2,6 +2,7 @@ use std::{collections::HashMap, fs::read_to_string};
 
 use glam::{Vec2, Vec3};
 use serde::{Deserialize, Serialize};
+use strum::EnumIter;
 use uuid::Uuid;
 
 use crate::{config::BASE_PATH, constants::GRENADE_FILE_NAME, cs2::entity::weapon::Weapon};
@@ -32,9 +33,30 @@ impl Grenade {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct GrenadeModifiers {
+    pub lmb: bool,
+    pub rmb: bool,
     pub jump: bool,
     pub duck: bool,
-    pub run: bool,
+    pub movement: MoveMode,
+    pub direction: DirMode,
+}
+
+#[derive(Debug, Clone, PartialEq, EnumIter, Serialize, Deserialize, Default)]
+pub enum MoveMode {
+    #[default]
+    None,
+    Step,
+    Walk,
+    Run,
+}
+
+#[derive(Debug, Clone, PartialEq, EnumIter, Serialize, Deserialize, Default)]
+pub enum DirMode {
+    #[default]
+    Forwards,
+    Left,
+    Right,
+    Backwards,
 }
 
 pub fn read_grenades() -> GrenadeList {
