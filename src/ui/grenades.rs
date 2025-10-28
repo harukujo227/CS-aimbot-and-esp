@@ -33,10 +33,10 @@ impl Grenade {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct GrenadeModifiers {
-    pub lmb: bool,
-    pub rmb: bool,
+    pub show: bool,
     pub jump: bool,
     pub duck: bool,
+    pub throw: ThrowMode,
     pub movement: MoveMode,
     pub direction: DirMode,
 }
@@ -45,7 +45,7 @@ pub struct GrenadeModifiers {
 pub enum MoveMode {
     #[default]
     None,
-    Step,
+    Tap,
     Walk,
     Run,
 }
@@ -57,6 +57,14 @@ pub enum DirMode {
     Left,
     Right,
     Backwards,
+}
+
+#[derive(Debug, Clone, PartialEq, EnumIter, Serialize, Deserialize, Default)]
+pub enum ThrowMode {
+    #[default]
+    Lmb,
+    Rmb,
+    Both,
 }
 
 pub fn read_grenades() -> GrenadeList {

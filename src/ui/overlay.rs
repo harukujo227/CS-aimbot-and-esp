@@ -15,7 +15,7 @@ use crate::{
     },
     data::{Data, PlayerData},
     math::world_to_screen,
-    ui::{app::App, color::Colors, grenades::{Grenade, MoveMode, DirMode}, trail::Trail},
+    ui::{app::App, color::Colors, grenades::{Grenade, MoveMode, DirMode, ThrowMode}, trail::Trail},
 };
 
 impl App {
@@ -775,41 +775,31 @@ impl App {
                 Align2::CENTER_TOP,
                 None,
             );
-            let mut text = String::from("");
+            if !grenade.modifiers.show {
+                return
+            }
 
-            if grenade.modifiers.movement == MoveMode::Run {
-                text += "Run"
-            } else if grenade.modifiers.movement == MoveMode::Walk {
-                text+= "Walk"
-            } else if grenade.modifiers.movement == MoveMode::Step {
-                text+= "Step"
+            let mut text = String::from("");
+            match grenade.modifiers.movement {
+                MoveMode::None => {}
+                MoveMode::Tap => {text+= "Tap"}
+                MoveMode::Walk => {text+= "Walk"}
+                MoveMode::Run => {text += "Run"}
             }
             if grenade.modifiers.movement != MoveMode::None {
-                if grenade.modifiers.direction == DirMode::Forwards {
-                    text+="/"
-                } else if grenade.modifiers.direction == DirMode::Right {
-                    text+=" Right/"
-                } else if grenade.modifiers.direction == DirMode::Left {
-                    text+=" Left/"
-                } else if grenade.modifiers.direction == DirMode::Backwards {
-                    text+= " Backwards/"
+                match grenade.modifiers.direction {
+                    DirMode::Forwards => {text += "/"}
+                    DirMode::Left => { text += " Left/" }
+                    DirMode::Right => { text += " Right/" }
+                    DirMode::Backwards => { text += " Backwards/" }
                 }
             }
-            if grenade.modifiers.duck {
-                text += "Duck/"
-            }
-            if grenade.modifiers.jump {
-                text +=  "Jump/"
-            }
-            if grenade.modifiers.lmb && grenade.modifiers.rmb {
-                text+="M1+M2"
-            } else if grenade.modifiers.lmb {
-                text+="M1"
-            } else if grenade.modifiers.rmb {
-                text+="M2"
-            }
-            if text=="" {
-                return
+            if grenade.modifiers.duck { text += "Duck/" }
+            if grenade.modifiers.jump { text += "Jump/" }
+            match grenade.modifiers.throw {
+                ThrowMode::Lmb => {text += "M1"}
+                ThrowMode::Rmb => {text += "M2"}
+                ThrowMode::Both => {text += "M1+M2"}
             }
 
             self.text(

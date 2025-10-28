@@ -1016,8 +1016,18 @@ impl App {
                 ui.text_edit_multiline(&mut self.new_grenade.description);
                 ui.label("Description");
             });
-            ui.checkbox(&mut self.new_grenade.modifiers.lmb, "Mouse 1");
-            ui.checkbox(&mut self.new_grenade.modifiers.rmb, "Mouse 2");
+            ui.checkbox(&mut self.new_grenade.modifiers.show, "Show in game");
+            egui::ComboBox::new("throw_mode", "Throw type")
+                .selected_text(format!("{:?}", self.new_grenade.modifiers.throw))
+                .show_ui(ui, |ui| {
+                    use crate::ui::grenades::ThrowMode;
+                    for mode in ThrowMode::iter() {
+                        let text = format!("{:?}", &mode);
+                        ui
+                            .selectable_value(&mut self.new_grenade.modifiers.throw, mode, text)
+                            .clicked();
+                    }
+                });
             ui.checkbox(&mut self.new_grenade.modifiers.jump, "Jump");
             ui.checkbox(&mut self.new_grenade.modifiers.duck, "Duck");
             use crate::ui::grenades::MoveMode;
@@ -1089,8 +1099,18 @@ impl App {
                 ui.text_edit_multiline(&mut grenade.description);
                 ui.label("Description");
             });
-            ui.checkbox(&mut grenade.modifiers.lmb, "Mouse 1");
-            ui.checkbox(&mut grenade.modifiers.rmb, "Mouse 2");
+            ui.checkbox(&mut grenade.modifiers.show, "Show in game");
+            egui::ComboBox::new("throw_mode", "Throw type")
+                .selected_text(format!("{:?}", grenade.modifiers.throw))
+                .show_ui(ui, |ui| {
+                    use crate::ui::grenades::ThrowMode;
+                    for mode in ThrowMode::iter() {
+                        let text = format!("{:?}", &mode);
+                        ui
+                            .selectable_value(&mut grenade.modifiers.throw, mode, text)
+                            .clicked();
+                    }
+                });
             ui.checkbox(&mut grenade.modifiers.jump, "Jump");
             ui.checkbox(&mut grenade.modifiers.duck, "Duck");
             egui::ComboBox::new("move_mode", "Movement")
