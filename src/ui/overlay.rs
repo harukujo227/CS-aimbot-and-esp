@@ -761,6 +761,7 @@ impl App {
         }
         let text_center = center - up * CROSS_SIZE;
         if let Some(text_center) = world_to_screen(&text_center, data) {
+            let mut offset = 0.0;
             self.text(
                 painter,
                 &grenade.name,
@@ -771,16 +772,17 @@ impl App {
             self.text(
                 painter,
                 format!("{}", grenade.weapon,),
-                text_center + egui::vec2(0.0, self.config.hud.font_size),
+                text_center + egui::vec2(0.0, offset),
                 Align2::CENTER_TOP,
                 None,
             );
+            offset+=self.config.hud.font_size;
             let text = match (
                 grenade.modifiers.duck,
                 grenade.modifiers.jump,
                 grenade.modifiers.run,
             ) {
-                (false, false, false) => return,
+                (false, false, false) => "",
                 (true, false, false) => "Duck",
                 (true, true, false) => "Duck/Jump",
                 (true, true, true) => "Duck/Jump/Run",
@@ -789,14 +791,25 @@ impl App {
                 (false, true, true) => "Jump/Run",
                 (false, false, true) => "Run",
             };
-
-            self.text(
-                painter,
-                text,
-                text_center + egui::vec2(0.0, self.config.hud.font_size * 2.0),
-                Align2::CENTER_TOP,
-                None,
-            );
+            if text != "" {
+                self.text(
+                    painter,
+                    text,
+                    text_center + egui::vec2(0.0, offset),
+                    Align2::CENTER_TOP,
+                    None,
+                );
+                offset+=self.config.hud.font_size;
+            }
+            if grenade.description != "" {
+                self.text(
+                    painter,
+                    &grenade.description,
+                    text_center + egui::vec2(0.0, offset),
+                    Align2::CENTER_TOP,
+                    None,
+                );
+            }
         }
     }
 
