@@ -170,7 +170,9 @@ impl App {
                             self.send_config();
                         }
                     }
-                });
+                })
+                .response
+                .on_hover_text("This key needs to be held for the aimbot to activate");
 
             if self.aimbot_tab == AimbotTab::Weapon
                 && ui
@@ -178,6 +180,7 @@ impl App {
                         &mut self.weapon_config().aimbot.enable_override,
                         "Enable Override",
                     )
+                    .on_hover_text("Enable aimbot settings override for a specific weapon")
                     .changed()
             {
                 self.send_config();
@@ -236,6 +239,7 @@ impl App {
                             .speed(0.02)
                             .max_decimals(1),
                     )
+                    .on_hover_text("Smooth the aimbot movements\nSetting it to 0 will instantly snap to the target")
                     .changed()
                 {
                     self.send_config();
@@ -249,6 +253,9 @@ impl App {
                         DragValue::new(&mut self.weapon_config().aimbot.start_bullet)
                             .range(0..=10)
                             .speed(0.05),
+                    )
+                    .on_hover_text(
+                        "How many bullets you need to shoot\nbefore the aimbot starts aiming",
                     )
                     .changed()
                 {
@@ -432,6 +439,7 @@ impl App {
                     &mut self.weapon_config().triggerbot.velocity_check,
                     "Velocity Check",
                 )
+                .on_hover_text("Only shoot if the player moves slower than the specified threshold")
                 .changed()
             {
                 self.send_config();
@@ -442,6 +450,9 @@ impl App {
                     .add(
                         DragValue::new(&mut self.weapon_config().triggerbot.velocity_threshold)
                             .range(0..=5000),
+                    )
+                    .on_hover_text(
+                        "Maximum velocity at which the triggerbot can shoot (in CS2 Units)",
                     )
                     .changed()
                 {
@@ -477,6 +488,7 @@ impl App {
                             .range(0.0..=1.0)
                             .speed(0.02),
                     )
+                    .on_hover_text("Lower values mean more direct recoil control")
                     .changed()
                 {
                     self.send_config();
@@ -701,7 +713,7 @@ impl App {
                     }
                 });
 
-                collapsing_open(ui, "Grenade Trails", |ui| {
+                ui.collapsing("Grenade Trails", |ui| {
                     if ui
                         .checkbox(&mut self.config.hud.grenade_trails, "Grenade Trails")
                         .changed()
