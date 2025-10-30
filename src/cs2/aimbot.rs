@@ -1,19 +1,40 @@
 use glam::vec2;
 
 use crate::{
-    config::Config,
+    config::{Config, KeyMode},
     cs2::{CS2, entity::player::Player},
     math::{angles_to_fov, vec2_clamp},
     os::mouse::Mouse,
 };
 
+#[derive(Debug, Default)]
+pub struct Aimbot {
+    previous_button_state: bool,
+    pub(super) active: bool,
+}
+
 impl CS2 {
     pub fn aimbot(&mut self, config: &Config, mouse: &mut Mouse) {
+        let hotkey = config.aim.aimbot_hotkey;
         let config = self.aimbot_config(config);
 
         if !config.enabled || self.target.player.is_none() {
             return;
         }
+
+        let button_state = self.is_button_down(&hotkey);
+        if config.mode == KeyMode::Hold && !button_state {
+            return;
+        } else {
+            if button_state && !self.aim.previous_button_state {
+                self.aim.active = !self.aim.active;
+            }
+            self.aim.previous_button_state = button_state;
+            if !self.aim.active {
+                return;
+            }
+        }
+
         let target = self.target.player.as_ref().unwrap();
 
         let Some(local_player) = Player::local_player(self) else {

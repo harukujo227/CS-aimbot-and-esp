@@ -178,13 +178,26 @@ impl App {
             );
         }
 
+        if data.aimbot_active {
+            self.text(
+                &painter,
+                "aimobt active",
+                pos2(
+                    data.window_size.x / 2.0 + 8.0,
+                    data.window_size.y / 2.0 + 8.0,
+                ),
+                Align2::LEFT_TOP,
+                None,
+            );
+        }
+
         if data.triggerbot_active {
             self.text(
                 &painter,
                 "trigger active",
                 pos2(
                     data.window_size.x / 2.0 + 8.0,
-                    data.window_size.y / 2.0 + 8.0,
+                    data.window_size.y / 2.0 + 8.0 + self.config.hud.font_size,
                 ),
                 Align2::LEFT_TOP,
                 None,
@@ -776,7 +789,7 @@ impl App {
                 Align2::CENTER_TOP,
                 None,
             );
-            offset+=self.config.hud.font_size;
+            offset += self.config.hud.font_size;
             let text = match (
                 grenade.modifiers.duck,
                 grenade.modifiers.jump,
@@ -791,7 +804,7 @@ impl App {
                 (false, true, true) => "Jump/Run",
                 (false, false, true) => "Run",
             };
-            if text != "" {
+            if !text.is_empty() {
                 self.text(
                     painter,
                     text,
@@ -799,9 +812,9 @@ impl App {
                     Align2::CENTER_TOP,
                     None,
                 );
-                offset+=self.config.hud.font_size;
+                offset += self.config.hud.font_size;
             }
-            if grenade.description != "" {
+            if !grenade.description.is_empty() {
                 self.text(
                     painter,
                     &grenade.description,

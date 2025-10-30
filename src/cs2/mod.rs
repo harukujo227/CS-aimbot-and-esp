@@ -9,9 +9,10 @@ use glam::{IVec2, Mat4, Vec2, Vec3};
 
 use crate::{
     bvh::Bvh,
-    config::{AimbotConfig, Config, RcsConfig, TriggerbotConfig, TriggerbotMode},
+    config::{AimbotConfig, Config, KeyMode, RcsConfig, TriggerbotConfig},
     constants::cs2::{self, TEAM_CT, TEAM_T, class},
     cs2::{
+        aimbot::Aimbot,
         bones::Bones,
         entity::{
             Entity, EntityInfo, GrenadeInfo, inferno::Inferno, molotov::Molotov,
@@ -57,6 +58,7 @@ pub struct CS2 {
     dead_spectators: RefCell<Vec<(String, u64, u64)>>,
     entities: Vec<Entity>,
     recoil: Recoil,
+    aim: Aimbot,
     trigger: Triggerbot,
     wallhack: EspToggle,
     weapon: Weapon,
@@ -126,9 +128,7 @@ impl Game for CS2 {
 
         self.find_target(config);
 
-        if self.is_button_down(&config.aim.hotkey) {
-            self.aimbot(config, mouse);
-        }
+        self.aimbot(config, mouse);
     }
 
     fn data(&self, config: &Config, data: &mut Data) {
@@ -240,7 +240,12 @@ impl Game for CS2 {
         data.is_ffa = self.is_ffa();
         data.is_custom_mode = self.is_custom_game_mode();
         data.map_name = self.current_map();
-        data.triggerbot_active = if self.triggerbot_config(config).mode == TriggerbotMode::Toggle {
+        data.aimbot_active = if self.aimbot_config(config).mode == KeyMode::Toggle {
+            self.aim.active
+        } else {
+            false
+        };
+        data.triggerbot_active = if self.triggerbot_config(config).mode == KeyMode::Toggle {
             self.trigger.active
         } else {
             false
@@ -283,6 +288,7 @@ impl CS2 {
             dead_spectators: RefCell::new(Vec::new()),
             entities: Vec::with_capacity(128),
             recoil: Recoil::default(),
+            aim: Aimbot::default(),
             trigger: Triggerbot::default(),
             wallhack: EspToggle::default(),
             weapon: Weapon::default(),
@@ -582,7 +588,7 @@ impl CS2 {
         let Some(local_player) = Player::local_player(self) else {
             return;
         };
-        
+
         const NUM_BUCKETS: usize = 64;
         let bucket_pointers = self
             .process

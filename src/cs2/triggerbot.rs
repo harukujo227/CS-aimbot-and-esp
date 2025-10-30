@@ -4,7 +4,7 @@ use glam::Vec2;
 use rand::{Rng, rng};
 
 use crate::{
-    config::{Config, TriggerbotMode},
+    config::{Config, KeyMode},
     cs2::{
         CS2,
         bones::Bones,
@@ -18,7 +18,7 @@ use crate::{
 pub struct Triggerbot {
     next_shot: Option<Instant>,
     previous_button_state: bool,
-    pub(crate) active: bool,
+    pub(super) active: bool,
     additional_shooting_end_time: Option<Instant>,
     next_additional_shot: Option<Instant>,
 }
@@ -33,7 +33,7 @@ impl CS2 {
         }
 
         let button_state = self.is_button_down(&hotkey);
-        if config.mode == TriggerbotMode::Hold && !button_state {
+        if config.mode == KeyMode::Hold && !button_state {
             return;
         } else {
             if button_state && !self.trigger.previous_button_state {

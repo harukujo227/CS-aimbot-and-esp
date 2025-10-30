@@ -4,8 +4,8 @@ use strum::IntoEnumIterator;
 
 use crate::{
     config::{
-        CONFIG_PATH, Config, TargetingMode, TriggerbotMode, VERSION, WeaponConfig,
-        available_configs, delete_config, parse_config, write_config,
+        CONFIG_PATH, Config, KeyMode, TargetingMode, VERSION, WeaponConfig, available_configs,
+        delete_config, parse_config, write_config,
     },
     constants::cs2::GRENADES,
     cs2::{bones::Bones, entity::weapon::Weapon},
@@ -159,20 +159,18 @@ impl App {
     fn aimbot_left(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Aimbot", |ui| {
             egui::ComboBox::new("aimbot_hotkey", "Hotkey")
-                .selected_text(format!("{:?}", self.config.aim.hotkey))
+                .selected_text(format!("{:?}", self.config.aim.aimbot_hotkey))
                 .show_ui(ui, |ui| {
                     for key_code in KeyCode::iter() {
                         let text = format!("{:?}", &key_code);
                         if ui
-                            .selectable_value(&mut self.config.aim.hotkey, key_code, text)
+                            .selectable_value(&mut self.config.aim.aimbot_hotkey, key_code, text)
                             .clicked()
                         {
                             self.send_config();
                         }
                     }
-                })
-                .response
-                .on_hover_text("This key needs to be held for the aimbot to activate");
+                });
 
             if self.aimbot_tab == AimbotTab::Weapon
                 && ui
@@ -192,6 +190,20 @@ impl App {
             {
                 self.send_config();
             }
+
+            egui::ComboBox::new("aimbot_mode", "Mode")
+                .selected_text(format!("{:?}", self.weapon_config().aimbot.mode))
+                .show_ui(ui, |ui| {
+                    for mode in KeyMode::iter() {
+                        let text = format!("{:?}", &mode);
+                        if ui
+                            .selectable_value(&mut self.weapon_config().aimbot.mode, mode, text)
+                            .clicked()
+                        {
+                            self.send_config();
+                        }
+                    }
+                });
 
             if ui
                 .checkbox(
@@ -380,7 +392,7 @@ impl App {
             egui::ComboBox::new("triggerbot_mode", "Mode")
                 .selected_text(format!("{:?}", self.weapon_config().triggerbot.mode))
                 .show_ui(ui, |ui| {
-                    for mode in TriggerbotMode::iter() {
+                    for mode in KeyMode::iter() {
                         let text = format!("{:?}", &mode);
                         if ui
                             .selectable_value(&mut self.weapon_config().triggerbot.mode, mode, text)
