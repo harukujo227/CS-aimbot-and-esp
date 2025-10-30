@@ -774,7 +774,6 @@ impl App {
         }
         let text_center = center - up * CROSS_SIZE;
         if let Some(text_center) = world_to_screen(&text_center, data) {
-            let mut offset = 0.0;
             self.text(
                 painter,
                 &grenade.name,
@@ -782,6 +781,7 @@ impl App {
                 Align2::CENTER_TOP,
                 None,
             );
+            let mut offset = self.config.hud.font_size;
             self.text(
                 painter,
                 format!("{}", grenade.weapon,),
