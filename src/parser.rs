@@ -25,10 +25,12 @@ pub fn parse_maps(
 
     let game_dir = game_dir().unwrap();
     let build_file = game_dir.join("game/bin/built_from_cl.txt");
-    let cs2_build_raw =
-        std::fs::read_to_string(&build_file).expect("could not read cs2 build number");
+    let Ok(cs2_build_raw) = std::fs::read_to_string(&build_file) else {
+        log::error!("could not read cs2 build number");
+        return;
+    };
     let cs2_build = cs2_build_raw.trim();
-    let cs2_build: u64 = cs2_build.parse().unwrap();
+    let cs2_build: u64 = cs2_build.parse().unwrap_or_default();
 
     let maps_dir = maps_dir().unwrap();
     let parsed_build_file = maps_dir.join("parsed_build.txt");

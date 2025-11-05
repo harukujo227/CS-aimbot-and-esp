@@ -959,8 +959,8 @@ fn convex_hull(points: &[Vec3]) -> Vec<Vec3> {
     let mut sorted_points = points.to_vec();
     sorted_points.sort_by(|a, b| {
         a.x.partial_cmp(&b.x)
-            .unwrap()
-            .then(a.y.partial_cmp(&b.y).unwrap())
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then(a.y.partial_cmp(&b.y).unwrap_or(std::cmp::Ordering::Equal))
     });
 
     let mut deduped: Vec<Vec3> = Vec::new();
