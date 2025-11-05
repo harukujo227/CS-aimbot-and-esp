@@ -1074,7 +1074,12 @@ impl App {
                 None => return,
             };
 
-            let grenade = &mut self.grenades.get_mut(map).unwrap()[*index];
+            let Some(grenades) = &mut self.grenades.get_mut(map) else {
+                return;
+            };
+            let Some(grenade) = grenades.get_mut(*index) else {
+                return;
+            };
 
             ui.horizontal(|ui| {
                 ui.text_edit_singleline(&mut grenade.name);
