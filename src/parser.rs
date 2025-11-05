@@ -110,7 +110,9 @@ pub fn parse_maps(
             "-f",
             &format!("maps/{map_name}/world_physics.vmdl_c"),
         ]);
-        s2v_cmd.output().unwrap();
+        if let Err(error) = s2v_cmd.output() {
+            log::error!("source2viewer error:\n{error}");
+        }
     }
 
     let cpus = std::thread::available_parallelism()
@@ -151,7 +153,10 @@ fn parse_map(
     let bvh_path = maps_dir.join(bvh_name);
 
     if bvh_path.exists() && !force_reparse {
-        let mut bvh_file = File::open(&bvh_path).unwrap();
+        let Ok(mut bvh_file) = File::open(&bvh_path) else {
+            log::error!("could not open {bvh_path:?}");
+            return;
+        };
         if let Some(map_bvh) = Bvh::load(&mut bvh_file) {
             log::debug!("loaded bvh for {map_name}");
             bvh.lock().unwrap().insert(map_name, map_bvh);
