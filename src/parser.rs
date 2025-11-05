@@ -23,10 +23,13 @@ pub fn parse_maps(
     crash::info();
     let source2viewer = exe_path().join("source2viewer/Source2Viewer-CLI");
 
-    let game_dir = game_dir().unwrap();
+    let Some(game_dir) = game_dir() else {
+        log::warn!("could not find cs2 game directory");
+        return;
+    };
     let build_file = game_dir.join("game/bin/built_from_cl.txt");
     let Ok(cs2_build_raw) = std::fs::read_to_string(&build_file) else {
-        log::error!("could not read cs2 build number");
+        log::warn!("could not read cs2 build number");
         return;
     };
     let cs2_build = cs2_build_raw.trim();
@@ -39,10 +42,6 @@ pub fn parse_maps(
 
     if parsed_build != cs2_build {
         force_reparse = true;
-    }
-
-    if force_reparse {
-        log::info!("reparsing map data");
     }
 
     if force_reparse {
