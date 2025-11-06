@@ -22,6 +22,10 @@ pub fn parse_maps(
 ) {
     crash::info();
     let source2viewer = exe_path().join("source2viewer/Source2Viewer-CLI");
+    if !source2viewer.exists() && !use_system_binary {
+        log::warn!("could not find source2viewer binary");
+        return;
+    }
 
     let Some(game_dir) = game_dir() else {
         log::warn!("could not find cs2 game directory");
@@ -113,7 +117,7 @@ pub fn parse_maps(
             log::error!("source2viewer error:\n{error}");
         }
     }
-    
+
     if !geom_dir.exists() {
         log::warn!("could not parse any map successfully");
         return;
