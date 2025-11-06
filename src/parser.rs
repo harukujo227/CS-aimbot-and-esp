@@ -113,6 +113,11 @@ pub fn parse_maps(
             log::error!("source2viewer error:\n{error}");
         }
     }
+    
+    if !geom_dir.exists() {
+        log::warn!("could not parse any map successfully");
+        return;
+    }
 
     let cpus = std::thread::available_parallelism()
         .map(|n| n.get())
@@ -164,6 +169,9 @@ fn parse_map(
     }
 
     let geom_dir = maps_dir.join("geometry/maps").join(&map_name);
+    if !geom_dir.exists() {
+        log::warn!("geometry directory doesn't exist...");
+    }
 
     let mut map_bvh = Bvh::new();
     for file in std::fs::read_dir(&geom_dir).unwrap() {
