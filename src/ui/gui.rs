@@ -4,8 +4,8 @@ use strum::IntoEnumIterator;
 
 use crate::{
     config::{
-        CONFIG_PATH, Config, KeyMode, TargetingMode, VERSION, WeaponConfig, available_configs,
-        delete_config, parse_config, write_config,
+        BASE_PATH, CONFIG_PATH, Config, KeyMode, TargetingMode, VERSION, WeaponConfig,
+        available_configs, delete_config, parse_config, write_config,
     },
     constants::cs2::GRENADES,
     cs2::{bones::Bones, entity::weapon::Weapon},
@@ -80,6 +80,12 @@ impl App {
                     if ui.button("Report Issue").clicked() {
                         std::process::Command::new("xdg-open")
                             .arg("https://github.com/avitran0/deadlocked/issues")
+                            .status()
+                            .unwrap();
+                    }
+                    if ui.button("Config Folder").clicked() {
+                        std::process::Command::new("xdg-open")
+                            .arg(BASE_PATH.as_os_str())
                             .status()
                             .unwrap();
                     }
@@ -1037,7 +1043,7 @@ impl App {
 
             ui.horizontal(|ui| {
                 ui.text_edit_multiline(&mut self.new_grenade.description);
-                ui.label("Description");
+                ui.label("Instructions");
             });
 
             ui.checkbox(&mut self.new_grenade.modifiers.jump, "Jump");

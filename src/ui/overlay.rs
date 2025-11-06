@@ -677,7 +677,11 @@ impl App {
             return;
         };
 
+        let player_weapon = &data.local_player.weapon;
         for grenade in grenades {
+            if *player_weapon != grenade.weapon {
+                continue;
+            }
             let distance = (position - grenade.position).length();
             if distance > 500.0 {
                 continue;
@@ -764,14 +768,26 @@ impl App {
 
         let stroke = Stroke::new(self.config.hud.line_width, self.config.hud.text_color);
         let stroke_bg = Stroke::new(self.config.hud.line_width * 2.0, Color32::BLACK);
-        if let (Some(v1), Some(v4)) = (world_to_screen(&v1, data), world_to_screen(&v4, data)) {
-            painter.line_segment([v1, v4], stroke_bg);
-            painter.line_segment([v1, v4], stroke);
-        }
-        if let (Some(v2), Some(v3)) = (world_to_screen(&v2, data), world_to_screen(&v3, data)) {
-            painter.line_segment([v2, v3], stroke_bg);
-            painter.line_segment([v2, v3], stroke);
-        }
+
+        let Some(v1) = world_to_screen(&v1, data) else {
+            return;
+        };
+        let Some(v2) = world_to_screen(&v2, data) else {
+            return;
+        };
+        let Some(v3) = world_to_screen(&v3, data) else {
+            return;
+        };
+        let Some(v4) = world_to_screen(&v4, data) else {
+            return;
+        };
+
+        painter.line_segment([v1, v4], stroke_bg);
+        painter.line_segment([v2, v3], stroke_bg);
+
+        painter.line_segment([v1, v4], stroke);
+        painter.line_segment([v2, v3], stroke);
+
         let text_center = center - up * CROSS_SIZE;
         if let Some(text_center) = world_to_screen(&text_center, data) {
             self.text(
