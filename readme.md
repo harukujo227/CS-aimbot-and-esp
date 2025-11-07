@@ -4,6 +4,29 @@ simple cs2 aimbot and esp, for linux only.
 
 [![Open Source CS2 Hacking](https://badgen.net/discord/members/eXjG4Ar9Sx)](https://discord.gg/eXjG4Ar9Sx)
 
+## Setup
+
+```bash
+sudo usermod -aG input $(whoami)
+# Restart your machine (required)
+git clone --recursive https://github.com/avitran0/deadlocked
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Running NixOS or Fedora Atomic? See [OS-Specific Setup](os-setup.md).
+
+## Running
+
+```bash
+./run.sh
+```
+
+> [!NOTE]
+> When running for the first time and on game updates,
+> it will parse the map data for a fast visibility check.
+> Let this run until you see all maps have been parsed.
+> This will take a lot of resources, so it's best to let it run before joining a game.
+
 ## Features
 
 ### Aimbot
@@ -70,73 +93,6 @@ simple cs2 aimbot and esp, for linux only.
 
 > [!CAUTION]
 > VACNet 3.0 is better at detecting aimbot and wallhacks. **Do not** use aim lock. Play with a low FOV. Use visuals sparingly.
-
-## Setup
-
-### Linux (Generic)
-
-```bash
-sudo usermod -aG input $(whoami)
-# Restart your machine (required)
-git clone --recursive https://github.com/avitran0/deadlocked
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-### NixOS
-
-Add `"input"` to your user's `extraGroups` in `configuration.nix`:
-
-```nix
-users.users.yourname = {
-  isNormalUser = true;
-  extraGroups = [ "wheel" "input" ];
-};
-```
-
-Then rebuild and reboot:
-
-```bash
-sudo nixos-rebuild switch
-sudo reboot
-```
-
-After reboot:
-
-```bash
-git clone --recursive https://github.com/avitran0/deadlocked
-cd deadlocked
-direnv allow
-cargo run --release
-```
-
-If maps parsing fails, run (it will use Source2Viewer provided by nix direnv instead of one in resources):
-
-```bash
-cargo run --release -- --local-s2v
-```
-
-Everything is configured in `flake.nix` and `nix/shell.nix`.
-
-### Fedora Atomic
-
-```bash
-grep -E '^input:' /usr/lib/group | sudo tee -a /etc/group && sudo usermod -aG input $USER
-# Restart your machine (required)
-git clone --recursive https://github.com/avitran0/deadlocked
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-## Running
-
-```bash
-./run.sh
-```
-
-> [!NOTE]
-> When running for the first time and on game updates,
-> it will parse the map data for a fast visibility check.
-> Let this run until you see all maps have been parsed.
-> This will take a lot of resources, so it's best to let it run before joining a game.
 
 ## FAQ
 
