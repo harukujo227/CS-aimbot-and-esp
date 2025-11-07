@@ -129,8 +129,14 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ## Running
 
 ```bash
-cargo run --release
+./run.sh
 ```
+
+> [!NOTE]
+> When running for the first time and on game updates,
+> it will parse the map data for a fast visibility check.
+> Let this run until you see all maps have been parsed.
+> This will take a lot of resources, so it's best to let it run before joining a game.
 
 ## FAQ
 
