@@ -307,6 +307,82 @@ impl Bvh {
             }
         }
     }
+
+    pub fn triangles_near(&self, position: Vec3, radius: f32) -> Vec<&Triangle> {
+        let mut result = Vec::new();
+        if let Some(root) = self.root {
+            self.collect_triangles_near(root, position, radius, &mut result);
+        }
+        result
+    }
+
+    pub fn aabbs_near(&self, position: Vec3, radius: f32) -> Vec<&Aabb> {
+        let mut result = Vec::new();
+        if let Some(root) = self.root {
+            self.collect_aabbs_near(root, position, radius, &mut result);
+        }
+        result
+    }
+
+    fn collect_triangles_near<'a>(
+        &'a self,
+        node_idx: usize,
+        position: Vec3,
+        radius: f32,
+        result: &mut Vec<&'a Triangle>,
+    ) {
+        let node = &self.nodes[node_idx];
+        let aabb = node.aabb();
+
+        if !self.sphere_aabb_intersect(position, radius, aabb) {
+            return;
+        }
+
+        match node {
+            BvhNode::Leaf { primitives, .. } => {
+                for &idx in primitives {
+                    let tri = &self.triangles[idx];
+                    if (tri.centroid() - position).length() <= radius {
+                        result.push(tri);
+                    }
+                }
+            }
+            BvhNode::Branch { left, right, .. } => {
+                self.collect_triangles_near(*left, position, radius, result);
+                self.collect_triangles_near(*right, position, radius, result);
+            }
+        }
+    }
+
+    fn collect_aabbs_near<'a>(
+        &'a self,
+        node_idx: usize,
+        position: Vec3,
+        radius: f32,
+        result: &mut Vec<&'a Aabb>,
+    ) {
+        let node = &self.nodes[node_idx];
+        let aabb = node.aabb();
+
+        if !self.sphere_aabb_intersect(position, radius, aabb) {
+            return;
+        }
+
+        if (aabb.centroid() - position).length() <= radius {
+            result.push(aabb);
+        }
+
+        if let BvhNode::Branch { left, right, .. } = node {
+            self.collect_aabbs_near(*left, position, radius, result);
+            self.collect_aabbs_near(*right, position, radius, result);
+        }
+    }
+
+    fn sphere_aabb_intersect(&self, sphere_center: Vec3, sphere_radius: f32, aabb: &Aabb) -> bool {
+        let closest_point = sphere_center.clamp(aabb.min, aabb.max);
+        let distance_sq = (sphere_center - closest_point).length_squared();
+        distance_sq <= sphere_radius * sphere_radius
+    }
 }
 
 impl BvhNode {

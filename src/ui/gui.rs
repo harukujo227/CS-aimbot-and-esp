@@ -899,6 +899,28 @@ impl App {
             {
                 self.send_config();
             }
+
+            if ui
+                .checkbox(&mut self.config.hud.debug_bvh, "Debug BVH")
+                .changed()
+            {
+                self.send_config();
+            }
+
+            if self.config.hud.debug_bvh {
+                if ui
+                    .checkbox(&mut self.config.hud.bvh_aabbs, "Show AABBs")
+                    .changed()
+                {
+                    self.send_config();
+                }
+                if ui
+                    .checkbox(&mut self.config.hud.bvh_triangles, "Show Triangles")
+                    .changed()
+                {
+                    self.send_config();
+                }
+            }
         });
     }
 

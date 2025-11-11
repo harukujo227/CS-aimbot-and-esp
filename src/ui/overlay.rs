@@ -181,7 +181,7 @@ impl App {
         if data.aimbot_active {
             self.text(
                 &painter,
-                "aimobt active",
+                "aimbot active",
                 pos2(
                     data.window_size.x / 2.0 + 8.0,
                     data.window_size.y / 2.0 + 8.0,
@@ -238,9 +238,33 @@ impl App {
         }
 
         self.grenade_manager(data, &painter);
+
+        if self.config.hud.debug_bvh {
+            self.debug_bvh(data, &painter);
+        }
     }
 
-    #[allow(unused)]
+    fn debug_bvh(&self, data: &Data, painter: &Painter) {
+        let all_bvhs = self.bvh.lock().unwrap();
+        let Some(bvh) = all_bvhs.get(&data.map_name) else {
+            return;
+        };
+
+        if self.config.hud.bvh_aabbs {
+            let aabbs = bvh.aabbs_near(data.local_player.position, 200.0);
+            for aabb in aabbs {
+                self.aabb_box(aabb, data, painter);
+            }
+        }
+
+        if self.config.hud.bvh_triangles {
+            let triangles = bvh.triangles_near(data.local_player.position, 200.0);
+            for triangle in triangles {
+                self.triangle(triangle, data, painter);
+            }
+        }
+    }
+
     fn triangle(&self, triangle: &Triangle, data: &Data, painter: &Painter) {
         let Some(v1) = world_to_screen(&triangle.v0, data) else {
             return;
@@ -254,7 +278,6 @@ impl App {
         painter.line(vec![v1, v2, v3], Stroke::new(1.0, Color32::WHITE));
     }
 
-    #[allow(unused)]
     fn aabb_box(&self, aabb: &Aabb, data: &Data, painter: &Painter) {
         let min = aabb.min();
         let max = aabb.max();
