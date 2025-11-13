@@ -52,7 +52,6 @@ pub fn vec2_clamp(vec: &mut Vec2) {
     vec.y = (vec.y + 180.0) % 360.0 - 180.0;
 }
 
-#[cfg(feature = "visuals")]
 pub fn world_to_screen(position: &Vec3, data: &crate::data::Data) -> Option<egui::Pos2> {
     let vm = &data.view_matrix;
     let mut screen_position = Vec2::new(

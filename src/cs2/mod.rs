@@ -36,9 +36,7 @@ mod aimbot;
 pub mod bones;
 pub mod entity;
 mod esp_toggle;
-#[cfg(feature = "unsafe")]
 mod fov_changer;
-#[cfg(feature = "unsafe")]
 mod no_flash;
 mod offsets;
 mod rcs;
@@ -101,7 +99,6 @@ impl Game for CS2 {
         // self.cache_players();
         self.cache_entities();
 
-        #[cfg(feature = "unsafe")]
         for entity in &self.entities {
             if let Entity::Smoke(smoke) = entity {
                 if config.misc.no_smoke {
@@ -114,11 +111,9 @@ impl Game for CS2 {
             }
         }
 
-        #[cfg(feature = "unsafe")]
-        {
             self.no_flash(config);
             self.fov_changer(config);
-        }
+
         self.esp_toggle(config);
 
         self.rcs(config, mouse);

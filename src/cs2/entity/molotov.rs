@@ -36,7 +36,6 @@ pub struct MolotovInfo {
 }
 
 impl MolotovInfo {
-    #[cfg(feature = "visuals")]
     pub fn grenade(&self) -> super::GrenadeInfo {
         super::GrenadeInfo {
             entity: self.entity,

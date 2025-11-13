@@ -527,7 +527,6 @@ impl App {
         painter.circle_stroke(pos, height / 2.0, stroke);
     }
 
-    #[cfg(feature = "visuals")]
     fn entity(&self, painter: &Painter, entity: &EntityInfo, data: &Data) {
         match entity {
             EntityInfo::Weapon { weapon, position } => {

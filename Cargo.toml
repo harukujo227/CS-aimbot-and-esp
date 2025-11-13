@@ -3,11 +3,6 @@ name = "deadlocked"
 version = "4.2.0"
 edition = "2024"
 
-[features]
-default = ["visuals", "unsafe"]
-visuals = []
-unsafe = []
-
 [dependencies]
 arboard = { version = "3.6", default-features = false }
 bincode = { version = "2.0", features = ["std", "serde"] }

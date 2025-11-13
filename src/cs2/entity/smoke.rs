@@ -1,4 +1,3 @@
-#[cfg(feature = "unsafe")]
 use egui::{Color32, Rgba};
 use glam::Vec3;
 use serde::Serialize;
@@ -22,7 +21,6 @@ impl Smoke {
         }
     }
 
-    #[cfg(feature = "unsafe")]
     pub fn disable(&self, cs2: &CS2) {
         let disabled = cs2
             .process
@@ -34,7 +32,6 @@ impl Smoke {
         }
     }
 
-    #[cfg(feature = "unsafe")]
     pub fn color(&self, cs2: &CS2, color: &Color32) {
         let offset = self.controller + cs2.offsets.smoke.smoke_color;
         let current_color: [f32; 3] = cs2.process.read(offset);
@@ -53,7 +50,6 @@ pub struct SmokeInfo {
 }
 
 impl SmokeInfo {
-    #[cfg(feature = "visuals")]
     pub fn grenade(&self) -> super::GrenadeInfo {
         super::GrenadeInfo {
             entity: self.entity,

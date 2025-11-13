@@ -26,7 +26,7 @@ use crate::{
     ui::{
         color::Colors,
         grenades::{Grenade, GrenadeList, read_grenades},
-        gui::{AimbotTab, Tab},
+        gui::{Tab, aimbot::AimbotTab},
         trail::Trail,
         window_context::WindowContext,
     },
@@ -39,11 +39,8 @@ pub struct App {
     pub gui_window: Option<WindowContext>,
     pub gui_gl: Option<Arc<glow::Context>>,
     pub gui_glow: Option<egui_glow::EguiGlow>,
-    #[cfg(feature = "visuals")]
     pub overlay_window: Option<WindowContext>,
-    #[cfg(feature = "visuals")]
     pub overlay_gl: Option<Arc<glow::Context>>,
-    #[cfg(feature = "visuals")]
     pub overlay_glow: Option<egui_glow::EguiGlow>,
     pub clipboard: Clipboard,
     next_frame_time: Instant,
@@ -96,11 +93,8 @@ impl App {
             gui_gl: None,
             gui_glow: None,
 
-            #[cfg(feature = "visuals")]
             overlay_window: None,
-            #[cfg(feature = "visuals")]
             overlay_gl: None,
-            #[cfg(feature = "visuals")]
             overlay_glow: None,
 
             clipboard: Clipboard::new().unwrap(),
@@ -155,18 +149,15 @@ impl App {
         self.gui_gl = Some(gui_gl);
         self.gui_glow = Some(gui_glow);
 
-        #[cfg(feature = "visuals")]
-        {
-            let (overlay_window, overlay_gl) = create_display(event_loop, true);
-            let overlay_gl = Arc::new(overlay_gl);
-            let mut overlay_glow =
-                egui_glow::EguiGlow::new(event_loop, overlay_gl.clone(), None, None, true);
-            prep_ctx(&mut overlay_glow.egui_ctx, self.config.accent_color);
+        let (overlay_window, overlay_gl) = create_display(event_loop, true);
+        let overlay_gl = Arc::new(overlay_gl);
+        let mut overlay_glow =
+            egui_glow::EguiGlow::new(event_loop, overlay_gl.clone(), None, None, true);
+        prep_ctx(&mut overlay_glow.egui_ctx, self.config.accent_color);
 
-            self.overlay_window = Some(overlay_window);
-            self.overlay_gl = Some(overlay_gl);
-            self.overlay_glow = Some(overlay_glow);
-        }
+        self.overlay_window = Some(overlay_window);
+        self.overlay_gl = Some(overlay_gl);
+        self.overlay_glow = Some(overlay_glow);
     }
 }
 
@@ -176,7 +167,6 @@ impl ApplicationHandler for App {
             if let Some(window) = &self.gui_window {
                 window.window().request_redraw();
             }
-            #[cfg(feature = "visuals")]
             if let Some(window) = &self.overlay_window {
                 window.window().request_redraw();
             }
@@ -211,12 +201,10 @@ impl ApplicationHandler for App {
         let Some(gui_window) = &self.gui_window else {
             return;
         };
-        #[cfg(feature = "visuals")]
         let Some(overlay_window) = &self.overlay_window else {
             return;
         };
 
-        #[cfg(feature = "visuals")]
         let window = if gui_window.window().id() == window_id {
             gui_window
         } else if overlay_window.window().id() == window_id {
@@ -224,8 +212,6 @@ impl ApplicationHandler for App {
         } else {
             return;
         };
-        #[cfg(not(feature = "visuals"))]
-        let window = gui_window;
 
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
@@ -247,7 +233,6 @@ impl ApplicationHandler for App {
 
                 if event_response.repaint {
                     self.gui_window.as_mut().unwrap().window().request_redraw();
-                    #[cfg(feature = "visuals")]
                     self.overlay_window
                         .as_mut()
                         .unwrap()

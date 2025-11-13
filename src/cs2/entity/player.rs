@@ -443,7 +443,6 @@ impl Player {
         cs2.process.read(self.pawn + cs2.offsets.pawn.velocity)
     }
 
-    #[cfg(feature = "unsafe")]
     pub fn no_flash(&self, cs2: &CS2, flash_alpha: f32) {
         let flash_alpha = flash_alpha.clamp(0.0, 255.0);
         let current_alpha: f32 = cs2.process.read(self.pawn + cs2.offsets.pawn.flash_alpha);
@@ -453,7 +452,6 @@ impl Player {
         }
     }
 
-    #[cfg(feature = "unsafe")]
     pub fn set_fov(&self, cs2: &CS2, value: u32) {
         let camera_service = cs2
             .process

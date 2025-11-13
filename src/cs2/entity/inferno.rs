@@ -54,7 +54,6 @@ pub struct InfernoInfo {
 }
 
 impl InfernoInfo {
-    #[cfg(feature = "visuals")]
     pub fn grenade(&self) -> super::GrenadeInfo {
         super::GrenadeInfo {
             entity: self.entity,
