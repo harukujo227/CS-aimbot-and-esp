@@ -182,39 +182,11 @@ impl Mouse {
 }
 
 fn is_mouse_device(event_name: &str) -> bool {
-    let capabilities_path = format!("/sys/class/input/{}/device/capabilities/rel", event_name);
-    if let Ok(rel_caps) = fs::read_to_string(&capabilities_path)
-        && let Ok(caps) = u64::from_str_radix(rel_caps.trim().trim_start_matches("0x"), 16)
-    {
-        const REL_X_BIT: u64 = 1 << 0;
-        const REL_Y_BIT: u64 = 1 << 1;
-        return (caps & REL_X_BIT) != 0 && (caps & REL_Y_BIT) != 0;
-    }
-
-    let device_name_path = format!("/sys/class/input/{}/device/name", event_name);
-    if let Ok(device_name) = fs::read_to_string(&device_name_path) {
-        let name_lower = device_name.to_lowercase();
-
-        if name_lower.contains("mouse") {
-            return true;
-        }
-
-        if name_lower.contains("keyboard")
-            || name_lower.contains("power")
-            || name_lower.contains("sleep")
-            || name_lower.contains("lid")
-            || name_lower.contains("video")
-            || name_lower.contains("audio")
-            || name_lower.contains("consumer control")
-            || name_lower.contains("system control")
-            || name_lower.contains("wireless")
-            || name_lower.contains("rfkill")
-        {
-            return false;
-        }
-    }
-
-    false
+    let caps = decode_capabilities(&format!(
+        "/sys/class/input/{}/device/capabilities/rel",
+        event_name
+    ));
+    caps[AXIS_X as usize] && caps[AXIS_Y as usize]
 }
 
 pub fn discover_mice() -> Vec<MouseDevice> {
@@ -273,3 +245,40 @@ const SYN: InputEvent = InputEvent {
     code: SYN_REPORT,
     value: 0,
 };
+
+fn hex_to_reversed_binary(hex_char: char) -> Vec<bool> {
+    let value = match hex_char {
+        '0'..='9' => hex_char as u8 - b'0',
+        'a'..='f' => hex_char as u8 - b'a' + 10,
+        'A'..='F' => hex_char as u8 - b'A' + 10,
+        _ => 0,
+    };
+    (0..4).map(|i| (value >> i) & 1 == 1).collect()
+}
+
+pub fn decode_capabilities(filename: &str) -> Vec<bool> {
+    let Ok(content) = std::fs::read_to_string(filename) else {
+        return Vec::new();
+    };
+
+    let mut binary_out = Vec::new();
+    let mut hex_count = 0;
+
+    // line has to be processed in reverse (why?)
+    for c in content.chars().rev().filter(|&c| c != '\n') {
+        if c == ' ' {
+            binary_out.extend(std::iter::repeat_n(false, 4 * (16 - hex_count)));
+            hex_count = 0;
+        } else if c.is_ascii_hexdigit() {
+            binary_out.extend(hex_to_reversed_binary(c));
+            hex_count += 1;
+        }
+    }
+
+    // pad final group if incomplete
+    if (1..16).contains(&hex_count) {
+        binary_out.extend(std::iter::repeat_n(false, 4 * (16 - hex_count)));
+    }
+
+    binary_out
+}
