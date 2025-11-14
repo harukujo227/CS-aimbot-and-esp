@@ -83,14 +83,18 @@ pub fn parse_maps(
     }
 
     let geom_dir = maps_dir.join("geometry");
-    if force_reparse && geom_dir.exists() {
-        std::fs::remove_dir_all(&geom_dir).unwrap();
+    if force_reparse
+        && geom_dir.exists()
+        && let Err(err) = std::fs::remove_dir_all(&geom_dir)
+    {
+        log::error!("error removing geometry dir: {err}");
     }
 
     if !geom_dir.exists() {
-        std::fs::create_dir_all(geom_dir.join("maps")).unwrap();
+        if let Err(err) = td::fs::create_dir_all(geom_dir.join("maps")) {
+            &&log::error!("error creating geometry dir: {err}");
+        }
     }
-
     for file in &files {
         let path = maps_dir.join(file);
         let map_name = file.replace(".vpk", "");
