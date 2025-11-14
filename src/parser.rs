@@ -90,10 +90,10 @@ pub fn parse_maps(
         log::error!("error removing geometry dir: {err}");
     }
 
-    if !geom_dir.exists() {
-        if let Err(err) = td::fs::create_dir_all(geom_dir.join("maps")) {
-            &&log::error!("error creating geometry dir: {err}");
-        }
+    if !geom_dir.exists()
+        && let Err(err) = std::fs::create_dir_all(geom_dir.join("maps"))
+    {
+        log::error!("error creating geometry dir: {err}");
     }
     for file in &files {
         let path = maps_dir.join(file);
