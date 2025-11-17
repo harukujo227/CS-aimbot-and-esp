@@ -41,14 +41,22 @@ impl Process {
             };
         }
 
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(format!("/proc/{pid}/mem"))
+            .unwrap_or_else(|e| {
+                log::error!("failed to open /proc/{pid}/mem: {e}");
+                OpenOptions::new()
+                    .read(true)
+                    .write(true)
+                    .open("/dev/null")
+                    .unwrap()
+            });
         let mut ret = Self {
             pid,
             path: PathBuf::from(format!("/proc/{pid}")),
-            file: OpenOptions::new()
-                .read(true)
-                .write(true)
-                .open(format!("/proc/{pid}/mem"))
-                .unwrap(),
+            file,
             min: u64::MAX,
             max: u64::MIN,
         };
