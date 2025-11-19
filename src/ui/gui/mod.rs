@@ -4,7 +4,7 @@ use egui_glow::glow;
 use crate::{
     config::{BASE_PATH, VERSION, WeaponConfig, write_config},
     message::{Envelope, GameStatus, Message, Target},
-    os::mouse::{DeviceStatus, discover_mice},
+    os::{crash::report_error, mouse::{DeviceStatus, discover_mice}},
     ui::{app::App, color::Colors, gui::aimbot::AimbotTab},
 };
 
@@ -193,7 +193,11 @@ impl App {
         let gui_window = self.gui_window.as_ref().unwrap();
         let gui_glow = self.gui_glow.as_mut().unwrap();
 
-        gui_window.make_current().unwrap();
+        if let Err(err) = gui_window.make_current() {
+            log::error!("could not make gui window current: {err}");
+            report_error(err);
+            return;
+        }
         gui_glow.run(gui_window.window(), |ctx| {
             (unsafe { &mut *self_ptr }).gui(ctx)
         });
@@ -206,13 +210,21 @@ impl App {
 
         gui_glow.paint(gui_window.window());
 
-        gui_window.swap_buffers().unwrap();
+        if let Err(err) = gui_window.swap_buffers() {
+            log::error!("could not swap gui window buffers: {err}");
+            report_error(err);
+            return;
+        }
 
         let overlay_window = self.overlay_window.as_ref().unwrap();
         let overlay_glow = self.overlay_glow.as_mut().unwrap();
 
         overlay_window.window().set_cursor_hittest(false).unwrap();
-        overlay_window.make_current().unwrap();
+        if let Err(err) = overlay_window.make_current() {
+            log::error!("could not make overlay window current: {err}");
+            report_error(err);
+            return;
+        }
 
         overlay_glow.run(overlay_window.window(), move |egui_ctx| {
             (unsafe { &mut *self_ptr }).overlay(egui_ctx);
@@ -226,7 +238,10 @@ impl App {
 
         overlay_glow.paint(overlay_window.window());
 
-        overlay_window.swap_buffers().unwrap();
+        if let Err(err) = overlay_window.swap_buffers() {
+            log::error!("could not swap overlay window buffers: {err}");
+            report_error(err);
+        }
     }
 }
 

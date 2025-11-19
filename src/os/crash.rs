@@ -1,5 +1,7 @@
 use std::{
+    backtrace::Backtrace,
     collections::HashMap,
+    fmt::Display,
     panic::{self, PanicHookInfo},
     process::Command,
 };
@@ -13,15 +15,22 @@ pub fn install_crash_handler() {
 }
 
 fn crash_handler(_panic_hook_info: &PanicHookInfo) {
-    let machine_id = std::fs::read_to_string("/etc/machine-id").unwrap_or(UNKNOWN.to_string());
-    let hwid = machine_id.trim_end();
+    match std::thread::current().name() {
+        Some(name) => {
+            if name != "main" {
+                return;
+            }
+        }
+        None => return,
+    }
+    let hwid = hwid();
     let mut stacktrace = _panic_hook_info
         .payload()
         .downcast_ref::<&str>()
         .unwrap_or(&"explicit panic")
         .to_string();
     stacktrace.push('\n');
-    stacktrace.push_str(&std::backtrace::Backtrace::force_capture().to_string());
+    stacktrace.push_str(&Backtrace::force_capture().to_string());
 
     let json = serde_json::json!({"hwid": hwid,"stacktrace": stacktrace});
 
@@ -32,11 +41,21 @@ fn crash_handler(_panic_hook_info: &PanicHookInfo) {
 
 const UNKNOWN: &str = "unknown";
 
+pub fn report_error(error: impl Display) {
+    let hwid = hwid();
+    let stacktrace = Backtrace::force_capture().to_string();
+
+    let json = serde_json::json!({
+        "hwid": hwid,
+        "stacktrace": stacktrace,
+        "error": error.to_string(),
+    });
+
+    let _ = ureq::post("https://deadlocked.holyhades64.workers.dev/error").send_json(json);
+}
+
 pub fn info() {
-    let hwid = std::fs::read_to_string("/etc/machine-id")
-        .unwrap_or(UNKNOWN.to_owned())
-        .trim()
-        .to_owned();
+    let hwid = hwid();
     let kernel = std::fs::read_to_string("/proc/sys/kernel/osrelease")
         .unwrap_or(UNKNOWN.to_owned())
         .trim()
@@ -55,6 +74,13 @@ pub fn info() {
         "git_commit": git_commit
     });
     let _ = ureq::post("https://deadlocked.holyhades64.workers.dev/misc").send_json(json);
+}
+
+fn hwid() -> String {
+    std::fs::read_to_string("/etc/machine-id")
+        .unwrap_or(UNKNOWN.to_owned())
+        .trim()
+        .to_owned()
 }
 
 fn distro() -> String {

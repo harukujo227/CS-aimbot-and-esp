@@ -12,7 +12,7 @@ use glam::{Mat4, Quat, Vec2, Vec3, Vec4};
 
 use crate::{
     bvh::{Bvh, Triangle},
-    os::crash,
+    os::crash::{self, report_error},
 };
 
 pub fn parse_maps(
@@ -31,6 +31,7 @@ pub fn parse_maps(
         Ok(dir) => dir,
         Err(err) => {
             log::warn!("could not find cs2 game directory: {err}");
+            report_error(err);
             return;
         }
     };
@@ -46,6 +47,7 @@ pub fn parse_maps(
         Ok(dir) => dir,
         Err(err) => {
             log::error!("could not find cs2 maps directory: {err}");
+            report_error(err);
             return;
         }
     };
@@ -191,6 +193,7 @@ fn parse_map(
             Ok(file) => file,
             Err(err) => {
                 log::error!("could not open {bvh_path:?}: {err}");
+                report_error(err);
                 return;
             }
         };
@@ -218,6 +221,7 @@ fn parse_map(
         Ok(dir) => dir,
         Err(err) => {
             log::warn!("could not read geometry directory: {err}");
+            report_error(err);
             return;
         }
     };
@@ -515,18 +519,22 @@ enum Attribute {
     U64Array(Vec<u64>),
 }
 
-fn game_dir() -> Result<PathBuf, &'static str> {
+fn game_dir() -> Result<PathBuf, String> {
     let Ok(home) = std::env::var("HOME") else {
-        return Err("could not find home directory");
+        return Err("could not find home directory".to_owned());
     };
-    let steam_path = PathBuf::from(home).join(".steam/steam");
+    let steam_path = PathBuf::from(&home).join(".steam/steam");
     if !steam_path.exists() {
-        return Err("could not locate steam directory");
+        return Err(format!(
+            "could not locate steam directory ({home}/.steam/steam)"
+        ));
     }
 
     let library_folders = steam_path.join("config/libraryfolders.vdf");
     let Ok(content) = std::fs::read_to_string(&library_folders) else {
-        return Err("could not read steam library folders");
+        return Err(format!(
+            "could not read steam library folders({home}/.steam/steam/config/libraryfolders.vdf)"
+        ));
     };
     let libs: Vec<&str> = content
         .lines()
@@ -545,12 +553,17 @@ fn game_dir() -> Result<PathBuf, &'static str> {
             let dir = PathBuf::from(lib).join("steamapps/common/Counter-Strike Global Offensive");
             dir.exists()
         })
-        .ok_or("could not locate cs2 files. is it installed?")?;
+        .ok_or("could not locate cs2 files. is it installed?".to_owned())?;
     Ok(PathBuf::from(game_dir).join("steamapps/common/Counter-Strike Global Offensive"))
 }
 
-fn maps_dir() -> Result<PathBuf, &'static str> {
-    game_dir().map(|p| p.join("game/csgo/maps"))
+fn maps_dir() -> Result<PathBuf, String> {
+    let maps_dir = game_dir().map(|p| p.join("game/csgo/maps"))?;
+    if !maps_dir.exists() {
+        Err("could locate csgo directory, but not maps directory".to_string())
+    } else {
+        Ok(maps_dir)
+    }
 }
 
 fn exe_path() -> PathBuf {
