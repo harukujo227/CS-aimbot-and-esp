@@ -27,9 +27,12 @@ pub fn parse_maps(
         return;
     }
 
-    let Some(game_dir) = game_dir() else {
-        log::warn!("could not find cs2 game directory");
-        return;
+    let game_dir = match game_dir() {
+        Ok(dir) => dir,
+        Err(err) => {
+            log::warn!("could not find cs2 game directory: {err}");
+            return;
+        }
     };
     let build_file = game_dir.join("game/bin/built_from_cl.txt");
     let Ok(cs2_build_raw) = std::fs::read_to_string(&build_file) else {
@@ -39,7 +42,13 @@ pub fn parse_maps(
     let cs2_build = cs2_build_raw.trim();
     let cs2_build: u64 = cs2_build.parse().unwrap_or_default();
 
-    let maps_dir = maps_dir().unwrap();
+    let maps_dir = match maps_dir() {
+        Ok(dir) => dir,
+        Err(err) => {
+            log::error!("could not find cs2 maps directory: {err}");
+            return;
+        }
+    };
     let parsed_build_file = maps_dir.join("parsed_build.txt");
     let parsed_build = std::fs::read_to_string(&parsed_build_file).unwrap_or_default();
     let parsed_build: u64 = parsed_build.parse().unwrap_or_default();
@@ -53,7 +62,14 @@ pub fn parse_maps(
     }
 
     let mut files = Vec::with_capacity(32);
-    for file in std::fs::read_dir(&maps_dir).expect("could not read cs2 maps dir") {
+    let maps_dir_iter = match std::fs::read_dir(&maps_dir) {
+        Ok(dir) => dir,
+        Err(err) => {
+            log::error!("could not read cs2 maps dir: {err}");
+            return;
+        }
+    };
+    for file in maps_dir_iter {
         let Ok(file) = file else {
             continue;
         };
@@ -147,10 +163,16 @@ pub fn parse_maps(
             let _ = thread.join();
         }
     }
-    let mut parsed_build_file = File::create(&parsed_build_file).unwrap();
-    parsed_build_file
-        .write_all(format!("{cs2_build}").as_bytes())
-        .unwrap();
+    let mut parsed_build_file = match File::create(&parsed_build_file) {
+        Ok(file) => file,
+        Err(err) => {
+            log::error!("could not open metadata file: {err}");
+            return;
+        }
+    };
+    if let Err(err) = parsed_build_file.write_all(format!("{cs2_build}").as_bytes()) {
+        log::error!("could not write to metadata file: {err}");
+    }
     log::info!("loaded map info");
 }
 
@@ -165,13 +187,23 @@ fn parse_map(
     let bvh_path = maps_dir.join(bvh_name);
 
     if bvh_path.exists() && !force_reparse {
-        let Ok(mut bvh_file) = File::open(&bvh_path) else {
-            log::error!("could not open {bvh_path:?}");
-            return;
+        let mut bvh_file = match File::open(&bvh_path) {
+            Ok(file) => file,
+            Err(err) => {
+                log::error!("could not open {bvh_path:?}: {err}");
+                return;
+            }
         };
         if let Some(map_bvh) = Bvh::load(&mut bvh_file) {
             log::debug!("loaded bvh for {map_name}");
-            bvh.lock().unwrap().insert(map_name, map_bvh);
+            match bvh.lock() {
+                Ok(lock) => lock,
+                Err(err) => {
+                    log::error!("failed to lock bvh mutex ({map_name}): {err}");
+                    return;
+                }
+            }
+            .insert(map_name, map_bvh);
             return;
         }
     }
@@ -182,7 +214,14 @@ fn parse_map(
     }
 
     let mut map_bvh = Bvh::new();
-    for file in std::fs::read_dir(&geom_dir).unwrap() {
+    let geom_dir_iter = match std::fs::read_dir(&geom_dir) {
+        Ok(dir) => dir,
+        Err(err) => {
+            log::warn!("could not read geometry directory: {err}");
+            return;
+        }
+    };
+    for file in geom_dir_iter {
         let Ok(file) = file else {
             continue;
         };
@@ -195,7 +234,13 @@ fn parse_map(
         } else {
             continue;
         };
-        let file = File::open(file.path()).unwrap();
+        let file = match File::open(file.path()) {
+            Ok(file) => file,
+            Err(err) => {
+                log::error!("could not open {file_name} ({map_name}): {err}");
+                return;
+            }
+        };
         let mut reader = BufReader::new(file);
         let elements = parse_dmx(&mut reader);
         let vertex_element = elements.get("DmeVertexData_bind").unwrap();
@@ -242,10 +287,23 @@ fn parse_map(
         }
     }
     map_bvh.build();
-    let mut bvh_file = File::create(&bvh_path).unwrap();
+    let mut bvh_file = match File::create(&bvh_path) {
+        Ok(file) => file,
+        Err(err) => {
+            log::error!("could not save bvh for {map_name} in file {bvh_path:?}: {err}");
+            return;
+        }
+    };
     map_bvh.save(&mut bvh_file);
     log::info!("parsed bvh for {map_name}");
-    bvh.lock().unwrap().insert(map_name, map_bvh);
+    match bvh.lock() {
+        Ok(lock) => lock,
+        Err(err) => {
+            log::error!("failed to lock bvh mutex ({map_name}): {err}");
+            return;
+        }
+    }
+    .insert(map_name, map_bvh);
 }
 
 #[derive(PartialEq)]
@@ -457,21 +515,18 @@ enum Attribute {
     U64Array(Vec<u64>),
 }
 
-fn game_dir() -> Option<PathBuf> {
+fn game_dir() -> Result<PathBuf, &'static str> {
     let Ok(home) = std::env::var("HOME") else {
-        log::warn!("could not find home directory");
-        return None;
+        return Err("could not find home directory");
     };
     let steam_path = PathBuf::from(home).join(".steam/steam");
     if !steam_path.exists() {
-        log::warn!("could not locate steam directory");
-        return None;
+        return Err("could not locate steam directory");
     }
 
     let library_folders = steam_path.join("config/libraryfolders.vdf");
     let Ok(content) = std::fs::read_to_string(&library_folders) else {
-        log::warn!("could not read steam library folders");
-        return None;
+        return Err("could not read steam library folders");
     };
     let libs: Vec<&str> = content
         .lines()
@@ -484,14 +539,17 @@ fn game_dir() -> Option<PathBuf> {
         })
         .collect();
 
-    let game_dir = libs.iter().find(|&&lib| {
-        let dir = PathBuf::from(lib).join("steamapps/common/Counter-Strike Global Offensive");
-        dir.exists()
-    })?;
-    Some(PathBuf::from(game_dir).join("steamapps/common/Counter-Strike Global Offensive"))
+    let game_dir = libs
+        .iter()
+        .find(|&&lib| {
+            let dir = PathBuf::from(lib).join("steamapps/common/Counter-Strike Global Offensive");
+            dir.exists()
+        })
+        .ok_or("could not locate cs2 files. is it installed?")?;
+    Ok(PathBuf::from(game_dir).join("steamapps/common/Counter-Strike Global Offensive"))
 }
 
-fn maps_dir() -> Option<PathBuf> {
+fn maps_dir() -> Result<PathBuf, &'static str> {
     game_dir().map(|p| p.join("game/csgo/maps"))
 }
 
