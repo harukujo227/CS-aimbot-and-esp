@@ -166,9 +166,16 @@ impl Game for CS2 {
             return;
         }
         for player in &self.players {
+            let _is_making_sound = player.is_making_sound(self);
+            let health = player.health(self);
+
+            let sound_type = player.is_making_sound(self);
             let player_data = PlayerData {
+                sound_timestamp: if sound_type.is_some() { Some(0.0) } else { None },
+                sound_type,
                 steam_id: player.steam_id(self),
-                health: player.health(self),
+                health,
+                last_health: health,
                 armor: player.armor(self),
                 position: player.position(self),
                 head: player.bone_position(self, Bones::Head.u64()),
@@ -189,9 +196,14 @@ impl Game for CS2 {
             }
         }
 
+        let local_health = local_player.health(self);
+        let local_sound_type = local_player.is_making_sound(self);
         let local_player_data = PlayerData {
+            sound_timestamp: if local_sound_type.is_some() { Some(0.0) } else { None },
+            sound_type: local_sound_type,
             steam_id: local_player.steam_id(self),
-            health: local_player.health(self),
+            health: local_health,
+            last_health: local_health,
             armor: local_player.armor(self),
             position: local_player.position(self),
             head: local_player.bone_position(self, Bones::Head.u64()),

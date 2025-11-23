@@ -41,6 +41,10 @@ impl App {
                         self.config.player.skeleton_color = color;
                         self.send_config();
                     }
+                    if let Some(color) = self.color_picker(ui, &self.config.player.sound_esp_color, "Sound ESP") {
+                        self.config.player.sound_esp_color = color;
+                        self.send_config();
+                    }
 
                     ui.horizontal(|ui| {
                         if ui
@@ -144,6 +148,92 @@ impl App {
                 .changed()
             {
                 self.send_config();
+            }
+        });
+        collapsing_open(ui, "Sound ESP", |ui| {
+                if ui
+                    .checkbox(&mut self.config.player.sound_esp_enabled, "Enabled")
+                    .on_hover_text("Show a circle under players when they make sound")
+                    .changed()
+                {
+                    self.send_config();
+                }
+                
+            if self.config.player.sound_esp_enabled {
+                if ui
+                    .checkbox(
+                        &mut self.config.player.sound_esp_show_friendlies,
+                        "Show Friendlies",
+                    )
+                    .changed()
+                {
+                    self.send_config();
+                }
+                                
+                ui.horizontal(|ui| {
+                    ui.label("Footstep Range:");
+                    
+                    let response = ui.add(
+                        egui::DragValue::new(&mut self.config.player.sound_esp_footstep_radius)
+                            .speed(10.0)
+                            .clamp_range(100.0..=3000.0)
+                            .suffix(" units")
+                    );
+                    
+                    let default_footstep = 1000.0;
+                    if ui.button("↺").on_hover_text("Reset to default (1000)").clicked() {
+                        self.config.player.sound_esp_footstep_radius = default_footstep;
+                        self.send_config();
+                    }
+                    
+                    if response.changed() {
+                        self.send_config();
+                    }
+                });
+                
+                // Gunshot radius slider
+                ui.horizontal(|ui| {
+                    ui.label("Gunshot Range:");
+                    
+                    let response = ui.add(
+                        egui::DragValue::new(&mut self.config.player.sound_esp_gunshot_radius)
+                            .speed(10.0)
+                            .clamp_range(100.0..=5000.0)
+                            .suffix(" units")
+                    );
+                    
+                    let default_gunshot = 2500.0;
+                    if ui.button("↺").on_hover_text("Reset to default (2500)").clicked() {
+                        self.config.player.sound_esp_gunshot_radius = default_gunshot;
+                        self.send_config();
+                    }
+                    
+                    if response.changed() {
+                        self.send_config();
+                    }
+                });
+                
+                // Weapon sound radius
+                ui.horizontal(|ui| {
+                    ui.label("Weapon Range:");
+                    
+                    let response = ui.add(
+                        egui::DragValue::new(&mut self.config.player.sound_esp_weapon_radius)
+                            .speed(10.0)
+                            .clamp_range(100.0..=3000.0)
+                            .suffix(" units")
+                    );
+                    
+                    let default_weapon = 1500.0;
+                    if ui.button("↺").on_hover_text("Reset to default (1500)").clicked() {
+                        self.config.player.sound_esp_weapon_radius = default_weapon;
+                        self.send_config();
+                    }
+                    
+                    if response.changed() {
+                        self.send_config();
+                    }
+                });
             }
         });
     }

@@ -1,10 +1,20 @@
 use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
+use super::weapon::Weapon;
+
+#[derive(Default)]
+struct SoundPlayerState {
+    was_in_air: bool,
+    last_weapon: Option<Weapon>,
+    last_weapon_switch_time: f32,
+    last_reload_time: f32,
+}
 
 use glam::{Vec2, Vec3};
 
 use crate::{
     constants::cs2,
-    cs2::{bones::Bones, entity::weapon::Weapon},
+    cs2::bones::Bones,
 };
 
 use super::{CS2, weapon_class::WeaponClass};
@@ -441,6 +451,91 @@ impl Player {
     #[allow(unused)]
     pub fn velocity(&self, cs2: &CS2) -> Vec3 {
         cs2.process.read(self.pawn + cs2.offsets.pawn.velocity)
+    }
+    
+    fn player_states() -> &'static Mutex<HashMap<u64, SoundPlayerState>> {
+        static PLAYER_STATES: OnceLock<Mutex<HashMap<u64, SoundPlayerState>>> = OnceLock::new();
+        PLAYER_STATES.get_or_init(|| Mutex::new(HashMap::new()))
+    }
+
+    fn is_in_air(&self, cs2: &CS2) -> bool {
+        let velocity = self.velocity(cs2);
+        velocity.z.abs() > 1.0
+    }
+    
+    pub fn is_making_sound(&self, cs2: &CS2) -> Option<crate::data::SoundType> {
+        let shots_fired = self.shots_fired(cs2);
+        if shots_fired > 0 {
+            return Some(crate::data::SoundType::Gunshot);
+        }
+        
+        let velocity = self.velocity(cs2);
+        let speed = (velocity.x * velocity.x + velocity.y * velocity.y).sqrt();
+        
+        let is_jumping = velocity.z > 100.0 && self.is_in_air(cs2);
+        let is_walking = speed > 100.0 && speed <= 150.0;
+        let is_standing = speed < 10.0;
+        
+        // get current weapon and time
+        let current_weapon = self.weapon(cs2);
+        let current_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs_f32();
+        
+        // get or initialize player state
+        let mut states = Self::player_states().lock().unwrap();
+        let state = states.entry(self.pawn).or_default();
+        
+        // check for weapon switch
+        let weapon_switched = state.last_weapon != Some(current_weapon.clone());
+        if weapon_switched {
+            state.last_weapon = Some(current_weapon.clone());
+            state.last_weapon_switch_time = current_time;
+        }
+        
+        // dheck for landing (was in air last frame, now on ground)
+        let is_now_in_air = self.is_in_air(cs2);
+        let just_landed = state.was_in_air && !is_now_in_air;
+        state.was_in_air = is_now_in_air;
+        
+        // check for scoping (only for snipers)
+        let is_scoped = self.is_scoped(cs2);
+        
+        // check for reloading
+        // change in the future to use actual reload times
+        let is_reloading = match current_weapon {
+            Weapon::Awp | Weapon::Ssg08 => {
+                // sniper rifles have longer reload times
+                current_time - state.last_weapon_switch_time < 3.7
+            }
+            Weapon::Ak47 | Weapon::M4A4 | Weapon::M4A1 | Weapon::Aug | Weapon::Sg556 => {
+                // rifles
+                current_time - state.last_weapon_switch_time < 2.5
+            }
+            Weapon::P90 | Weapon::Bizon | Weapon::Mp7 | Weapon::Mp9 | Weapon::Ump45 => {
+                // SMGs
+                current_time - state.last_weapon_switch_time < 2.2
+            }
+            Weapon::Nova | Weapon::Xm1014 | Weapon::Sawedoff | Weapon::Mag7 => {
+                // shotguns
+                current_time - state.last_weapon_switch_time < 3.0
+            }
+            _ => false,
+        };
+        
+        let weapon_switch_sound = current_time - state.last_weapon_switch_time < 0.5;
+        if is_walking || is_standing {
+            return None;
+        }
+
+        if is_reloading || weapon_switch_sound || is_scoped && matches!(current_weapon, Weapon::Awp | Weapon::Ssg08) {
+            Some(crate::data::SoundType::Weapon)
+        } else if speed > 150.0 || is_jumping || just_landed {
+            Some(crate::data::SoundType::Footstep)
+        } else {
+            None
+        }
     }
 
     pub fn no_flash(&self, cs2: &CS2, flash_alpha: f32) {
