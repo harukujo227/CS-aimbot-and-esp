@@ -191,7 +191,6 @@ impl App {
                     }
                 });
                 
-                // Gunshot radius slider
                 ui.horizontal(|ui| {
                     ui.label("Gunshot Range:");
                     
@@ -213,7 +212,6 @@ impl App {
                     }
                 });
                 
-                // Weapon sound radius
                 ui.horizontal(|ui| {
                     ui.label("Weapon Range:");
                     
