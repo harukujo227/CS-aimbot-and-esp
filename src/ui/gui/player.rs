@@ -176,7 +176,7 @@ impl App {
                     let response = ui.add(
                         egui::DragValue::new(&mut self.config.player.sound_esp_footstep_radius)
                             .speed(10.0)
-                            .clamp_range(100.0..=3000.0)
+                            .range(100.0..=3000.0)
                             .suffix(" units")
                     );
                     
@@ -197,7 +197,7 @@ impl App {
                     let response = ui.add(
                         egui::DragValue::new(&mut self.config.player.sound_esp_gunshot_radius)
                             .speed(10.0)
-                            .clamp_range(100.0..=5000.0)
+                            .range(100.0..=5000.0)
                             .suffix(" units")
                     );
                     
@@ -218,7 +218,7 @@ impl App {
                     let response = ui.add(
                         egui::DragValue::new(&mut self.config.player.sound_esp_weapon_radius)
                             .speed(10.0)
-                            .clamp_range(100.0..=3000.0)
+                            .range(100.0..=3000.0)
                             .suffix(" units")
                     );
                     

@@ -7,7 +7,6 @@ struct SoundPlayerState {
     was_in_air: bool,
     last_weapon: Option<Weapon>,
     last_weapon_switch_time: f32,
-    last_reload_time: f32,
 }
 
 use glam::{Vec2, Vec3};
