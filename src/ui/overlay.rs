@@ -52,7 +52,7 @@ impl App {
             
             let normalized_distance = (distance / sound_radius).min(1.0);
             let alpha = 1.0 - normalized_distance * 0.8;
-            let color = self.config.player.sound.color.gamma_multiply(alpha as f32);
+            let color = self.config.player.sound.color.gamma_multiply(alpha);
             
             let line_width = (2.0 * (1.0 + 1.0 / (distance * 0.01 + 1.0))).min(4.0);
             

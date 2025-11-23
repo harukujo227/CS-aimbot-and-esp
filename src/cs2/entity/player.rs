@@ -1,13 +1,6 @@
 use std::collections::HashMap;
 use super::weapon::Weapon;
 
-#[derive(Debug, Default)]
-pub struct SoundPlayerState {
-    was_in_air: bool,
-    last_weapon: Option<Weapon>,
-    last_weapon_switch_time: f32,
-}
-
 use glam::{Vec2, Vec3};
 
 use crate::{
@@ -465,47 +458,22 @@ impl Player {
         
         let velocity = self.velocity(cs2);
         let speed = (velocity.x * velocity.x + velocity.y * velocity.y).sqrt();
+        let current_weapon = self.weapon(cs2);
         
         let is_jumping = velocity.z > 100.0 && self.is_in_air(cs2);
         let is_walking = speed > 100.0 && speed <= 150.0;
         let is_standing = speed < 10.0;
         
-        // get current weapon and time
-        let current_weapon = self.weapon(cs2);
-        let current_time = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs_f32();
-        
-        // get or initialize player state
-        let mut states = cs2.player_states.lock().unwrap();
-        let state = states.entry(self.pawn).or_default();
-        
-        // check for weapon switch
-        let weapon_switched = state.last_weapon != Some(current_weapon.clone());
-        if weapon_switched {
-            state.last_weapon = Some(current_weapon.clone());
-            state.last_weapon_switch_time = current_time;
-        }
-        
-        // dheck for landing (was in air last frame, now on ground)
-        let is_now_in_air = self.is_in_air(cs2);
-        let just_landed = state.was_in_air && !is_now_in_air;
-        state.was_in_air = is_now_in_air;
-        
         // check for scoping (only for snipers)
         let is_scoped = self.is_scoped(cs2);
         
-        // check for reloading removed - half-baked feature
-        
-        let weapon_switch_sound = current_time - state.last_weapon_switch_time < 0.5;
         if is_walking || is_standing {
             return None;
         }
 
-        if weapon_switch_sound || is_scoped && matches!(current_weapon, Weapon::Awp | Weapon::Ssg08) {
+        if is_scoped && matches!(current_weapon, Weapon::Awp | Weapon::Ssg08) {
             Some(crate::data::SoundType::Weapon)
-        } else if speed > 150.0 || is_jumping || just_landed {
+        } else if speed > 150.0 || is_jumping || velocity.z < -200.0 {
             Some(crate::data::SoundType::Footstep)
         } else {
             None

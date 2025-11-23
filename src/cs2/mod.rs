@@ -16,7 +16,7 @@ use crate::{
         bones::Bones,
         entity::{
             Entity, EntityInfo, GrenadeInfo, inferno::Inferno, molotov::Molotov,
-            planted_c4::PlantedC4, player::{Player, SoundPlayerState}, smoke::Smoke, weapon::Weapon,
+            planted_c4::PlantedC4, player::Player, smoke::Smoke, weapon::Weapon,
         },
         esp_toggle::EspToggle,
         offsets::Offsets,
@@ -61,7 +61,6 @@ pub struct CS2 {
     wallhack: EspToggle,
     weapon: Weapon,
     planted_c4: Option<PlantedC4>,
-    player_states: Mutex<HashMap<u64, SoundPlayerState>>,
 }
 
 impl Game for CS2 {
@@ -167,9 +166,7 @@ impl Game for CS2 {
             return;
         }
         for player in &self.players {
-            let _is_making_sound = player.is_making_sound(self);
             let health = player.health(self);
-
             let sound = player.is_making_sound(self);
             let player_data = PlayerData {
                 sound,
@@ -195,12 +192,10 @@ impl Game for CS2 {
             }
         }
 
-        let local_health = local_player.health(self);
-        let local_sound = local_player.is_making_sound(self);
         data.local_player = PlayerData {
-            sound: local_sound,
+            sound: local_player.is_making_sound(self),
             steam_id: local_player.steam_id(self),
-            health: local_health,
+            health: local_player.health(self),
             armor: local_player.armor(self),
             position: local_player.position(self),
             head: local_player.bone_position(self, Bones::Head.u64()),
@@ -296,7 +291,6 @@ impl CS2 {
             wallhack: EspToggle::default(),
             weapon: Weapon::default(),
             planted_c4: None,
-            player_states: Mutex::new(HashMap::new()),
         }
     }
 
