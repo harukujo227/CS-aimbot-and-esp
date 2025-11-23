@@ -41,6 +41,10 @@ impl App {
                         self.config.player.skeleton_color = color;
                         self.send_config();
                     }
+                    if let Some(color) = self.color_picker(ui, &self.config.player.sound.color, "Sound ESP") {
+                        self.config.player.sound.color = color;
+                        self.send_config();
+                    }
 
                     ui.horizontal(|ui| {
                         if ui
@@ -144,6 +148,77 @@ impl App {
                 .changed()
             {
                 self.send_config();
+            }
+        });
+        collapsing_open(ui, "Sound ESP", |ui| {
+                if ui
+                    .checkbox(&mut self.config.player.sound.enabled, "Enabled")
+                    .on_hover_text("Show a circle under players when they make sound")
+                    .changed()
+                {
+                    self.send_config();
+                }
+                
+            if self.config.player.sound.enabled {
+                ui.horizontal(|ui| {
+                    ui.label("Footstep Range");
+                    
+                    let response = ui.add(
+                        egui::DragValue::new(&mut self.config.player.sound.footstep_radius)
+                            .speed(10.0)
+                            .range(100.0..=3000.0)
+                            .suffix(" units")
+                    );
+                    
+                    if ui.button("↺").on_hover_text("Reset").clicked() {
+                        self.config.player.sound.footstep_radius = crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT;
+                        self.send_config();
+                    }
+                    
+                    if response.changed() {
+                        self.send_config();
+                    }
+                });
+                
+                ui.horizontal(|ui| {
+                    ui.label("Gunshot Range");
+                    
+                    let response = ui.add(
+                        egui::DragValue::new(&mut self.config.player.sound.gunshot_radius)
+                            .speed(10.0)
+                            .range(100.0..=5000.0)
+                            .suffix(" units")
+                    );
+                    
+                    if ui.button("↺").on_hover_text("Reset").clicked() {
+                        self.config.player.sound.gunshot_radius = crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT;
+                        self.send_config();
+                    }
+                    
+                    if response.changed() {
+                        self.send_config();
+                    }
+                });
+                
+                ui.horizontal(|ui| {
+                    ui.label("Weapon Range");
+                    
+                    let response = ui.add(
+                        egui::DragValue::new(&mut self.config.player.sound.weapon_radius)
+                            .speed(10.0)
+                            .range(100.0..=3000.0)
+                            .suffix(" units")
+                    );
+                    
+                    if ui.button("↺").on_hover_text("Reset").clicked() {
+                        self.config.player.sound.weapon_radius = crate::constants::cs2::SOUND_ESP_WEAPON_RADIUS_DEFAULT;
+                        self.send_config();
+                    }
+                    
+                    if response.changed() {
+                        self.send_config();
+                    }
+                });
             }
         });
     }

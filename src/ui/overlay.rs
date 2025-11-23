@@ -14,11 +14,55 @@ use crate::{
         },
     },
     data::{Data, PlayerData},
+    data::SoundType,
     math::world_to_screen,
     ui::{app::App, color::Colors, grenades::Grenade, trail::Trail},
 };
 
 impl App {
+    fn draw_sound_esp(
+        &self,
+        painter: &egui::Painter,
+        player: &crate::data::PlayerData,
+        data: &crate::data::Data,
+    ) {
+        if !self.config.player.sound.enabled || player.sound.is_none() {
+            return;
+        }
+
+        let distance = (player.position - data.local_player.position).length();
+        let sound_radius = match player.sound {
+            Some(SoundType::Gunshot) => self.config.player.sound.gunshot_radius,
+            Some(SoundType::Weapon) => self.config.player.sound.weapon_radius,
+            Some(SoundType::Footstep) | None => self.config.player.sound.footstep_radius,
+        };
+
+        if distance > sound_radius {
+            return;
+        }
+
+        let feet_pos = player.position - Vec3::new(0.0, 0.0, 10.0);
+        
+        if let Some(screen_pos) = world_to_screen(&feet_pos, data) {
+            let max_size = 40.0;
+            let min_size = 5.0;
+            
+            let distance_ratio = 1.0 - (distance / sound_radius).min(1.0);
+            let visual_radius = min_size + (max_size - min_size) * distance_ratio;
+            
+            let normalized_distance = (distance / sound_radius).min(1.0);
+            let alpha = 1.0 - normalized_distance * 0.8;
+            let color = self.config.player.sound.color.gamma_multiply(alpha);
+            
+            let line_width = (2.0 * (1.0 + 1.0 / (distance * 0.01 + 1.0))).min(4.0);
+            
+            painter.circle_stroke(
+                screen_pos,
+                visual_radius,
+                egui::Stroke::new(line_width, color),
+            );
+        }
+    }
     fn aimbot_config(&self, weapon: &Weapon) -> &AimbotConfig {
         if let Some(weapon_config) = self.config.aim.weapons.get(weapon)
             && weapon_config.aimbot.enable_override
@@ -60,14 +104,18 @@ impl App {
             );
         }
 
-        if data.wallhack_active {
-            for player in &data.players {
+        for player in &data.players {
+            self.draw_sound_esp(&painter, player, data);
+            
+            if data.wallhack_active {
                 self.player_box(&painter, player, data);
                 self.skeleton(&painter, player, data);
             }
+        }
 
-            if self.config.player.show_friendlies && data.is_custom_mode {
-                for player in &data.friendlies {
+        if self.config.player.show_friendlies && data.is_custom_mode {
+            for player in &data.friendlies {
+                if data.wallhack_active {
                     self.player_box(&painter, player, data);
                     self.skeleton(&painter, player, data);
                 }

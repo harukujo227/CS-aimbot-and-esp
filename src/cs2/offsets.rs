@@ -54,6 +54,7 @@ pub struct PawnOffsets {
     pub eye_offset: u64,          // Vec3 (m_vecViewOffset)
     pub eye_angles: u64,          // Vec3 (m_angEyeAngles)
     pub velocity: u64,            // Vec3 (m_vecAbsVelocity)
+    pub flags: u64,               // i32 (m_fFlags)
     pub aim_punch_cache: u64,     // Vector<Vec3> (m_aimPunchCache)
     pub shots_fired: u64,         // i32 (m_iShotsFired)
     pub view_angles: u64,         // Vec2 (v_angle)

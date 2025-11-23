@@ -166,9 +166,12 @@ impl Game for CS2 {
             return;
         }
         for player in &self.players {
+            let health = player.health(self);
+            let sound = player.is_making_sound(self);
             let player_data = PlayerData {
+                sound,
                 steam_id: player.steam_id(self),
-                health: player.health(self),
+                health,
                 armor: player.armor(self),
                 position: player.position(self),
                 head: player.bone_position(self, Bones::Head.u64()),
@@ -189,7 +192,8 @@ impl Game for CS2 {
             }
         }
 
-        let local_player_data = PlayerData {
+        data.local_player = PlayerData {
+            sound: local_player.is_making_sound(self),
             steam_id: local_player.steam_id(self),
             health: local_player.health(self),
             armor: local_player.armor(self),
@@ -205,7 +209,6 @@ impl Game for CS2 {
             color: local_player.color(self),
             rotation: local_player.rotation(self),
         };
-        data.local_player = local_player_data.clone();
 
         data.entities = self
             .entities
@@ -460,6 +463,7 @@ impl CS2 {
         offsets.pawn.eye_offset = client.get("C_BaseModelEntity", "m_vecViewOffset")?;
         offsets.pawn.eye_angles = client.get("C_CSPlayerPawn", "m_angEyeAngles")?;
         offsets.pawn.velocity = client.get("C_BaseEntity", "m_vecAbsVelocity")?;
+        offsets.pawn.flags = client.get("C_BaseEntity", "m_fFlags")?;
         offsets.pawn.aim_punch_cache = client.get("C_CSPlayerPawn", "m_aimPunchCache")?;
         offsets.pawn.shots_fired = client.get("C_CSPlayerPawn", "m_iShotsFired")?;
         offsets.pawn.view_angles = client.get("C_BasePlayerPawn", "v_angle")?;

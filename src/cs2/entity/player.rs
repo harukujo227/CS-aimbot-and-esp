@@ -1,10 +1,11 @@
 use std::collections::HashMap;
+use super::weapon::Weapon;
 
 use glam::{Vec2, Vec3};
 
 use crate::{
     constants::cs2,
-    cs2::{bones::Bones, entity::weapon::Weapon},
+    cs2::bones::Bones,
 };
 
 use super::{CS2, weapon_class::WeaponClass};
@@ -441,6 +442,42 @@ impl Player {
     #[allow(unused)]
     pub fn velocity(&self, cs2: &CS2) -> Vec3 {
         cs2.process.read(self.pawn + cs2.offsets.pawn.velocity)
+    }
+    
+    fn is_in_air(&self, cs2: &CS2) -> bool {
+        let flags = cs2.process.read::<i32>(self.pawn + cs2.offsets.pawn.flags);
+        // FL_ONGROUND = (1 << 0)
+        (flags & 1) == 0
+    }
+    
+    pub fn is_making_sound(&self, cs2: &CS2) -> Option<crate::data::SoundType> {
+        let shots_fired = self.shots_fired(cs2);
+        if shots_fired > 0 {
+            return Some(crate::data::SoundType::Gunshot);
+        }
+        
+        let velocity = self.velocity(cs2);
+        let speed = (velocity.x * velocity.x + velocity.y * velocity.y).sqrt();
+        let current_weapon = self.weapon(cs2);
+        
+        let is_jumping = velocity.z > 100.0 && self.is_in_air(cs2);
+        let is_walking = speed > 100.0 && speed <= 150.0;
+        let is_standing = speed < 10.0;
+        
+        // check for scoping (only for snipers)
+        let is_scoped = self.is_scoped(cs2);
+        
+        if is_walking || is_standing {
+            return None;
+        }
+
+        if is_scoped && matches!(current_weapon, Weapon::Awp | Weapon::Ssg08) {
+            Some(crate::data::SoundType::Weapon)
+        } else if speed > 150.0 || is_jumping || velocity.z < -200.0 {
+            Some(crate::data::SoundType::Footstep)
+        } else {
+            None
+        }
     }
 
     pub fn no_flash(&self, cs2: &CS2, flash_alpha: f32) {
