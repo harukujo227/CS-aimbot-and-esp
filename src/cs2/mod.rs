@@ -16,7 +16,7 @@ use crate::{
         bones::Bones,
         entity::{
             Entity, EntityInfo, GrenadeInfo, inferno::Inferno, molotov::Molotov,
-            planted_c4::PlantedC4, player::Player, smoke::Smoke, weapon::Weapon,
+            planted_c4::PlantedC4, player::{Player, SoundPlayerState}, smoke::Smoke, weapon::Weapon,
         },
         esp_toggle::EspToggle,
         offsets::Offsets,
@@ -61,6 +61,7 @@ pub struct CS2 {
     wallhack: EspToggle,
     weapon: Weapon,
     planted_c4: Option<PlantedC4>,
+    player_states: Mutex<HashMap<u64, SoundPlayerState>>,
 }
 
 impl Game for CS2 {
@@ -169,13 +170,11 @@ impl Game for CS2 {
             let _is_making_sound = player.is_making_sound(self);
             let health = player.health(self);
 
-            let sound_type = player.is_making_sound(self);
+            let sound = player.is_making_sound(self);
             let player_data = PlayerData {
-                sound_timestamp: if sound_type.is_some() { Some(0.0) } else { None },
-                sound_type,
+                sound,
                 steam_id: player.steam_id(self),
                 health,
-                last_health: health,
                 armor: player.armor(self),
                 position: player.position(self),
                 head: player.bone_position(self, Bones::Head.u64()),
@@ -197,13 +196,11 @@ impl Game for CS2 {
         }
 
         let local_health = local_player.health(self);
-        let local_sound_type = local_player.is_making_sound(self);
-        let local_player_data = PlayerData {
-            sound_timestamp: if local_sound_type.is_some() { Some(0.0) } else { None },
-            sound_type: local_sound_type,
+        let local_sound = local_player.is_making_sound(self);
+        data.local_player = PlayerData {
+            sound: local_sound,
             steam_id: local_player.steam_id(self),
             health: local_health,
-            last_health: local_health,
             armor: local_player.armor(self),
             position: local_player.position(self),
             head: local_player.bone_position(self, Bones::Head.u64()),
@@ -217,7 +214,6 @@ impl Game for CS2 {
             color: local_player.color(self),
             rotation: local_player.rotation(self),
         };
-        data.local_player = local_player_data.clone();
 
         data.entities = self
             .entities
@@ -300,6 +296,7 @@ impl CS2 {
             wallhack: EspToggle::default(),
             weapon: Weapon::default(),
             planted_c4: None,
+            player_states: Mutex::new(HashMap::new()),
         }
     }
 
@@ -472,6 +469,7 @@ impl CS2 {
         offsets.pawn.eye_offset = client.get("C_BaseModelEntity", "m_vecViewOffset")?;
         offsets.pawn.eye_angles = client.get("C_CSPlayerPawn", "m_angEyeAngles")?;
         offsets.pawn.velocity = client.get("C_BaseEntity", "m_vecAbsVelocity")?;
+        offsets.pawn.flags = client.get("C_BaseEntity", "m_fFlags")?;
         offsets.pawn.aim_punch_cache = client.get("C_CSPlayerPawn", "m_aimPunchCache")?;
         offsets.pawn.shots_fired = client.get("C_CSPlayerPawn", "m_iShotsFired")?;
         offsets.pawn.view_angles = client.get("C_BasePlayerPawn", "v_angle")?;

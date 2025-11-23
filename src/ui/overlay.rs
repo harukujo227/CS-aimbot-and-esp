@@ -14,6 +14,7 @@ use crate::{
         },
     },
     data::{Data, PlayerData},
+    data::SoundType,
     math::world_to_screen,
     ui::{app::App, color::Colors, grenades::Grenade, trail::Trail},
 };
@@ -25,34 +26,21 @@ impl App {
         player: &crate::data::PlayerData,
         data: &crate::data::Data,
     ) {
-        if !self.config.player.sound_esp_enabled
-            || (player.sound_timestamp.is_none() && player.last_health <= player.health)
-        {
+        if !self.config.player.sound.enabled || player.sound.is_none() {
             return;
         }
 
         let distance = (player.position - data.local_player.position).length();
-        let sound_radius = match player.sound_type {
-            Some(crate::data::SoundType::Gunshot) => self.config.player.sound_esp_gunshot_radius,
-            Some(crate::data::SoundType::Weapon) => self.config.player.sound_esp_weapon_radius,
-            Some(crate::data::SoundType::Footstep) | None => self.config.player.sound_esp_footstep_radius,
+        let sound_radius = match player.sound {
+            Some(SoundType::Gunshot) => self.config.player.sound.gunshot_radius,
+            Some(SoundType::Weapon) => self.config.player.sound.weapon_radius,
+            Some(SoundType::Footstep) | None => self.config.player.sound.footstep_radius,
         };
 
         if distance > sound_radius {
             return;
         }
 
-        // check if the sound is recent (within 200ms)
-        let _is_recent = if let Some(timestamp) = player.sound_timestamp {
-            let current_time = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs_f32();
-            current_time - timestamp < 0.2
-        } else {
-            false
-        };
-        
         let feet_pos = player.position - Vec3::new(0.0, 0.0, 10.0);
         
         if let Some(screen_pos) = world_to_screen(&feet_pos, data) {
@@ -64,7 +52,7 @@ impl App {
             
             let normalized_distance = (distance / sound_radius).min(1.0);
             let alpha = 1.0 - normalized_distance * 0.8;
-            let color = self.config.player.sound_esp_color.gamma_multiply(alpha as f32);
+            let color = self.config.player.sound.color.gamma_multiply(alpha as f32);
             
             let line_width = (2.0 * (1.0 + 1.0 / (distance * 0.01 + 1.0))).min(4.0);
             
@@ -125,10 +113,8 @@ impl App {
             }
         }
 
-        if self.config.player.show_friendlies && data.is_custom_mode && self.config.player.sound_esp_show_friendlies {
+        if self.config.player.show_friendlies && data.is_custom_mode {
             for player in &data.friendlies {
-                self.draw_sound_esp(&painter, player, data);
-                
                 if data.wallhack_active {
                     self.player_box(&painter, player, data);
                     self.skeleton(&painter, player, data);

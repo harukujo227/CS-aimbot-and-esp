@@ -41,8 +41,8 @@ impl App {
                         self.config.player.skeleton_color = color;
                         self.send_config();
                     }
-                    if let Some(color) = self.color_picker(ui, &self.config.player.sound_esp_color, "Sound ESP") {
-                        self.config.player.sound_esp_color = color;
+                    if let Some(color) = self.color_picker(ui, &self.config.player.sound.color, "Sound ESP") {
+                        self.config.player.sound.color = color;
                         self.send_config();
                     }
 
@@ -152,37 +152,26 @@ impl App {
         });
         collapsing_open(ui, "Sound ESP", |ui| {
                 if ui
-                    .checkbox(&mut self.config.player.sound_esp_enabled, "Enabled")
+                    .checkbox(&mut self.config.player.sound.enabled, "Enabled")
                     .on_hover_text("Show a circle under players when they make sound")
                     .changed()
                 {
                     self.send_config();
                 }
                 
-            if self.config.player.sound_esp_enabled {
-                if ui
-                    .checkbox(
-                        &mut self.config.player.sound_esp_show_friendlies,
-                        "Show Friendlies",
-                    )
-                    .changed()
-                {
-                    self.send_config();
-                }
-                                
+            if self.config.player.sound.enabled {
                 ui.horizontal(|ui| {
-                    ui.label("Footstep Range:");
+                    ui.label("Footstep Range");
                     
                     let response = ui.add(
-                        egui::DragValue::new(&mut self.config.player.sound_esp_footstep_radius)
+                        egui::DragValue::new(&mut self.config.player.sound.footstep_radius)
                             .speed(10.0)
                             .range(100.0..=3000.0)
                             .suffix(" units")
                     );
                     
-                    let default_footstep = 1000.0;
-                    if ui.button("↺").on_hover_text("Reset to default (1000)").clicked() {
-                        self.config.player.sound_esp_footstep_radius = default_footstep;
+                    if ui.button("↺").on_hover_text("Reset").clicked() {
+                        self.config.player.sound.footstep_radius = crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT;
                         self.send_config();
                     }
                     
@@ -192,18 +181,17 @@ impl App {
                 });
                 
                 ui.horizontal(|ui| {
-                    ui.label("Gunshot Range:");
+                    ui.label("Gunshot Range");
                     
                     let response = ui.add(
-                        egui::DragValue::new(&mut self.config.player.sound_esp_gunshot_radius)
+                        egui::DragValue::new(&mut self.config.player.sound.gunshot_radius)
                             .speed(10.0)
                             .range(100.0..=5000.0)
                             .suffix(" units")
                     );
                     
-                    let default_gunshot = 2500.0;
-                    if ui.button("↺").on_hover_text("Reset to default (2500)").clicked() {
-                        self.config.player.sound_esp_gunshot_radius = default_gunshot;
+                    if ui.button("↺").on_hover_text("Reset").clicked() {
+                        self.config.player.sound.gunshot_radius = crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT;
                         self.send_config();
                     }
                     
@@ -213,18 +201,17 @@ impl App {
                 });
                 
                 ui.horizontal(|ui| {
-                    ui.label("Weapon Range:");
+                    ui.label("Weapon Range");
                     
                     let response = ui.add(
-                        egui::DragValue::new(&mut self.config.player.sound_esp_weapon_radius)
+                        egui::DragValue::new(&mut self.config.player.sound.weapon_radius)
                             .speed(10.0)
                             .range(100.0..=3000.0)
                             .suffix(" units")
                     );
                     
-                    let default_weapon = 1500.0;
-                    if ui.button("↺").on_hover_text("Reset to default (1500)").clicked() {
-                        self.config.player.sound_esp_weapon_radius = default_weapon;
+                    if ui.button("↺").on_hover_text("Reset").clicked() {
+                        self.config.player.sound.weapon_radius = crate::constants::cs2::SOUND_ESP_WEAPON_RADIUS_DEFAULT;
                         self.send_config();
                     }
                     

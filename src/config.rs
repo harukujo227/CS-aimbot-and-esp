@@ -238,12 +238,7 @@ pub struct PlayerConfig {
     pub player_name: bool,
     pub weapon_icon: bool,
     pub tags: bool,
-    pub sound_esp_enabled: bool,
-    pub sound_esp_show_friendlies: bool,
-    pub sound_esp_color: Color32,
-    pub sound_esp_footstep_radius: f32,
-    pub sound_esp_gunshot_radius: f32,
-    pub sound_esp_weapon_radius: f32,
+    pub sound: SoundConfig,
 }
 
 impl Default for PlayerConfig {
@@ -265,12 +260,29 @@ impl Default for PlayerConfig {
             player_name: true,
             weapon_icon: true,
             tags: true,
-            sound_esp_enabled: true,
-            sound_esp_show_friendlies: false,
-            sound_esp_color: Color32::WHITE,
-            sound_esp_footstep_radius: 1000.0,   // For footsteps and quiet sounds
-            sound_esp_gunshot_radius: 2500.0,    // For gunshots and explosions
-            sound_esp_weapon_radius: 1500.0,     // For weapon switching, reloading, etc.
+            sound: SoundConfig::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct SoundConfig {
+    pub enabled: bool,
+    pub color: Color32,
+    pub footstep_radius: f32,
+    pub gunshot_radius: f32,
+    pub weapon_radius: f32,
+}
+
+impl Default for SoundConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            color: Color32::WHITE,
+            footstep_radius: crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT,
+            gunshot_radius: crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT,
+            weapon_radius: crate::constants::cs2::SOUND_ESP_WEAPON_RADIUS_DEFAULT,
         }
     }
 }

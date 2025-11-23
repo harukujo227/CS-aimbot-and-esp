@@ -1,9 +1,8 @@
 use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
 use super::weapon::Weapon;
 
-#[derive(Default)]
-struct SoundPlayerState {
+#[derive(Debug, Default)]
+pub struct SoundPlayerState {
     was_in_air: bool,
     last_weapon: Option<Weapon>,
     last_weapon_switch_time: f32,
@@ -452,14 +451,10 @@ impl Player {
         cs2.process.read(self.pawn + cs2.offsets.pawn.velocity)
     }
     
-    fn player_states() -> &'static Mutex<HashMap<u64, SoundPlayerState>> {
-        static PLAYER_STATES: OnceLock<Mutex<HashMap<u64, SoundPlayerState>>> = OnceLock::new();
-        PLAYER_STATES.get_or_init(|| Mutex::new(HashMap::new()))
-    }
-
     fn is_in_air(&self, cs2: &CS2) -> bool {
-        let velocity = self.velocity(cs2);
-        velocity.z.abs() > 1.0
+        let flags = cs2.process.read::<i32>(self.pawn + cs2.offsets.pawn.flags);
+        // FL_ONGROUND = (1 << 0)
+        (flags & 1) == 0
     }
     
     pub fn is_making_sound(&self, cs2: &CS2) -> Option<crate::data::SoundType> {
@@ -483,7 +478,7 @@ impl Player {
             .as_secs_f32();
         
         // get or initialize player state
-        let mut states = Self::player_states().lock().unwrap();
+        let mut states = cs2.player_states.lock().unwrap();
         let state = states.entry(self.pawn).or_default();
         
         // check for weapon switch
@@ -501,34 +496,14 @@ impl Player {
         // check for scoping (only for snipers)
         let is_scoped = self.is_scoped(cs2);
         
-        // check for reloading
-        // change in the future to use actual reload times
-        let is_reloading = match current_weapon {
-            Weapon::Awp | Weapon::Ssg08 => {
-                // sniper rifles have longer reload times
-                current_time - state.last_weapon_switch_time < 3.7
-            }
-            Weapon::Ak47 | Weapon::M4A4 | Weapon::M4A1 | Weapon::Aug | Weapon::Sg556 => {
-                // rifles
-                current_time - state.last_weapon_switch_time < 2.5
-            }
-            Weapon::P90 | Weapon::Bizon | Weapon::Mp7 | Weapon::Mp9 | Weapon::Ump45 => {
-                // SMGs
-                current_time - state.last_weapon_switch_time < 2.2
-            }
-            Weapon::Nova | Weapon::Xm1014 | Weapon::Sawedoff | Weapon::Mag7 => {
-                // shotguns
-                current_time - state.last_weapon_switch_time < 3.0
-            }
-            _ => false,
-        };
+        // check for reloading removed - half-baked feature
         
         let weapon_switch_sound = current_time - state.last_weapon_switch_time < 0.5;
         if is_walking || is_standing {
             return None;
         }
 
-        if is_reloading || weapon_switch_sound || is_scoped && matches!(current_weapon, Weapon::Awp | Weapon::Ssg08) {
+        if weapon_switch_sound || is_scoped && matches!(current_weapon, Weapon::Awp | Weapon::Ssg08) {
             Some(crate::data::SoundType::Weapon)
         } else if speed > 150.0 || is_jumping || just_landed {
             Some(crate::data::SoundType::Footstep)

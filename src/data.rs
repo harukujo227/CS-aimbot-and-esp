@@ -42,8 +42,6 @@ pub struct Data {
 pub struct PlayerData {
     pub steam_id: u64,
     pub health: i32,
-    #[serde(skip_serializing)]
-    pub last_health: i32,
     pub armor: i32,
     pub position: Vec3,
     pub head: Vec3,
@@ -56,8 +54,7 @@ pub struct PlayerData {
     pub visible: bool,
     pub color: i32,
     pub rotation: f32,
-    pub sound_timestamp: Option<f32>,
-    pub sound_type: Option<SoundType>,
+    pub sound: Option<SoundType>,
 }
 
 #[derive(Debug, Default, Serialize)]
