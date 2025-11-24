@@ -11,17 +11,14 @@ use crate::{
     config::{AimbotConfig, Config, KeyMode, RcsConfig, TriggerbotConfig},
     constants::cs2::{self, TEAM_CT, TEAM_T, class},
     cs2::{
-        aimbot::Aimbot,
         bones::Bones,
         entity::{
             Entity, EntityInfo, GrenadeInfo, inferno::Inferno, molotov::Molotov,
             planted_c4::PlantedC4, player::Player, smoke::Smoke, weapon::Weapon,
         },
-        esp_toggle::EspToggle,
+        features::{aimbot::Aimbot, esp_toggle::EspToggle, rcs::Recoil, triggerbot::Triggerbot},
         offsets::Offsets,
-        rcs::Recoil,
         target::Target,
-        triggerbot::Triggerbot,
     },
     data::{Data, PlayerData},
     game::Game,
@@ -30,18 +27,13 @@ use crate::{
     os::{mouse::Mouse, process::Process},
 };
 
-mod aimbot;
 pub mod bones;
 pub mod entity;
-mod esp_toggle;
+mod features;
 mod find_offsets;
-mod fov_changer;
-mod no_flash;
 mod offsets;
-mod rcs;
 mod schema;
 mod target;
-mod triggerbot;
 
 #[derive(Debug)]
 pub struct CS2 {

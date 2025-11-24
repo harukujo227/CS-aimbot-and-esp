@@ -10,7 +10,7 @@ use crate::{
 #[derive(Debug, Default)]
 pub struct Aimbot {
     previous_button_state: bool,
-    pub(super) active: bool,
+    pub active: bool,
 }
 
 impl CS2 {

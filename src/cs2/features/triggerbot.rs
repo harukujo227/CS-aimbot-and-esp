@@ -18,7 +18,7 @@ use crate::{
 pub struct Triggerbot {
     next_shot: Option<Instant>,
     previous_button_state: bool,
-    pub(super) active: bool,
+    pub active: bool,
     additional_shooting_end_time: Option<Instant>,
     next_additional_shot: Option<Instant>,
 }
