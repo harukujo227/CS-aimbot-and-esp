@@ -4,6 +4,7 @@ use std::{
     fmt::Display,
     panic::{self, PanicHookInfo},
     process::Command,
+    sync::atomic::{AtomicBool, Ordering},
 };
 
 pub fn install_crash_handler() {
@@ -14,17 +15,15 @@ pub fn install_crash_handler() {
     }));
 }
 
-fn crash_handler(_panic_hook_info: &PanicHookInfo) {
-    match std::thread::current().name() {
-        Some(name) => {
-            if name != "main" {
-                return;
-            }
-        }
-        None => return,
+static SENT_REPORT: AtomicBool = AtomicBool::new(false);
+fn crash_handler(panic_hook_info: &PanicHookInfo) {
+    if SENT_REPORT.load(Ordering::SeqCst) {
+        return;
     }
+    SENT_REPORT.store(true, Ordering::SeqCst);
+
     let hwid = hwid();
-    let mut stacktrace = _panic_hook_info
+    let mut stacktrace = panic_hook_info
         .payload()
         .downcast_ref::<&str>()
         .unwrap_or(&"explicit panic")
