@@ -8,7 +8,6 @@ use std::{
 use crossbeam::channel::{Receiver, Sender};
 
 use crate::{
-    bvh::Bvh,
     config::{
         CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, LOOP_DURATION, SLEEP_DURATION, parse_config,
         write_config,
@@ -17,6 +16,7 @@ use crate::{
     data::Data,
     message::{Envelope, GameStatus, Message, Target},
     os::mouse::{DeviceStatus, Mouse, discover_mice, get_mouse_by_name},
+    parser::bvh::Bvh,
 };
 
 pub trait Game: std::fmt::Debug {

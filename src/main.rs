@@ -8,14 +8,11 @@ use crossbeam::channel::{bounded, unbounded};
 
 use crate::{data::Data, parser::parse_maps, ui::app::App};
 
-mod bvh;
 mod config;
 mod constants;
 mod cs2;
 mod data;
-mod drag_range;
 mod game;
-mod key_codes;
 mod math;
 mod message;
 mod os;

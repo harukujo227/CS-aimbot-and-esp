@@ -4,7 +4,6 @@ use egui::{Align2, Color32, Context, FontId, Painter, Pos2, Shape, Stroke, pos2}
 use glam::{Vec3, vec3};
 
 use crate::{
-    bvh::{Aabb, Triangle},
     config::{AimbotConfig, BoxMode, DrawMode},
     cs2::{
         bones::Bones,
@@ -13,9 +12,10 @@ use crate::{
             weapon::Weapon, weapon_class::WeaponClass,
         },
     },
-    data::{Data, PlayerData},
     data::SoundType,
+    data::{Data, PlayerData},
     math::world_to_screen,
+    parser::bvh::{Aabb, Triangle},
     ui::{app::App, color::Colors, grenades::Grenade, trail::Trail},
 };
 
@@ -42,20 +42,20 @@ impl App {
         }
 
         let feet_pos = player.position - Vec3::new(0.0, 0.0, 10.0);
-        
+
         if let Some(screen_pos) = world_to_screen(&feet_pos, data) {
             let max_size = 40.0;
             let min_size = 5.0;
-            
+
             let distance_ratio = 1.0 - (distance / sound_radius).min(1.0);
             let visual_radius = min_size + (max_size - min_size) * distance_ratio;
-            
+
             let normalized_distance = (distance / sound_radius).min(1.0);
             let alpha = 1.0 - normalized_distance * 0.8;
             let color = self.config.player.sound.color.gamma_multiply(alpha);
-            
+
             let line_width = (2.0 * (1.0 + 1.0 / (distance * 0.01 + 1.0))).min(4.0);
-            
+
             painter.circle_stroke(
                 screen_pos,
                 visual_radius,
@@ -106,7 +106,7 @@ impl App {
 
         for player in &data.players {
             self.draw_sound_esp(&painter, player, data);
-            
+
             if data.wallhack_active {
                 self.player_box(&painter, player, data);
                 self.skeleton(&painter, player, data);

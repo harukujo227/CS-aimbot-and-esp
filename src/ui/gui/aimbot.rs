@@ -3,10 +3,8 @@ use strum::IntoEnumIterator as _;
 
 use crate::{
     config::{KeyMode, TargetingMode},
-    cs2::{bones::Bones, entity::weapon::Weapon},
-    drag_range::DragRange,
-    key_codes::KeyCode,
-    ui::{app::App, gui::collapsing_open},
+    cs2::{bones::Bones, entity::weapon::Weapon, key_codes::KeyCode},
+    ui::{app::App, drag_range::DragRange, gui::collapsing_open},
 };
 
 #[derive(PartialEq)]

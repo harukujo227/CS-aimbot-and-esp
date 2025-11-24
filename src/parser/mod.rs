@@ -11,9 +11,11 @@ use bytemuck::AnyBitPattern;
 use glam::{Mat4, Quat, Vec2, Vec3, Vec4};
 
 use crate::{
-    bvh::{Bvh, Triangle},
     os::crash::{self, report_error},
+    parser::bvh::{Bvh, Triangle},
 };
+
+pub mod bvh;
 
 pub fn parse_maps(
     bvh: Arc<Mutex<HashMap<String, Bvh>>>,

@@ -15,7 +15,6 @@ use winit::{
 };
 
 use crate::{
-    bvh::Bvh,
     config::{
         CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, available_configs, parse_config, write_config,
     },
@@ -23,6 +22,7 @@ use crate::{
     data::Data,
     message::{Envelope, GameStatus, Message, RadarStatus, Target},
     os::mouse::DeviceStatus,
+    parser::bvh::Bvh,
     ui::{
         color::Colors,
         grenades::{Grenade, GrenadeList, read_grenades},

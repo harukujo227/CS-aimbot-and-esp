@@ -7,7 +7,6 @@ use std::{
 use glam::{IVec2, Mat4, Vec2, Vec3};
 
 use crate::{
-    bvh::Bvh,
     config::{AimbotConfig, Config, KeyMode, RcsConfig, TriggerbotConfig},
     constants::cs2::{self, TEAM_CT, TEAM_T, class},
     cs2::{
@@ -17,20 +16,22 @@ use crate::{
             planted_c4::PlantedC4, player::Player, smoke::Smoke, weapon::Weapon,
         },
         features::{aimbot::Aimbot, esp_toggle::EspToggle, rcs::Recoil, triggerbot::Triggerbot},
+        key_codes::KeyCode,
         offsets::Offsets,
         target::Target,
     },
     data::{Data, PlayerData},
     game::Game,
-    key_codes::KeyCode,
     math::{angles_from_vector, vec2_clamp},
     os::{mouse::Mouse, process::Process},
+    parser::bvh::Bvh,
 };
 
 pub mod bones;
 pub mod entity;
 mod features;
 mod find_offsets;
+pub mod key_codes;
 mod offsets;
 mod schema;
 mod target;

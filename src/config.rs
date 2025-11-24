@@ -12,8 +12,7 @@ use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoEnumIterator};
 
 use crate::{
-    cs2::{bones::Bones, entity::weapon::Weapon},
-    key_codes::KeyCode,
+    cs2::{bones::Bones, entity::weapon::Weapon, key_codes::KeyCode},
     ui::color::Colors,
 };
 
