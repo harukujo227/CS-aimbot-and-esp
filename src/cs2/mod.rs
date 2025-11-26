@@ -176,11 +176,8 @@ impl Game for CS2 {
         }
 
         for player in &self.players {
-            let steam_id = player.steam_id(self);
-            let last_sound_time = current_sound_times.get(&steam_id).copied().flatten();
-
             let player_data = PlayerData {
-                steam_id,
+                steam_id: player.steam_id(self),
                 health: player.health(self),
                 armor: player.armor(self),
                 position: player.position(self),
@@ -195,7 +192,7 @@ impl Game for CS2 {
                 color: player.color(self),
                 rotation: player.rotation(self),
                 sound: player.is_making_sound(self),
-                last_sound_time,
+                last_sound_time: current_sound_times.get(&player.steam_id(self)).copied().flatten(),
             };
             
             if !self.is_ffa() && player.team(self) == local_team {
