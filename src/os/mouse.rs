@@ -186,6 +186,9 @@ fn is_mouse_device(event_name: &str) -> bool {
         "/sys/class/input/{}/device/capabilities/rel",
         event_name
     ));
+    if caps.is_empty() {
+        return false;
+    }
     caps[AXIS_X as usize] && caps[AXIS_Y as usize]
 }
 

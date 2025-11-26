@@ -5,6 +5,7 @@ use std::{
     panic::{self, PanicHookInfo},
     process::Command,
     sync::atomic::{AtomicBool, Ordering},
+    time::Duration,
 };
 
 pub fn install_crash_handler() {
@@ -15,25 +16,38 @@ pub fn install_crash_handler() {
     }));
 }
 
+const TIMEOUT_DURATION: Duration = Duration::from_secs(2);
 static SENT_REPORT: AtomicBool = AtomicBool::new(false);
-fn crash_handler(panic_hook_info: &PanicHookInfo) {
-    if SENT_REPORT.load(Ordering::SeqCst) {
+fn crash_handler(panic_info: &PanicHookInfo) {
+    if SENT_REPORT.swap(true, Ordering::SeqCst) {
         return;
     }
-    SENT_REPORT.store(true, Ordering::SeqCst);
 
     let hwid = hwid();
-    let mut stacktrace = panic_hook_info
-        .payload()
-        .downcast_ref::<&str>()
-        .unwrap_or(&"explicit panic")
-        .to_string();
-    stacktrace.push('\n');
+    let mut stacktrace = if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+        s.to_string()
+    } else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
+        s.clone()
+    } else {
+        "explicit panic".to_string()
+    };
+
+    if let Some(location) = panic_info.location() {
+        stacktrace.push_str(&format!(" at {}:{}", location.file(), location.line()));
+    }
+
+    stacktrace.push_str("\n\nStacktrace:\n");
     stacktrace.push_str(&Backtrace::force_capture().to_string());
 
     let json = serde_json::json!({"hwid": hwid,"stacktrace": stacktrace});
 
-    let _ = ureq::post("https://deadlocked.holyhades64.workers.dev/stacktrace").send_json(json);
+    let client_config = ureq::config::Config::builder()
+        .timeout_global(Some(TIMEOUT_DURATION))
+        .build();
+    let client = ureq::Agent::new_with_config(client_config);
+    let _ = client
+        .post("https://deadlocked.holyhades64.workers.dev/stacktrace")
+        .send_json(json);
 
     log::error!("crash reported");
 }
@@ -50,7 +64,13 @@ pub fn report_error(error: impl Display) {
         "error": error.to_string(),
     });
 
-    let _ = ureq::post("https://deadlocked.holyhades64.workers.dev/error").send_json(json);
+    let client_config = ureq::config::Config::builder()
+        .timeout_global(Some(TIMEOUT_DURATION))
+        .build();
+    let client = ureq::Agent::new_with_config(client_config);
+    let _ = client
+        .post("https://deadlocked.holyhades64.workers.dev/error")
+        .send_json(json);
 }
 
 pub fn info() {

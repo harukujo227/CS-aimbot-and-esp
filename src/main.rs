@@ -84,7 +84,13 @@ fn main() {
         radar::Radar::new(tx_radar, rx_radar, data_radar).run();
     });
 
-    let event_loop = winit::event_loop::EventLoop::new().unwrap();
+    let event_loop = match winit::event_loop::EventLoop::new() {
+        Ok(event_loop) => event_loop,
+        Err(err) => {
+            log::error!("failed to create event loop: {err}");
+            return;
+        }
+    };
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
     let mut app = App::new(tx, rx_gui, data, bvh_gui);
     event_loop.run_app(&mut app).unwrap();
