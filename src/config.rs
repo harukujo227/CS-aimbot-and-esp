@@ -272,6 +272,8 @@ pub struct SoundConfig {
     pub footstep_radius: f32,
     pub gunshot_radius: f32,
     pub weapon_radius: f32,
+    pub fadeout_duration_secs: u64,
+    pub circle_scale: f32,
 }
 
 impl Default for SoundConfig {
@@ -282,6 +284,8 @@ impl Default for SoundConfig {
             footstep_radius: crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT,
             gunshot_radius: crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT,
             weapon_radius: crate::constants::cs2::SOUND_ESP_WEAPON_RADIUS_DEFAULT,
+            fadeout_duration_secs: 1,
+            circle_scale: 1.0,
         }
     }
 }

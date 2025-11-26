@@ -26,42 +26,65 @@ impl App {
         player: &crate::data::PlayerData,
         data: &crate::data::Data,
     ) {
-        if !self.config.player.sound.enabled || player.sound.is_none() {
+        if !self.config.player.sound.enabled {
             return;
         }
 
-        let distance = (player.position - data.local_player.position).length();
-        let sound_radius = match player.sound {
-            Some(SoundType::Gunshot) => self.config.player.sound.gunshot_radius,
-            Some(SoundType::Weapon) => self.config.player.sound.weapon_radius,
-            Some(SoundType::Footstep) | None => self.config.player.sound.footstep_radius,
+        let Some(last_sound_time) = player.last_sound_time else {
+            return;
         };
 
-        if distance > sound_radius {
+        let fadeout_duration = self.config.player.sound.fadeout_duration_secs as f32;
+        let time_since_sound = (Instant::now() - last_sound_time).as_secs_f32();
+
+        if time_since_sound >= fadeout_duration {
             return;
         }
 
-        let feet_pos = player.position - Vec3::new(0.0, 0.0, 10.0);
+        let opacity = 1.0 - time_since_sound / fadeout_duration;
 
-        if let Some(screen_pos) = world_to_screen(&feet_pos, data) {
-            let max_size = 40.0;
-            let min_size = 5.0;
+        let distance_sq = (player.position - data.local_player.position).length_squared();
+        let sound_radius_sq = match player.sound {
+            Some(SoundType::Gunshot) => self.config.player.sound.gunshot_radius.powi(2),
+            Some(SoundType::Weapon) => self.config.player.sound.weapon_radius.powi(2),
+            Some(SoundType::Footstep) | None => self.config.player.sound.footstep_radius.powi(2),
+        };
 
-            let distance_ratio = 1.0 - (distance / sound_radius).min(1.0);
-            let visual_radius = min_size + (max_size - min_size) * distance_ratio;
-
-            let normalized_distance = (distance / sound_radius).min(1.0);
-            let alpha = 1.0 - normalized_distance * 0.8;
-            let color = self.config.player.sound.color.gamma_multiply(alpha);
-
-            let line_width = (2.0 * (1.0 + 1.0 / (distance * 0.01 + 1.0))).min(4.0);
-
-            painter.circle_stroke(
-                screen_pos,
-                visual_radius,
-                egui::Stroke::new(line_width, color),
-            );
+        if distance_sq > sound_radius_sq {
+            return;
         }
+
+        let distance = distance_sq.sqrt();
+
+        let Some(screen_pos) = world_to_screen(&(player.position - Vec3::new(0.0, 0.0, 10.0)), data) else {
+            return;
+        };
+
+        let player_height = player.head.z - player.position.z + 24.0;
+        let midpoint = player.position + Vec3::new(0.0, 0.0, player_height * 0.5);
+        let half_height = player_height * 0.5;
+        let top = midpoint + Vec3::new(0.0, 0.0, half_height);
+        let bottom = midpoint - Vec3::new(0.0, 0.0, half_height);
+
+        let (Some(top_screen), Some(bottom_screen)) = (
+            world_to_screen(&top, data),
+            world_to_screen(&bottom, data)
+        ) else {
+            return;
+        };
+
+        let player_screen_height = (bottom_screen.y - top_screen.y).abs();
+        let is_gunshot = matches!(player.sound, Some(SoundType::Gunshot));
+        let scale_multiplier = if is_gunshot { 1.25 } else { 1.0 };
+        let visual_radius = player_screen_height * self.config.player.sound.circle_scale * 0.07 * scale_multiplier;
+        
+        let max_distance = self.config.player.sound.footstep_radius;
+        let distance_factor = (distance / max_distance).min(1.0);
+        let alpha = (1.0 - distance_factor * 0.8) * opacity;
+        let color = self.config.player.sound.color.gamma_multiply(alpha);
+        let line_width = (2.0 * (1.0 + 1.0 / (distance * 0.01 + 1.0))).min(4.0);
+
+        painter.circle_stroke(screen_pos, visual_radius, egui::Stroke::new(line_width, color));
     }
     fn aimbot_config(&self, weapon: &Weapon) -> &AimbotConfig {
         if let Some(weapon_config) = self.config.aim.weapons.get(weapon)
