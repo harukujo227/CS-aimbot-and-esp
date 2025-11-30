@@ -496,10 +496,8 @@ impl Player {
         if camera_service == 0 {
             return;
         }
-        if cs2
-            .process
-            .read::<u32>(camera_service + cs2.offsets.camera_services.fov)
-            != value
+        let current: u32 = cs2.process.read(camera_service + cs2.offsets.camera_services.fov);
+        if current != 0 && current != value
         {
             cs2.process
                 .write(self.controller + cs2.offsets.controller.desired_fov, value);
