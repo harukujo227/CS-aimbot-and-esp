@@ -1,6 +1,5 @@
 use crate::{
     config::Config,
-    constants::cs2,
     cs2::{CS2, entity::player::Player},
 };
 
@@ -12,8 +11,6 @@ impl CS2 {
 
         if config.misc.fov_changer {
             local_player.set_fov(self, config.misc.desired_fov.clamp(1, 179));
-        } else {
-            local_player.set_fov(self, cs2::DEFAULT_FOV);
         }
     }
 }
