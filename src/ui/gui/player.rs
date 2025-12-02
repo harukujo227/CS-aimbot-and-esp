@@ -191,7 +191,7 @@ impl App {
                                 .range(200.0..=6000.0)
                         );
 
-                        ui.label("Footstep Diameter");
+                        ui.label("Footstep");
 
                         if ui.button("↺").on_hover_text("Reset").clicked() {
                             self.config.player.sound.footstep_diameter =
@@ -210,7 +210,7 @@ impl App {
                                 .range(200.0..=10000.0)
                         );
 
-                        ui.label("Gunshot Diameter");
+                        ui.label("Gunshot");
 
                         if ui.button("↺").on_hover_text("Reset").clicked() {
                             self.config.player.sound.gunshot_diameter =
@@ -229,7 +229,7 @@ impl App {
                                 .range(200.0..=6000.0)
                         );
 
-                        ui.label("Weapon Diameter");
+                        ui.label("Weapon");
 
                         if ui.button("↺").on_hover_text("Reset").clicked() {
                             self.config.player.sound.weapon_diameter =

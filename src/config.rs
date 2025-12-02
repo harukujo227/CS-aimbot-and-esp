@@ -279,7 +279,7 @@ pub struct SoundConfig {
 impl Default for SoundConfig {
     fn default() -> Self {
         Self {
-            enabled: true,
+            enabled: false,
             color: Color32::WHITE,
             footstep_diameter: crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT * 2.0,
             gunshot_diameter: crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT * 2.0,
