@@ -155,7 +155,7 @@ impl App {
                 self.send_config();
             }
         });
-        collapsing_open(ui, "Sound ESP", |ui| {
+        ui.collapsing("Sound ESP", |ui| {
             if ui
                 .checkbox(&mut self.config.player.sound.enabled, "Enabled")
                 .on_hover_text("Show a circle under players when they make sound")
@@ -195,7 +195,7 @@ impl App {
 
                         if ui.button("↺").on_hover_text("Reset").clicked() {
                             self.config.player.sound.footstep_diameter =
-                                crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT * 2.0;
+                                crate::constants::cs2::SOUND_ESP_FOOTSTEP_DIAMETER_DEFAULT;
                             self.send_config();
                         }
                         if response.changed() {
@@ -214,7 +214,7 @@ impl App {
 
                         if ui.button("↺").on_hover_text("Reset").clicked() {
                             self.config.player.sound.gunshot_diameter =
-                            crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT * 2.0;
+                            crate::constants::cs2::SOUND_ESP_GUNSHOT_DIAMETER_DEFAULT;
                             self.send_config();
                         }
                         if response.changed() {
@@ -233,7 +233,7 @@ impl App {
 
                         if ui.button("↺").on_hover_text("Reset").clicked() {
                             self.config.player.sound.weapon_diameter =
-                            crate::constants::cs2::SOUND_ESP_WEAPON_RADIUS_DEFAULT * 2.0;
+                            crate::constants::cs2::SOUND_ESP_WEAPON_DIAMETER_DEFAULT;
                             self.send_config();
                         }
                         if response.changed() {

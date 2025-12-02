@@ -19,9 +19,9 @@ pub mod cs2 {
     pub const WEAPON_UNKNOWN: &str = "unknown";
     pub const DEFAULT_FOV: u32 = 90;
 
-    pub const SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT: f32 = 1000.0;
-    pub const SOUND_ESP_GUNSHOT_RADIUS_DEFAULT: f32 = 4000.0;
-    pub const SOUND_ESP_WEAPON_RADIUS_DEFAULT: f32 = 1500.0;
+    pub const SOUND_ESP_FOOTSTEP_DIAMETER_DEFAULT: f32 = 2000.0;
+    pub const SOUND_ESP_GUNSHOT_DIAMETER_DEFAULT: f32 = 8000.0;
+    pub const SOUND_ESP_WEAPON_DIAMETER_DEFAULT: f32 = 3000.0;
 
     pub const GRENADES: &[Weapon] = &[
         Weapon::Decoy,

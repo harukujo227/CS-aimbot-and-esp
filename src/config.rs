@@ -281,9 +281,9 @@ impl Default for SoundConfig {
         Self {
             enabled: false,
             color: Color32::WHITE,
-            footstep_diameter: crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT * 2.0,
-            gunshot_diameter: crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT * 2.0,
-            weapon_diameter: crate::constants::cs2::SOUND_ESP_WEAPON_RADIUS_DEFAULT * 2.0,
+            footstep_diameter: crate::constants::cs2::SOUND_ESP_FOOTSTEP_DIAMETER_DEFAULT,
+            gunshot_diameter: crate::constants::cs2::SOUND_ESP_GUNSHOT_DIAMETER_DEFAULT,
+            weapon_diameter: crate::constants::cs2::SOUND_ESP_WEAPON_DIAMETER_DEFAULT,
             fadeout_duration: std::time::Duration::from_secs(1),
             circle_scale: 1.0,
         }
