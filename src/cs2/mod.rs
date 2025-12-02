@@ -202,11 +202,8 @@ impl Game for CS2 {
             }
         }
 
-        let local_steam_id = local_player.steam_id(self);
-        let local_last_sound_time = current_sound_times.get(&local_steam_id).copied().flatten();
-
         data.local_player = PlayerData {
-            steam_id: local_steam_id,
+            steam_id: local_player.steam_id(self),
             health: local_player.health(self),
             armor: local_player.armor(self),
             position: local_player.position(self),
@@ -220,8 +217,8 @@ impl Game for CS2 {
             visible: true,
             color: local_player.color(self),
             rotation: local_player.rotation(self),
-            sound: local_player.is_making_sound(self),
-            last_sound_time: local_last_sound_time,
+            sound: None,
+            last_sound_time: None,
         };
 
         std::mem::swap(&mut *previous_sound_times, &mut current_sound_times);

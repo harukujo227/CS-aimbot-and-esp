@@ -164,26 +164,26 @@ impl App {
                 self.send_config();
             }
 
-            if self.config.player.sound.enabled {
-                ui.horizontal(|ui| {
-                    let response = ui.add(
-                        egui::DragValue::new(&mut self.config.player.sound.circle_scale)
-                            .speed(0.1)
-                            .range(0.1..=3.0)
-                    );
+            ui.horizontal(|ui| {
+                let response = ui.add(
+                    egui::DragValue::new(&mut self.config.player.sound.circle_scale)
+                        .speed(0.1)
+                        .range(0.1..=3.0)
+                );
 
-                    ui.label("Scale");
+                ui.label("Scale");
 
-                    if ui.button("↺").on_hover_text("Reset").clicked() {
-                        self.config.player.sound.circle_scale = 1.0;
-                        self.send_config();
-                    }
+                if ui.button("↺").on_hover_text("Reset").clicked() {
+                    self.config.player.sound.circle_scale = 1.0;
+                    self.send_config();
+                }
 
-                    if response.changed() {
-                        self.send_config();
-                    }
-                });
-                collapsing_open(ui, "Ranges", |ui| {
+                if response.changed() {
+                    self.send_config();
+                }
+            });
+
+            ui.collapsing("Ranges", |ui| {
                     ui.horizontal(|ui| {
                         let response = ui.add(
                             egui::DragValue::new(&mut self.config.player.sound.footstep_diameter)
@@ -240,8 +240,7 @@ impl App {
                             self.send_config();
                         }
                     });
-                }); 
-            }
+                });
         });
     }
 
