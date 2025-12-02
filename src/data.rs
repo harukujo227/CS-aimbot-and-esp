@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Instant;
 
 use glam::{Mat4, Vec2, Vec3};
 use serde::Serialize;
@@ -55,6 +56,8 @@ pub struct PlayerData {
     pub color: i32,
     pub rotation: f32,
     pub sound: Option<SoundType>,
+    #[serde(skip)]
+    pub last_sound_time: Option<Instant>,
 }
 
 #[derive(Debug, Default, Serialize)]

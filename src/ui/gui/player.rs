@@ -155,7 +155,7 @@ impl App {
                 self.send_config();
             }
         });
-        collapsing_open(ui, "Sound ESP", |ui| {
+        ui.collapsing("Sound ESP", |ui| {
             if ui
                 .checkbox(&mut self.config.player.sound.enabled, "Enabled")
                 .on_hover_text("Show a circle under players when they make sound")
@@ -164,70 +164,83 @@ impl App {
                 self.send_config();
             }
 
-            if self.config.player.sound.enabled {
-                ui.horizontal(|ui| {
-                    ui.label("Footstep Range");
+            ui.horizontal(|ui| {
+                let response = ui.add(
+                    egui::DragValue::new(&mut self.config.player.sound.circle_scale)
+                        .speed(0.1)
+                        .range(0.1..=3.0)
+                );
 
-                    let response = ui.add(
-                        egui::DragValue::new(&mut self.config.player.sound.footstep_radius)
-                            .speed(10.0)
-                            .range(100.0..=3000.0)
-                            .suffix(" units"),
-                    );
+                ui.label("Scale");
 
-                    if ui.button("↺").on_hover_text("Reset").clicked() {
-                        self.config.player.sound.footstep_radius =
-                            crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT;
-                        self.send_config();
-                    }
+                if ui.button("↺").on_hover_text("Reset").clicked() {
+                    self.config.player.sound.circle_scale = 1.0;
+                    self.send_config();
+                }
 
-                    if response.changed() {
-                        self.send_config();
-                    }
+                if response.changed() {
+                    self.send_config();
+                }
+            });
+
+            ui.collapsing("Ranges", |ui| {
+                    ui.horizontal(|ui| {
+                        let response = ui.add(
+                            egui::DragValue::new(&mut self.config.player.sound.footstep_diameter)
+                                .speed(10.0)
+                                .range(200.0..=6000.0)
+                        );
+
+                        ui.label("Footstep");
+
+                        if ui.button("↺").on_hover_text("Reset").clicked() {
+                            self.config.player.sound.footstep_diameter =
+                                crate::constants::cs2::SOUND_ESP_FOOTSTEP_DIAMETER_DEFAULT;
+                            self.send_config();
+                        }
+                        if response.changed() {
+                            self.send_config();
+                        }
+                    });
+
+                    ui.horizontal(|ui| {
+                        let response = ui.add(
+                            egui::DragValue::new(&mut self.config.player.sound.gunshot_diameter)
+                                .speed(10.0)
+                                .range(200.0..=10000.0)
+                        );
+
+                        ui.label("Gunshot");
+
+                        if ui.button("↺").on_hover_text("Reset").clicked() {
+                            self.config.player.sound.gunshot_diameter =
+                            crate::constants::cs2::SOUND_ESP_GUNSHOT_DIAMETER_DEFAULT;
+                            self.send_config();
+                        }
+                        if response.changed() {
+                            self.send_config();
+                        }
+                    });
+
+                    ui.horizontal(|ui| {
+                        let response = ui.add(
+                            egui::DragValue::new(&mut self.config.player.sound.weapon_diameter)
+                                .speed(10.0)
+                                .range(200.0..=6000.0)
+                        );
+
+                        ui.label("Weapon");
+
+                        if ui.button("↺").on_hover_text("Reset").clicked() {
+                            self.config.player.sound.weapon_diameter =
+                            crate::constants::cs2::SOUND_ESP_WEAPON_DIAMETER_DEFAULT;
+                            self.send_config();
+                        }
+                        if response.changed() {
+                            self.send_config();
+                        }
+                    });
                 });
-
-                ui.horizontal(|ui| {
-                    ui.label("Gunshot Range");
-
-                    let response = ui.add(
-                        egui::DragValue::new(&mut self.config.player.sound.gunshot_radius)
-                            .speed(10.0)
-                            .range(100.0..=5000.0)
-                            .suffix(" units"),
-                    );
-
-                    if ui.button("↺").on_hover_text("Reset").clicked() {
-                        self.config.player.sound.gunshot_radius =
-                            crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT;
-                        self.send_config();
-                    }
-
-                    if response.changed() {
-                        self.send_config();
-                    }
-                });
-
-                ui.horizontal(|ui| {
-                    ui.label("Weapon Range");
-
-                    let response = ui.add(
-                        egui::DragValue::new(&mut self.config.player.sound.weapon_radius)
-                            .speed(10.0)
-                            .range(100.0..=3000.0)
-                            .suffix(" units"),
-                    );
-
-                    if ui.button("↺").on_hover_text("Reset").clicked() {
-                        self.config.player.sound.weapon_radius =
-                            crate::constants::cs2::SOUND_ESP_WEAPON_RADIUS_DEFAULT;
-                        self.send_config();
-                    }
-
-                    if response.changed() {
-                        self.send_config();
-                    }
-                });
-            }
         });
     }
 

@@ -2,6 +2,7 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     sync::{Arc, Mutex},
+    time::Instant,
 };
 
 use glam::{IVec2, Mat4, Vec2, Vec3};
@@ -53,6 +54,7 @@ pub struct CS2 {
     wallhack: EspToggle,
     weapon: Weapon,
     planted_c4: Option<PlantedC4>,
+    previous_sound_times: RefCell<HashMap<u64, Option<Instant>>>,
 }
 
 impl Game for CS2 {
@@ -157,6 +159,22 @@ impl Game for CS2 {
             data.in_game = false;
             return;
         }
+        let mut current_sound_times = HashMap::with_capacity(self.players.len() + 1);
+        let mut previous_sound_times = self.previous_sound_times.borrow_mut();
+
+        let all_players = std::iter::once(&local_player).chain(&self.players);
+        
+        for player in all_players {
+            let steam_id = player.steam_id(self);
+            let current_sound = player.is_making_sound(self);
+            let last_sound_time = if current_sound.is_some() {
+                Some(Instant::now())
+            } else {
+                previous_sound_times.get(&steam_id).copied().flatten()
+            };
+            current_sound_times.insert(steam_id, last_sound_time);
+        }
+
         for player in &self.players {
             let player_data = PlayerData {
                 steam_id: player.steam_id(self),
@@ -174,7 +192,9 @@ impl Game for CS2 {
                 color: player.color(self),
                 rotation: player.rotation(self),
                 sound: player.is_making_sound(self),
+                last_sound_time: current_sound_times.get(&player.steam_id(self)).copied().flatten(),
             };
+            
             if !self.is_ffa() && player.team(self) == local_team {
                 data.friendlies.push(player_data);
             } else {
@@ -197,8 +217,11 @@ impl Game for CS2 {
             visible: true,
             color: local_player.color(self),
             rotation: local_player.rotation(self),
-            sound: local_player.is_making_sound(self),
+            sound: None,
+            last_sound_time: None,
         };
+
+        std::mem::swap(&mut *previous_sound_times, &mut current_sound_times);
 
         data.entities = self
             .entities
@@ -281,6 +304,7 @@ impl CS2 {
             wallhack: EspToggle::default(),
             weapon: Weapon::default(),
             planted_c4: None,
+            previous_sound_times: RefCell::new(HashMap::new()),
         }
     }
 

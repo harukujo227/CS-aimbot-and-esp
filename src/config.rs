@@ -269,19 +269,23 @@ impl Default for PlayerConfig {
 pub struct SoundConfig {
     pub enabled: bool,
     pub color: Color32,
-    pub footstep_radius: f32,
-    pub gunshot_radius: f32,
-    pub weapon_radius: f32,
+    pub footstep_diameter: f32,
+    pub gunshot_diameter: f32,
+    pub weapon_diameter: f32,
+    pub fadeout_duration: std::time::Duration,
+    pub circle_scale: f32,
 }
 
 impl Default for SoundConfig {
     fn default() -> Self {
         Self {
-            enabled: true,
+            enabled: false,
             color: Color32::WHITE,
-            footstep_radius: crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT,
-            gunshot_radius: crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT,
-            weapon_radius: crate::constants::cs2::SOUND_ESP_WEAPON_RADIUS_DEFAULT,
+            footstep_diameter: crate::constants::cs2::SOUND_ESP_FOOTSTEP_DIAMETER_DEFAULT,
+            gunshot_diameter: crate::constants::cs2::SOUND_ESP_GUNSHOT_DIAMETER_DEFAULT,
+            weapon_diameter: crate::constants::cs2::SOUND_ESP_WEAPON_DIAMETER_DEFAULT,
+            fadeout_duration: std::time::Duration::from_secs(1),
+            circle_scale: 1.0,
         }
     }
 }
