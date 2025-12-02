@@ -272,7 +272,6 @@ pub struct SoundConfig {
     pub footstep_diameter: f32,
     pub gunshot_diameter: f32,
     pub weapon_diameter: f32,
-    #[serde(with = "humantime_serde")]
     pub fadeout_duration: std::time::Duration,
     pub circle_scale: f32,
 }
