@@ -34,7 +34,7 @@ impl App {
             return;
         };
 
-        let fadeout_duration = self.config.player.sound.fadeout_duration_secs as f32;
+        let fadeout_duration = self.config.player.sound.fadeout_duration.as_secs_f32();
         let time_since_sound = (Instant::now() - last_sound_time).as_secs_f32();
 
         if time_since_sound >= fadeout_duration {
@@ -45,9 +45,9 @@ impl App {
 
         let distance_sq = (player.position - data.local_player.position).length_squared();
         let sound_radius_sq = match player.sound {
-            Some(SoundType::Gunshot) => self.config.player.sound.gunshot_radius.powi(2),
-            Some(SoundType::Weapon) => self.config.player.sound.weapon_radius.powi(2),
-            Some(SoundType::Footstep) | None => self.config.player.sound.footstep_radius.powi(2),
+            Some(SoundType::Gunshot) => (self.config.player.sound.gunshot_diameter * 0.5).powi(2),
+            Some(SoundType::Weapon) => (self.config.player.sound.weapon_diameter * 0.5).powi(2),
+            Some(SoundType::Footstep) | None => (self.config.player.sound.footstep_diameter * 0.5).powi(2),
         };
 
         if distance_sq > sound_radius_sq {
@@ -79,9 +79,9 @@ impl App {
         let visual_radius = player_screen_height * self.config.player.sound.circle_scale * 0.07 * scale_multiplier;
         
         let max_distance = match player.sound {
-            Some(SoundType::Gunshot) => self.config.player.sound.gunshot_radius,
-            Some(SoundType::Weapon) => self.config.player.sound.weapon_radius,
-            Some(SoundType::Footstep) | None => self.config.player.sound.footstep_radius,
+            Some(SoundType::Gunshot) => self.config.player.sound.gunshot_diameter * 0.5,
+            Some(SoundType::Weapon) => self.config.player.sound.weapon_diameter * 0.5,
+            Some(SoundType::Footstep) | None => self.config.player.sound.footstep_diameter * 0.5,
         };
         let distance_factor = (distance / max_distance).min(1.0);
         let alpha = (1.0 - distance_factor * 0.8) * opacity;

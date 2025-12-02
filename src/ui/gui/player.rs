@@ -186,17 +186,16 @@ impl App {
                 collapsing_open(ui, "Ranges", |ui| {
                     ui.horizontal(|ui| {
                         let response = ui.add(
-                            egui::DragValue::new(&mut self.config.player.sound.footstep_radius)
+                            egui::DragValue::new(&mut self.config.player.sound.footstep_diameter)
                                 .speed(10.0)
-                                .range(100.0..=3000.0)
-                                .suffix(" units"),
+                                .range(200.0..=6000.0)
                         );
 
-                        ui.label("Footstep");
+                        ui.label("Footstep Diameter");
 
                         if ui.button("↺").on_hover_text("Reset").clicked() {
-                            self.config.player.sound.footstep_radius =
-                                crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT;
+                            self.config.player.sound.footstep_diameter =
+                                crate::constants::cs2::SOUND_ESP_FOOTSTEP_RADIUS_DEFAULT * 2.0;
                             self.send_config();
                         }
                         if response.changed() {
@@ -206,17 +205,16 @@ impl App {
 
                     ui.horizontal(|ui| {
                         let response = ui.add(
-                            egui::DragValue::new(&mut self.config.player.sound.gunshot_radius)
+                            egui::DragValue::new(&mut self.config.player.sound.gunshot_diameter)
                                 .speed(10.0)
-                                .range(100.0..=5000.0)
-                                .suffix(" units"),
+                                .range(200.0..=10000.0)
                         );
 
-                        ui.label("Gunshot");
+                        ui.label("Gunshot Diameter");
 
                         if ui.button("↺").on_hover_text("Reset").clicked() {
-                            self.config.player.sound.gunshot_radius =
-                            crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT;
+                            self.config.player.sound.gunshot_diameter =
+                            crate::constants::cs2::SOUND_ESP_GUNSHOT_RADIUS_DEFAULT * 2.0;
                             self.send_config();
                         }
                         if response.changed() {
@@ -226,17 +224,16 @@ impl App {
 
                     ui.horizontal(|ui| {
                         let response = ui.add(
-                            egui::DragValue::new(&mut self.config.player.sound.weapon_radius)
+                            egui::DragValue::new(&mut self.config.player.sound.weapon_diameter)
                                 .speed(10.0)
-                                .range(100.0..=3000.0)
-                                .suffix(" units"),
+                                .range(200.0..=6000.0)
                         );
 
-                        ui.label("Weapon");
+                        ui.label("Weapon Diameter");
 
                         if ui.button("↺").on_hover_text("Reset").clicked() {
-                            self.config.player.sound.weapon_radius =
-                            crate::constants::cs2::SOUND_ESP_WEAPON_RADIUS_DEFAULT;
+                            self.config.player.sound.weapon_diameter =
+                            crate::constants::cs2::SOUND_ESP_WEAPON_RADIUS_DEFAULT * 2.0;
                             self.send_config();
                         }
                         if response.changed() {
