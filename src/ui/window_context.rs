@@ -1,6 +1,6 @@
 use std::{num::NonZeroU32, sync::Arc};
 
-use egui::{FontData, FontDefinitions, Stroke, Style};
+use egui::{Color32, FontData, FontDefinitions, Stroke, Style};
 use egui_glow::glow::{self, HasContext as _};
 use glutin::prelude::PossiblyCurrentGlContext;
 use winit::platform::x11::{WindowAttributesExtX11, WindowType};
@@ -14,6 +14,7 @@ pub struct WindowContext {
     gl_surface: glutin::surface::Surface<glutin::surface::WindowSurface>,
     glow: Arc<glow::Context>,
     egui_glow: egui_glow::EguiGlow,
+    clear_color: Color32,
 }
 
 impl WindowContext {
@@ -139,6 +140,12 @@ impl WindowContext {
         let mut egui_glow = egui_glow::EguiGlow::new(event_loop, glow.clone(), None, None, true);
         prep_ctx(&mut egui_glow.egui_ctx, accent_color);
 
+        let clear_color = if overlay {
+            Color32::TRANSPARENT
+        } else {
+            Color32::BLACK
+        };
+
         Self {
             window,
             gl_context,
@@ -146,6 +153,7 @@ impl WindowContext {
             gl_surface,
             glow,
             egui_glow,
+            clear_color,
         }
     }
 
@@ -184,8 +192,9 @@ impl WindowContext {
     }
 
     pub fn clear(&self) {
+        let [r, g, b, a] = self.clear_color.to_normalized_gamma_f32();
         unsafe {
-            self.glow.clear_color(0.0, 0.0, 0.0, 1.0);
+            self.glow.clear_color(r, g, b, a);
             self.glow.clear(glow::COLOR_BUFFER_BIT);
         }
     }
