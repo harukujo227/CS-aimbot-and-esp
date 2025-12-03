@@ -47,7 +47,9 @@ impl App {
         let sound_radius_sq = match player.sound {
             Some(SoundType::Gunshot) => (self.config.player.sound.gunshot_diameter * 0.5).powi(2),
             Some(SoundType::Weapon) => (self.config.player.sound.weapon_diameter * 0.5).powi(2),
-            Some(SoundType::Footstep) | None => (self.config.player.sound.footstep_diameter * 0.5).powi(2),
+            Some(SoundType::Footstep) | None => {
+                (self.config.player.sound.footstep_diameter * 0.5).powi(2)
+            }
         };
 
         if distance_sq > sound_radius_sq {
@@ -56,7 +58,9 @@ impl App {
 
         let distance = distance_sq.sqrt();
 
-        let Some(screen_pos) = world_to_screen(&(player.position - Vec3::new(0.0, 0.0, 10.0)), data) else {
+        let Some(screen_pos) =
+            world_to_screen(&(player.position - Vec3::new(0.0, 0.0, 10.0)), data)
+        else {
             return;
         };
 
@@ -66,18 +70,18 @@ impl App {
         let top = midpoint + Vec3::new(0.0, 0.0, half_height);
         let bottom = midpoint - Vec3::new(0.0, 0.0, half_height);
 
-        let (Some(top_screen), Some(bottom_screen)) = (
-            world_to_screen(&top, data),
-            world_to_screen(&bottom, data)
-        ) else {
+        let (Some(top_screen), Some(bottom_screen)) =
+            (world_to_screen(&top, data), world_to_screen(&bottom, data))
+        else {
             return;
         };
 
         let player_screen_height = (bottom_screen.y - top_screen.y).abs();
         let is_gunshot = matches!(player.sound, Some(SoundType::Gunshot));
         let scale_multiplier = if is_gunshot { 1.25 } else { 1.0 };
-        let visual_radius = player_screen_height * self.config.player.sound.circle_scale * 0.07 * scale_multiplier;
-        
+        let visual_radius =
+            player_screen_height * self.config.player.sound.circle_scale * 0.07 * scale_multiplier;
+
         let max_distance = match player.sound {
             Some(SoundType::Gunshot) => self.config.player.sound.gunshot_diameter * 0.5,
             Some(SoundType::Weapon) => self.config.player.sound.weapon_diameter * 0.5,
@@ -88,7 +92,11 @@ impl App {
         let color = self.config.player.sound.color.gamma_multiply(alpha);
         let line_width = (2.0 * (1.0 + 1.0 / (distance * 0.01 + 1.0))).min(4.0);
 
-        painter.circle_stroke(screen_pos, visual_radius, egui::Stroke::new(line_width, color));
+        painter.circle_stroke(
+            screen_pos,
+            visual_radius,
+            egui::Stroke::new(line_width, color),
+        );
     }
     fn aimbot_config(&self, weapon: &Weapon) -> &AimbotConfig {
         if let Some(weapon_config) = self.config.aim.weapons.get(weapon)
@@ -105,7 +113,7 @@ impl App {
 
         self.add_trails();
         let data = &self.data.lock().unwrap();
-        if let Some(window) = &self.overlay_window {
+        if let Some(window) = &self.overlay {
             window
                 .window()
                 .set_outer_position(winit::dpi::PhysicalPosition::new(

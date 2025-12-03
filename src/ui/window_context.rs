@@ -1,17 +1,27 @@
-use std::num::NonZeroU32;
+use std::{num::NonZeroU32, sync::Arc};
 
+use egui::{FontData, FontDefinitions, Stroke, Style};
+use egui_glow::glow::{self, HasContext as _};
 use glutin::prelude::PossiblyCurrentGlContext;
 use winit::platform::x11::{WindowAttributesExtX11, WindowType};
+
+use crate::ui::color::Colors;
 
 pub struct WindowContext {
     window: winit::window::Window,
     gl_context: glutin::context::PossiblyCurrentContext,
-    gl_display: glutin::display::Display,
+    _gl_display: glutin::display::Display,
     gl_surface: glutin::surface::Surface<glutin::surface::WindowSurface>,
+    glow: Arc<glow::Context>,
+    egui_glow: egui_glow::EguiGlow,
 }
 
 impl WindowContext {
-    pub fn new(event_loop: &winit::event_loop::ActiveEventLoop, overlay: bool) -> Self {
+    pub fn new(
+        event_loop: &winit::event_loop::ActiveEventLoop,
+        overlay: bool,
+        accent_color: egui::Color32,
+    ) -> Self {
         use glutin::context::NotCurrentGlContext as _;
         use glutin::display::GetGlDisplay as _;
         use glutin::display::GlDisplay as _;
@@ -116,11 +126,26 @@ impl WindowContext {
             window.set_outer_position(winit::dpi::PhysicalPosition::new(0, 0));
         }
 
+        let glow = unsafe {
+            glow::Context::from_loader_function(|s| {
+                let s = std::ffi::CString::new(s)
+                    .expect("failed to construct C string from string for gl proc address");
+
+                gl_display.get_proc_address(&s)
+            })
+        };
+
+        let glow = Arc::new(glow);
+        let mut egui_glow = egui_glow::EguiGlow::new(event_loop, glow.clone(), None, None, true);
+        prep_ctx(&mut egui_glow.egui_ctx, accent_color);
+
         Self {
             window,
             gl_context,
-            gl_display,
+            _gl_display: gl_display,
             gl_surface,
+            glow,
+            egui_glow,
         }
     }
 
@@ -142,12 +167,105 @@ impl WindowContext {
         self.gl_surface.swap_buffers(&self.gl_context)
     }
 
-    pub fn get_proc_address(&self, addr: &std::ffi::CStr) -> *const std::ffi::c_void {
-        use glutin::display::GlDisplay as _;
-        self.gl_display.get_proc_address(addr)
-    }
-
     pub fn make_current(&self) -> glutin::error::Result<()> {
         self.gl_context.make_current(&self.gl_surface)
     }
+
+    pub fn process_event(&mut self, event: &winit::event::WindowEvent) -> egui_glow::EventResponse {
+        self.egui_glow.on_window_event(&self.window, event)
+    }
+
+    pub fn request_redraw(&self) {
+        self.window.request_redraw();
+    }
+
+    pub fn run(&mut self, func: impl FnMut(&egui::Context)) {
+        self.egui_glow.run(&self.window, func);
+    }
+
+    pub fn clear(&self) {
+        unsafe {
+            self.glow.clear_color(0.0, 0.0, 0.0, 1.0);
+            self.glow.clear(glow::COLOR_BUFFER_BIT);
+        }
+    }
+
+    pub fn paint(&mut self) {
+        self.egui_glow.paint(&self.window);
+    }
+}
+
+fn prep_ctx(ctx: &mut egui::Context, accent_color: egui::Color32) {
+    // add font
+    let fira_sans = include_bytes!("../../resources/FiraSansIcons.ttf");
+    let cs2_icons = include_bytes!("../../resources/CS2GunIcons.ttf");
+    let mut font_definitions = FontDefinitions::default();
+    font_definitions.font_data.insert(
+        String::from("fira_sans"),
+        Arc::new(FontData::from_static(fira_sans)),
+    );
+    font_definitions.font_data.insert(
+        String::from("cs2_icons"),
+        Arc::new(FontData::from_static(cs2_icons)),
+    );
+
+    // insert into font definitions, so it gets chosen as default
+    font_definitions
+        .families
+        .get_mut(&egui::FontFamily::Proportional)
+        .unwrap()
+        .insert(0, String::from("fira_sans"));
+    font_definitions
+        .families
+        .get_mut(&egui::FontFamily::Monospace)
+        .unwrap()
+        .insert(0, String::from("cs2_icons"));
+
+    ctx.set_fonts(font_definitions);
+
+    ctx.style_mut_of(egui::Theme::Dark, |style| {
+        gui_style(style, accent_color);
+    });
+}
+
+fn gui_style(style: &mut Style, accent_color: egui::Color32) {
+    style.interaction.selectable_labels = false;
+    for font in style.text_styles.iter_mut() {
+        font.1.size = 16.0;
+    }
+    //style.visuals.override_text_color = Some(Color32::WHITE);
+
+    style.visuals.window_fill = Colors::BASE;
+    style.visuals.panel_fill = Colors::BASE;
+    style.visuals.extreme_bg_color = Colors::BACKDROP;
+
+    let bg_stroke = Stroke::new(1.0, Colors::SUBTEXT);
+    let fg_stroke = Stroke::new(1.0, Colors::TEXT);
+    let dark_stroke = Stroke::new(1.0, Colors::BASE);
+
+    style.visuals.selection.bg_fill = accent_color;
+    style.visuals.selection.stroke = dark_stroke;
+
+    style.visuals.widgets.active.bg_fill = Colors::HIGHLIGHT;
+    style.visuals.widgets.active.bg_stroke = bg_stroke;
+    style.visuals.widgets.active.fg_stroke = fg_stroke;
+    style.visuals.widgets.active.weak_bg_fill = Colors::HIGHLIGHT;
+
+    style.visuals.widgets.hovered.bg_fill = Colors::HIGHLIGHT;
+    style.visuals.widgets.hovered.bg_stroke = bg_stroke;
+    style.visuals.widgets.hovered.fg_stroke = fg_stroke;
+    style.visuals.widgets.hovered.weak_bg_fill = Colors::HIGHLIGHT;
+
+    style.visuals.widgets.inactive.bg_fill = Colors::HIGHLIGHT;
+    style.visuals.widgets.inactive.fg_stroke = fg_stroke;
+    style.visuals.widgets.inactive.weak_bg_fill = Colors::HIGHLIGHT;
+
+    style.visuals.widgets.noninteractive.bg_fill = Colors::HIGHLIGHT;
+    style.visuals.widgets.noninteractive.fg_stroke = fg_stroke;
+    style.visuals.widgets.noninteractive.weak_bg_fill = Colors::HIGHLIGHT;
+
+    style.visuals.widgets.open.bg_fill = Colors::HIGHLIGHT;
+    style.visuals.widgets.open.bg_stroke = bg_stroke;
+    style.visuals.widgets.open.fg_stroke = fg_stroke;
+    style.visuals.widgets.open.weak_bg_fill = Colors::HIGHLIGHT;
 }

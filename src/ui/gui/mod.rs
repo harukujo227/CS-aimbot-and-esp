@@ -1,10 +1,12 @@
 use egui::{Align, CollapsingHeader, Color32, Context, DragValue, Ui};
-use egui_glow::glow;
 
 use crate::{
     config::{BASE_PATH, VERSION, WeaponConfig, write_config},
     message::{Envelope, GameStatus, Message, Target},
-    os::{crash::report_error, mouse::{DeviceStatus, discover_mice}},
+    os::{
+        crash::report_error,
+        mouse::{DeviceStatus, discover_mice},
+    },
     ui::{app::App, color::Colors, gui::aimbot::AimbotTab},
 };
 
@@ -186,59 +188,41 @@ impl App {
     }
 
     pub fn render(&mut self) {
-        use glow::HasContext as _;
-
         let self_ptr = self as *mut Self;
 
-        let gui_window = self.gui_window.as_ref().unwrap();
-        let gui_glow = self.gui_glow.as_mut().unwrap();
+        let gui = self.gui.as_mut().unwrap();
 
-        if let Err(err) = gui_window.make_current() {
+        if let Err(err) = gui.make_current() {
             log::error!("could not make gui window current: {err}");
             report_error(err);
             return;
         }
-        gui_glow.run(gui_window.window(), |ctx| {
-            (unsafe { &mut *self_ptr }).gui(ctx)
-        });
+        gui.run(|ctx| (unsafe { &mut *self_ptr }).gui(ctx));
+        gui.clear();
+        gui.paint();
 
-        unsafe {
-            let gui_gl = self.gui_gl.as_ref().unwrap();
-            gui_gl.clear_color(0.0, 0.0, 0.0, 1.0);
-            gui_gl.clear(glow::COLOR_BUFFER_BIT);
-        }
-
-        gui_glow.paint(gui_window.window());
-
-        if let Err(err) = gui_window.swap_buffers() {
+        if let Err(err) = gui.swap_buffers() {
             log::error!("could not swap gui window buffers: {err}");
             report_error(err);
             return;
         }
 
-        let overlay_window = self.overlay_window.as_ref().unwrap();
-        let overlay_glow = self.overlay_glow.as_mut().unwrap();
+        let overlay = self.overlay.as_mut().unwrap();
 
-        overlay_window.window().set_cursor_hittest(false).unwrap();
-        if let Err(err) = overlay_window.make_current() {
+        overlay.window().set_cursor_hittest(false).unwrap();
+        if let Err(err) = overlay.make_current() {
             log::error!("could not make overlay window current: {err}");
             report_error(err);
             return;
         }
 
-        overlay_glow.run(overlay_window.window(), move |egui_ctx| {
+        overlay.run(move |egui_ctx| {
             (unsafe { &mut *self_ptr }).overlay(egui_ctx);
         });
+        overlay.clear();
+        overlay.paint();
 
-        unsafe {
-            let overlay_gl = self.overlay_gl.as_ref().unwrap();
-            overlay_gl.clear_color(0.0, 0.0, 0.0, 0.0);
-            overlay_gl.clear(glow::COLOR_BUFFER_BIT);
-        }
-
-        overlay_glow.paint(overlay_window.window());
-
-        if let Err(err) = overlay_window.swap_buffers() {
+        if let Err(err) = overlay.swap_buffers() {
             log::error!("could not swap overlay window buffers: {err}");
             report_error(err);
         }
