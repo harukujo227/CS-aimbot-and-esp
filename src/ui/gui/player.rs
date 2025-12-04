@@ -1,4 +1,4 @@
-use egui::{DragValue, Ui};
+use egui::Ui;
 use strum::IntoEnumIterator as _;
 
 use crate::{
@@ -50,21 +50,6 @@ impl App {
                         self.config.player.sound.color = color;
                         self.send_config();
                     }
-
-                    ui.horizontal(|ui| {
-                        if ui
-                            .add(
-                                DragValue::new(&mut self.config.player.alpha)
-                                    .range(0.0..=1.0)
-                                    .speed(0.01)
-                                    .max_decimals(2),
-                            )
-                            .changed()
-                        {
-                            self.send_config();
-                        }
-                        ui.label("Alpha (0=transparent, 1=opaque)");
-                    });
                 });
             });
     }
@@ -168,7 +153,7 @@ impl App {
                 let response = ui.add(
                     egui::DragValue::new(&mut self.config.player.sound.circle_scale)
                         .speed(0.1)
-                        .range(0.1..=3.0)
+                        .range(0.1..=3.0),
                 );
 
                 ui.label("Scale");
@@ -184,63 +169,63 @@ impl App {
             });
 
             ui.collapsing("Ranges", |ui| {
-                    ui.horizontal(|ui| {
-                        let response = ui.add(
-                            egui::DragValue::new(&mut self.config.player.sound.footstep_diameter)
-                                .speed(10.0)
-                                .range(200.0..=6000.0)
-                        );
+                ui.horizontal(|ui| {
+                    let response = ui.add(
+                        egui::DragValue::new(&mut self.config.player.sound.footstep_diameter)
+                            .speed(10.0)
+                            .range(200.0..=6000.0),
+                    );
 
-                        ui.label("Footstep");
+                    ui.label("Footstep");
 
-                        if ui.button("↺").on_hover_text("Reset").clicked() {
-                            self.config.player.sound.footstep_diameter =
-                                crate::constants::cs2::SOUND_ESP_FOOTSTEP_DIAMETER_DEFAULT;
-                            self.send_config();
-                        }
-                        if response.changed() {
-                            self.send_config();
-                        }
-                    });
-
-                    ui.horizontal(|ui| {
-                        let response = ui.add(
-                            egui::DragValue::new(&mut self.config.player.sound.gunshot_diameter)
-                                .speed(10.0)
-                                .range(200.0..=10000.0)
-                        );
-
-                        ui.label("Gunshot");
-
-                        if ui.button("↺").on_hover_text("Reset").clicked() {
-                            self.config.player.sound.gunshot_diameter =
-                            crate::constants::cs2::SOUND_ESP_GUNSHOT_DIAMETER_DEFAULT;
-                            self.send_config();
-                        }
-                        if response.changed() {
-                            self.send_config();
-                        }
-                    });
-
-                    ui.horizontal(|ui| {
-                        let response = ui.add(
-                            egui::DragValue::new(&mut self.config.player.sound.weapon_diameter)
-                                .speed(10.0)
-                                .range(200.0..=6000.0)
-                        );
-
-                        ui.label("Weapon");
-
-                        if ui.button("↺").on_hover_text("Reset").clicked() {
-                            self.config.player.sound.weapon_diameter =
-                            crate::constants::cs2::SOUND_ESP_WEAPON_DIAMETER_DEFAULT;
-                            self.send_config();
-                        }
-                        if response.changed() {
-                            self.send_config();
-                        }
-                    });
+                    if ui.button("↺").on_hover_text("Reset").clicked() {
+                        self.config.player.sound.footstep_diameter =
+                            crate::constants::cs2::SOUND_ESP_FOOTSTEP_DIAMETER_DEFAULT;
+                        self.send_config();
+                    }
+                    if response.changed() {
+                        self.send_config();
+                    }
                 });
+
+                ui.horizontal(|ui| {
+                    let response = ui.add(
+                        egui::DragValue::new(&mut self.config.player.sound.gunshot_diameter)
+                            .speed(10.0)
+                            .range(200.0..=10000.0),
+                    );
+
+                    ui.label("Gunshot");
+
+                    if ui.button("↺").on_hover_text("Reset").clicked() {
+                        self.config.player.sound.gunshot_diameter =
+                            crate::constants::cs2::SOUND_ESP_GUNSHOT_DIAMETER_DEFAULT;
+                        self.send_config();
+                    }
+                    if response.changed() {
+                        self.send_config();
+                    }
+                });
+
+                ui.horizontal(|ui| {
+                    let response = ui.add(
+                        egui::DragValue::new(&mut self.config.player.sound.weapon_diameter)
+                            .speed(10.0)
+                            .range(200.0..=6000.0),
+                    );
+
+                    ui.label("Weapon");
+
+                    if ui.button("↺").on_hover_text("Reset").clicked() {
+                        self.config.player.sound.weapon_diameter =
+                            crate::constants::cs2::SOUND_ESP_WEAPON_DIAMETER_DEFAULT;
+                        self.send_config();
+                    }
+                    if response.changed() {
+                        self.send_config();
+                    }
+                });
+            });
         });
     }
 

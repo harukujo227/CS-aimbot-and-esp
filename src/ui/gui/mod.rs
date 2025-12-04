@@ -162,7 +162,7 @@ impl App {
     }
 
     fn color_picker(&self, ui: &mut Ui, color: &Color32, label: &str) -> Option<Color32> {
-        let [mut r, mut g, mut b, _] = color.to_array();
+        let [mut r, mut g, mut b, mut a] = color.to_array();
         let res = ui
             .horizontal(|ui| {
                 let (response, painter) =
@@ -175,13 +175,14 @@ impl App {
                 let mut res = ui.add(DragValue::new(&mut r).prefix("r: "));
                 res = res.union(ui.add(DragValue::new(&mut g).prefix("g: ")));
                 res = res.union(ui.add(DragValue::new(&mut b).prefix("b: ")));
+                res = res.union(ui.add(DragValue::new(&mut a).prefix("a: ")));
                 ui.label(label);
                 res
             })
             .inner;
 
         if res.changed() {
-            Some(Color32::from_rgb(r, g, b))
+            Some(Color32::from_rgba_unmultiplied(r, g, b, a))
         } else {
             None
         }

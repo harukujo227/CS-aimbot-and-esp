@@ -16,7 +16,7 @@ use crate::{
     data::{Data, PlayerData},
     math::world_to_screen,
     parser::bvh::{Aabb, Triangle},
-    ui::{app::App, color::Colors, grenades::Grenade, trail::Trail},
+    ui::{app::App, grenades::Grenade, trail::Trail},
 };
 
 impl App {
@@ -131,11 +131,11 @@ impl App {
         if self.config.hud.debug {
             painter.line(
                 vec![pos2(0.0, 0.0), pos2(data.window_size.x, data.window_size.y)],
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+                Stroke::new(self.config.hud.line_width, Color32::WHITE),
             );
             painter.line(
                 vec![pos2(data.window_size.x, 0.0), pos2(0.0, data.window_size.y)],
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::WHITE)),
+                Stroke::new(self.config.hud.line_width, Color32::WHITE),
             );
         }
 
@@ -189,7 +189,7 @@ impl App {
             }
 
             let fraction = (data.bomb.timer / 40.0).clamp(0.0, 1.0);
-            let color = self.apply_alpha(self.health_color((fraction * 100.0) as i32));
+            let color = self.health_color((fraction * 100.0) as i32, 255);
             painter.line(
                 vec![
                     pos2(0.0, data.window_size.y),
@@ -210,29 +210,18 @@ impl App {
                     data,
                     aim_fov,
                     125.0,
-                    self.apply_alpha(Color32::GREEN),
+                    Color32::GREEN,
                 );
                 self.draw_distance_scaled_fov_circle(
                     &painter,
                     data,
                     aim_fov,
                     250.0,
-                    self.apply_alpha(Color32::YELLOW),
+                    Color32::YELLOW,
                 );
-                self.draw_distance_scaled_fov_circle(
-                    &painter,
-                    data,
-                    aim_fov,
-                    500.0,
-                    self.apply_alpha(Color32::RED),
-                );
+                self.draw_distance_scaled_fov_circle(&painter, data, aim_fov, 500.0, Color32::RED);
             } else {
-                self.draw_simple_fov_circle(
-                    &painter,
-                    data,
-                    aim_fov,
-                    self.apply_alpha(Colors::TEXT),
-                );
+                self.draw_simple_fov_circle(&painter, data, aim_fov, Color32::WHITE);
             }
         }
 
@@ -244,20 +233,14 @@ impl App {
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 - 50.0),
                     pos2(data.window_size.x / 2.0, data.window_size.y / 2.0 + 50.0),
                 ],
-                Stroke::new(
-                    self.config.hud.line_width,
-                    self.apply_alpha(self.config.hud.crosshair_color),
-                ),
+                Stroke::new(self.config.hud.line_width, self.config.hud.crosshair_color),
             );
             painter.line(
                 vec![
                     pos2(data.window_size.x / 2.0 - 50.0, data.window_size.y / 2.0),
                     pos2(data.window_size.x / 2.0 + 50.0, data.window_size.y / 2.0),
                 ],
-                Stroke::new(
-                    self.config.hud.line_width,
-                    self.apply_alpha(self.config.hud.crosshair_color),
-                ),
+                Stroke::new(self.config.hud.line_width, self.config.hud.crosshair_color),
             );
         }
 
@@ -404,15 +387,16 @@ impl App {
     fn player_box(&self, painter: &Painter, player: &PlayerData, data: &Data) {
         use crate::config::DrawMode;
 
-        let health_color = self.apply_alpha(self.health_color(player.health));
+        let health_color =
+            self.health_color(player.health, self.config.player.box_visible_color.a());
         let color = match &self.config.player.draw_box {
             DrawMode::None => health_color,
             DrawMode::Health => health_color,
             DrawMode::Color => {
                 if player.visible {
-                    self.apply_alpha(self.config.player.box_visible_color)
+                    self.config.player.box_visible_color
                 } else {
-                    self.apply_alpha(self.config.player.box_invisible_color)
+                    self.config.player.box_invisible_color
                 }
             }
         };
@@ -500,13 +484,13 @@ impl App {
                     pos2(x, bl.y),
                     pos2(x, bl.y - (delta * player.armor as f32 / 100.0)),
                 ],
-                Stroke::new(self.config.hud.line_width, self.apply_alpha(Color32::BLUE)),
+                Stroke::new(self.config.hud.line_width, Color32::BLUE),
             );
         }
 
         let mut offset = 0.0;
         let font_size = self.config.hud.font_size;
-        let text_color = self.apply_alpha(self.config.hud.text_color);
+        let text_color = self.config.hud.text_color;
         if self.config.player.player_name {
             self.text(
                 painter,
@@ -564,8 +548,10 @@ impl App {
     fn skeleton(&self, painter: &Painter, player: &PlayerData, data: &Data) {
         let color = match &self.config.player.draw_skeleton {
             DrawMode::None => return,
-            DrawMode::Health => self.apply_alpha(self.health_color(player.health)),
-            DrawMode::Color => self.apply_alpha(self.config.player.skeleton_color),
+            DrawMode::Health => {
+                self.health_color(player.health, self.config.player.skeleton_color.a())
+            }
+            DrawMode::Color => self.config.player.skeleton_color,
         };
         let stroke = Stroke::new(self.config.hud.line_width, color);
 
@@ -703,7 +689,7 @@ impl App {
 
         let shape = Shape::convex_polygon(
             hull,
-            Color32::from_rgba_premultiplied(255, 0, 0, 127),
+            Color32::from_rgba_unmultiplied(255, 0, 0, 127),
             Stroke::NONE,
         );
         painter.add(shape);
@@ -831,7 +817,7 @@ impl App {
 
         let shape = Shape::convex_polygon(
             points,
-            Color32::from_rgba_premultiplied(0, 255, 0, 127),
+            Color32::from_rgba_unmultiplied(0, 255, 0, 127),
             Stroke::NONE,
         );
         painter.add(shape);
@@ -839,7 +825,7 @@ impl App {
         painter.circle_filled(
             center_screen,
             WIDTH / 8.0,
-            Color32::from_rgba_premultiplied(255, 0, 0, 127),
+            Color32::from_rgba_unmultiplied(255, 0, 0, 127),
         );
     }
 
@@ -947,7 +933,7 @@ impl App {
         }
     }
 
-    fn health_color(&self, health: i32) -> Color32 {
+    fn health_color(&self, health: i32, alpha: u8) -> Color32 {
         let health = health.clamp(0, 100);
 
         let (r, g) = if health <= 50 {
@@ -958,7 +944,7 @@ impl App {
             ((255.0 * factor) as u8, 255)
         };
 
-        Color32::from_rgb(r, g, 0)
+        Color32::from_rgba_unmultiplied(r, g, 0, alpha)
     }
 
     fn text(
@@ -974,7 +960,7 @@ impl App {
         let font = FontId::proportional(self.config.hud.font_size);
         let color = match color {
             Some(color) => color,
-            None => self.apply_alpha(self.config.hud.text_color),
+            None => self.config.hud.text_color,
         };
         if self.config.hud.text_outline {
             for (pos, color) in outline(position, color) {
@@ -983,12 +969,6 @@ impl App {
         } else {
             painter.text(position, align, text.as_ref(), font, color);
         }
-    }
-
-    fn apply_alpha(&self, color: Color32) -> Color32 {
-        let [r, g, b, _] = color.to_array();
-        let alpha = (255.0 * self.config.player.alpha) as u8;
-        Color32::from_rgba_unmultiplied(r, g, b, alpha)
     }
 
     fn get_current_fov(&self) -> f32 {
