@@ -8,7 +8,7 @@ use std::{
 };
 
 use bytemuck::Pod;
-use nix::libc::{self, iovec, process_vm_readv, process_vm_writev};
+use nix::libc::{self, iovec, process_vm_readv};
 
 use crate::constants::{cs2, elf};
 
@@ -31,11 +31,7 @@ impl Process {
             return Self {
                 pid,
                 path: PathBuf::from(format!("/proc/{pid}")),
-                file: OpenOptions::new()
-                    .read(true)
-                    .write(true)
-                    .open("/dev/null")
-                    .unwrap(),
+                file: OpenOptions::new().read(true).open("/dev/null").unwrap(),
                 min: u64::MAX,
                 max: u64::MIN,
             };
@@ -43,15 +39,10 @@ impl Process {
 
         let file = OpenOptions::new()
             .read(true)
-            .write(true)
             .open(format!("/proc/{pid}/mem"))
             .unwrap_or_else(|e| {
                 log::error!("failed to open /proc/{pid}/mem: {e}");
-                OpenOptions::new()
-                    .read(true)
-                    .write(true)
-                    .open("/dev/null")
-                    .unwrap()
+                OpenOptions::new().read(true).open("/dev/null").unwrap()
             });
         let mut ret = Self {
             pid,
@@ -182,6 +173,10 @@ impl Process {
         result
     }
 
+    #[cfg(feature = "read-only")]
+    pub fn write<T: Pod>(&self, _address: u64, _value: T) {}
+
+    #[cfg(not(feature = "read-only"))]
     pub fn write<T: Pod>(&self, address: u64, value: T) {
         let mut buffer = bytemuck::bytes_of(&value).to_vec();
 
@@ -194,7 +189,7 @@ impl Process {
             iov_len: buffer.len(),
         };
 
-        unsafe { process_vm_writev(self.pid, &local_iov, 1, &remote_iov, 1, 0) };
+        unsafe { nix::libc::process_vm_writev(self.pid, &local_iov, 1, &remote_iov, 1, 0) };
     }
 
     pub fn read_string(&self, address: u64) -> String {
