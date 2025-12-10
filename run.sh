@@ -7,7 +7,7 @@ Please download deadlocked by cloning the Git repository: 'git clone https://git
 	exit 1
 }
 
-[[ -d '.git ' ]] || fail
+[[ -d '.git' ]] || fail
 
 git pull
 cargo run --release
