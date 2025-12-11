@@ -506,7 +506,7 @@ impl App {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                "r",
+                "\u{e00f}",
                 icon_font.clone(),
                 text_color,
             );
@@ -517,7 +517,7 @@ impl App {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                "q",
+                "\u{e017}",
                 icon_font.clone(),
                 text_color,
             );
@@ -528,7 +528,7 @@ impl App {
             painter.text(
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                "o",
+                "\u{e01e}",
                 icon_font.clone(),
                 text_color,
             );

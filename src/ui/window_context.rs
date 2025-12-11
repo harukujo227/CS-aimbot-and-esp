@@ -207,7 +207,7 @@ impl WindowContext {
 fn prep_ctx(ctx: &mut egui::Context, accent_color: egui::Color32) {
     // add font
     let fira_sans = include_bytes!("../../resources/FiraSansIcons.ttf");
-    let cs2_icons = include_bytes!("../../resources/CS2GunIcons.ttf");
+    let cs2_icons = include_bytes!("../../resources/CS2EquipmentIcons.ttf");
     let mut font_definitions = FontDefinitions::default();
     font_definitions.font_data.insert(
         String::from("fira_sans"),
