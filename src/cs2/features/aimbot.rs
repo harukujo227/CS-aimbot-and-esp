@@ -80,15 +80,12 @@ impl CS2 {
 
         let view_angles = local_player.view_angles(self);
         if angles_to_fov(&view_angles, &target_angle)
-            > (if grenade {
-                config.grenade_fov
-            } else {
-                config.fov
-            } * if config.distance_adjusted_fov {
-                self.distance_scale(self.target.distance)
-            } else {
-                1.0
-            })
+            > (config.fov
+                * if config.distance_adjusted_fov {
+                    self.distance_scale(self.target.distance)
+                } else {
+                    1.0
+                })
         {
             return;
         }

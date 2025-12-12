@@ -58,7 +58,6 @@ pub struct CS2 {
     previous_sound_times: RefCell<HashMap<u64, Option<Instant>>>,
     grenades: Arc<Mutex<GrenadeList>>,
     target_grenade: Option<Grenade>,
-    data: Arc<Mutex<Data>>,
 }
 
 impl Game for CS2 {
@@ -294,11 +293,7 @@ impl Game for CS2 {
 }
 
 impl CS2 {
-    pub fn new(
-        bvh: Arc<Mutex<HashMap<String, Bvh>>>,
-        grenades: Arc<Mutex<GrenadeList>>,
-        data: Arc<Mutex<Data>>,
-    ) -> Self {
+    pub fn new(bvh: Arc<Mutex<HashMap<String, Bvh>>>, grenades: Arc<Mutex<GrenadeList>>) -> Self {
         Self {
             is_valid: false,
             process: Process::new(-1),
@@ -318,7 +313,6 @@ impl CS2 {
             previous_sound_times: RefCell::new(HashMap::new()),
             grenades,
             target_grenade: None,
-            data,
         }
     }
 

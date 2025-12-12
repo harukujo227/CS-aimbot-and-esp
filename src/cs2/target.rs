@@ -57,7 +57,6 @@ impl CS2 {
         let aimbot_config = self.aimbot_config(config);
         let targeting_mode = &aimbot_config.targeting_mode;
         let max_fov = aimbot_config.fov;
-        let max_fov_grenade = aimbot_config.grenade_fov;
         let is_custom_mode = self.is_custom_game_mode();
 
         let mut best_fov = 360.0;
@@ -76,15 +75,10 @@ impl CS2 {
         let player_weapon = local_player.weapon(self);
         let player_position = local_player.position(self);
 
-        let Ok(data) = self.data.lock() else {
-            return;
-        };
-        let map = data.map_name.as_str();
-
         let Ok(grenades) = self.grenades.lock() else {
             return;
         };
-        let Some(grenades) = grenades.get(map) else {
+        let Some(grenades) = grenades.get(&self.current_map()) else {
             return;
         };
 
@@ -102,7 +96,7 @@ impl CS2 {
             let angle = grenade.view_angles;
             let fov = angles_to_fov(&view_angles, &angle);
 
-            let fov_limit = max_fov_grenade;
+            let fov_limit = max_fov;
             if fov > fov_limit {
                 continue;
             }

@@ -203,20 +203,7 @@ impl App {
         if self.config.hud.fov_circle && data.in_game {
             let weapon_config = self.aimbot_config(&data.weapon);
 
-            let has_grenade = matches!(
-                data.weapon,
-                Weapon::Flashbang
-                    | Weapon::HeGrenade
-                    | Weapon::Molotov
-                    | Weapon::Incendiary
-                    | Weapon::Decoy
-                    | Weapon::Smoke
-            );
-            let aim_fov = if has_grenade {
-                weapon_config.grenade_fov
-            } else {
-                weapon_config.fov
-            };
+            let aim_fov = weapon_config.fov;
 
             if weapon_config.distance_adjusted_fov {
                 self.draw_distance_scaled_fov_circle(

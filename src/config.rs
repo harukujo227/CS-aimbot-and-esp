@@ -83,7 +83,6 @@ pub struct AimbotConfig {
     pub visibility_check: bool,
     pub flash_check: bool,
     pub fov: f32,
-    pub grenade_fov: f32,
     pub smooth: f32,
     pub bones: Vec<Bones>,
     pub targeting_mode: TargetingMode,
@@ -101,7 +100,6 @@ impl Default for AimbotConfig {
             visibility_check: true,
             flash_check: true,
             fov: 2.5,
-            grenade_fov: 5.0,
             smooth: 5.0,
             bones: vec![
                 Bones::Head,

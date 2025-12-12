@@ -51,10 +51,10 @@ impl GameManager {
         let mut game = Self {
             tx,
             rx,
-            data: data.clone(),
+            data,
             config: Config::default(),
             mouse,
-            game: CS2::new(bvh, grenades, data.clone()),
+            game: CS2::new(bvh, grenades),
             manual_mouse: false,
             preferred_event: None,
         };
