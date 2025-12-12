@@ -17,6 +17,7 @@ use crate::{
     message::{Envelope, GameStatus, Message, Target},
     os::mouse::{DeviceStatus, Mouse, discover_mice, get_mouse_by_name},
     parser::bvh::Bvh,
+    ui::grenades::GrenadeList,
 };
 
 pub trait Game: std::fmt::Debug {
@@ -43,16 +44,17 @@ impl GameManager {
         rx: Receiver<Message>,
         data: Arc<Mutex<Data>>,
         bvh: Arc<Mutex<HashMap<String, Bvh>>>,
+        grenades: Arc<Mutex<GrenadeList>>,
     ) -> Self {
         let mouse = Mouse::open();
 
         let mut game = Self {
             tx,
             rx,
-            data,
+            data: data.clone(),
             config: Config::default(),
             mouse,
-            game: CS2::new(bvh),
+            game: CS2::new(bvh, grenades, data.clone()),
             manual_mouse: false,
             preferred_event: None,
         };

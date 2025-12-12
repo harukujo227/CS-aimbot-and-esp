@@ -142,6 +142,22 @@ impl App {
             ui.horizontal(|ui| {
                 if ui
                     .add(
+                        DragValue::new(&mut self.weapon_config().aimbot.grenade_fov)
+                            .range(0.1..=360.0)
+                            .suffix("°")
+                            .speed(0.02)
+                            .max_decimals(1),
+                    )
+                    .changed()
+                {
+                    self.send_config();
+                }
+                ui.label("Grenade FOV");
+            });
+
+            ui.horizontal(|ui| {
+                if ui
+                    .add(
                         DragValue::new(&mut self.weapon_config().aimbot.smooth)
                             .range(0.0..=20.0)
                             .speed(0.02)

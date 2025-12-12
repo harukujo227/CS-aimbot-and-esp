@@ -32,7 +32,10 @@ impl App {
     fn grenade_list(&mut self, ui: &mut Ui) {
         let mut should_write = false;
 
-        for (map, grenades) in &mut self.grenades {
+        let Ok(mut grenades) = self.grenades.lock() else {
+            return;
+        };
+        for (map, grenades) in grenades.iter_mut() {
             let mut delete_grenade_index = None;
 
             ui.collapsing(map, |ui| {
@@ -65,7 +68,7 @@ impl App {
         }
 
         if should_write {
-            write_grenades(&self.grenades);
+            write_grenades(&grenades);
         }
     }
 
@@ -100,12 +103,16 @@ impl App {
             ui.checkbox(&mut self.new_grenade.modifiers.run, "Run");
 
             if ui.button("Save").clicked() {
+                let Ok(mut grenades) = self.grenades.lock() else {
+                    return;
+                };
+
                 let map = &data.map_name;
-                let grenade_list = match self.grenades.get_mut(map) {
+                let grenade_list = match grenades.get_mut(map) {
                     Some(list) => list,
                     None => {
-                        self.grenades.insert(map.to_owned(), Vec::new());
-                        self.grenades.get_mut(map).unwrap()
+                        grenades.insert(map.to_owned(), Vec::new());
+                        grenades.get_mut(map).unwrap()
                     }
                 };
 
@@ -117,7 +124,7 @@ impl App {
                 new_grenade.view_angles = data.view_angles;
 
                 grenade_list.push(new_grenade);
-                write_grenades(&self.grenades);
+                write_grenades(&grenades);
             }
         });
     }
@@ -129,7 +136,10 @@ impl App {
                 None => return,
             };
 
-            let Some(grenades) = &mut self.grenades.get_mut(map) else {
+            let Ok(mut grenades) = self.grenades.lock() else {
+                return;
+            };
+            let Some(grenades) = grenades.get_mut(map) else {
                 return;
             };
             let Some(grenade) = grenades.get_mut(*index) else {

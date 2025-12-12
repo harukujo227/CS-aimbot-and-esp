@@ -54,14 +54,10 @@ impl CS2 {
         };
         self.target.previous_aim_punch = aim_punch;
 
-        if self.players.is_empty() {
-            self.target.reset();
-            return;
-        }
-
         let aimbot_config = self.aimbot_config(config);
         let targeting_mode = &aimbot_config.targeting_mode;
         let max_fov = aimbot_config.fov;
+        let max_fov_grenade = aimbot_config.grenade_fov;
         let is_custom_mode = self.is_custom_game_mode();
 
         let mut best_fov = 360.0;
@@ -75,6 +71,53 @@ impl CS2 {
             && !player.is_valid(self)
         {
             self.target.reset();
+        }
+
+        let player_weapon = local_player.weapon(self);
+        let player_position = local_player.position(self);
+
+        let Ok(data) = self.data.lock() else {
+            return;
+        };
+        let map = data.map_name.as_str();
+
+        let Ok(grenades) = self.grenades.lock() else {
+            return;
+        };
+        let Some(grenades) = grenades.get(map) else {
+            return;
+        };
+
+        self.target_grenade = None;
+
+        for grenade in grenades {
+            if player_weapon != grenade.weapon {
+                continue;
+            }
+            let distance = (player_position - grenade.position).length();
+            if distance > 24.0 {
+                continue;
+            }
+
+            let angle = grenade.view_angles;
+            let fov = angles_to_fov(&view_angles, &angle);
+
+            let fov_limit = max_fov_grenade;
+            if fov > fov_limit {
+                continue;
+            }
+
+            self.target_grenade = Some(grenade.clone());
+        }
+
+        // prioritizes grenade over players (to trigger this, you must be very close to the grenade position and look near the angle)
+        if self.target_grenade.is_some() {
+            return;
+        }
+
+        if self.players.is_empty() {
+            self.target.reset();
+            return;
         }
 
         let target_friendlies = aimbot_config.target_friendlies;
