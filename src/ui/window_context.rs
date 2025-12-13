@@ -163,11 +163,9 @@ impl WindowContext {
 
     pub fn resize(&self, physical_size: winit::dpi::PhysicalSize<u32>) {
         use glutin::surface::GlSurface as _;
-        self.gl_surface.resize(
-            &self.gl_context,
-            physical_size.width.try_into().unwrap(),
-            physical_size.height.try_into().unwrap(),
-        );
+        let width = NonZeroU32::new(physical_size.width).unwrap_or(NonZeroU32::MIN);
+        let height = NonZeroU32::new(physical_size.height).unwrap_or(NonZeroU32::MIN);
+        self.gl_surface.resize(&self.gl_context, width, height);
     }
 
     pub fn swap_buffers(&self) -> glutin::error::Result<()> {
