@@ -75,38 +75,40 @@ impl CS2 {
         let player_weapon = local_player.weapon(self);
         let player_position = local_player.position(self);
 
-        let Ok(grenades) = self.grenades.lock() else {
-            return;
-        };
-        let Some(grenades) = grenades.get(&self.current_map()) else {
-            return;
-        };
+        'grenades: {
+            let Ok(grenades) = self.grenades.lock() else {
+                break 'grenades;
+            };
+            let Some(grenades) = grenades.get(&self.current_map()) else {
+                break 'grenades;
+            };
 
-        self.target_grenade = None;
+            self.target_grenade = None;
 
-        for grenade in grenades {
-            if player_weapon != grenade.weapon {
-                continue;
+            for grenade in grenades {
+                if player_weapon != grenade.weapon {
+                    continue;
+                }
+                let distance = (player_position - grenade.position).length();
+                if distance > 24.0 {
+                    continue;
+                }
+
+                let angle = grenade.view_angles;
+                let fov = angles_to_fov(&view_angles, &angle);
+
+                let fov_limit = max_fov;
+                if fov > fov_limit {
+                    continue;
+                }
+
+                self.target_grenade = Some(grenade.clone());
             }
-            let distance = (player_position - grenade.position).length();
-            if distance > 24.0 {
-                continue;
+
+            // prioritizes grenade over players (to trigger this, you must be very close to the grenade position and look near the angle)
+            if self.target_grenade.is_some() {
+                return;
             }
-
-            let angle = grenade.view_angles;
-            let fov = angles_to_fov(&view_angles, &angle);
-
-            let fov_limit = max_fov;
-            if fov > fov_limit {
-                continue;
-            }
-
-            self.target_grenade = Some(grenade.clone());
-        }
-
-        // prioritizes grenade over players (to trigger this, you must be very close to the grenade position and look near the angle)
-        if self.target_grenade.is_some() {
-            return;
         }
 
         if self.players.is_empty() {
