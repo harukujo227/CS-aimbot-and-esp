@@ -521,6 +521,7 @@ enum Attribute {
     U64Array(Vec<u64>),
 }
 
+// todo: improve this
 fn game_dir() -> Result<PathBuf, String> {
     let Ok(home) = std::env::var("HOME") else {
         return Err("could not find home directory".to_owned());
@@ -535,7 +536,7 @@ fn game_dir() -> Result<PathBuf, String> {
     let library_folders = steam_path.join("config/libraryfolders.vdf");
     let Ok(content) = std::fs::read_to_string(&library_folders) else {
         return Err(format!(
-            "could not read steam library folders({home}/.steam/steam/config/libraryfolders.vdf)"
+            "could not read steam library folders ({home}/.steam/steam/config/libraryfolders.vdf)"
         ));
     };
     let libs: Vec<&str> = content
