@@ -75,6 +75,8 @@ impl CS2 {
         let player_weapon = local_player.weapon(self);
         let player_position = local_player.position(self);
 
+        self.target_grenade = None;
+
         'grenades: {
             let Ok(grenades) = self.grenades.lock() else {
                 break 'grenades;
@@ -82,8 +84,6 @@ impl CS2 {
             let Some(grenades) = grenades.get(&self.current_map()) else {
                 break 'grenades;
             };
-
-            self.target_grenade = None;
 
             for grenade in grenades {
                 if player_weapon != grenade.weapon {
