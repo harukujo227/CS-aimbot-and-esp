@@ -18,9 +18,11 @@ impl CS2 {
         let hotkey = config.aim.aimbot_hotkey;
         let config = self.aimbot_config(config);
 
-        if !config.enabled || self.target.player.is_none() {
+        if !config.enabled || (self.target.player.is_none() && self.target_grenade.is_none()) {
             return;
         }
+
+        let grenade = self.target_grenade.is_some();
 
         let button_state = self.is_button_down(&hotkey);
         if config.mode == KeyMode::Hold && !button_state {
@@ -35,7 +37,7 @@ impl CS2 {
             }
         }
 
-        let target = self.target.player.as_ref().unwrap();
+        let target = self.target.player.as_ref();
 
         let Some(local_player) = Player::local_player(self) else {
             return;
@@ -45,21 +47,32 @@ impl CS2 {
             return;
         }
 
-        if config.visibility_check && !target.visible(self, &local_player) {
+        if !grenade && config.visibility_check && !target.unwrap().visible(self, &local_player) {
             return;
         }
 
         let target_angle = {
             let mut smallest_fov = 360.0;
             let mut smallest_angle = glam::Vec2::ZERO;
-            for bone in &config.bones {
-                let bone_pos = target.bone_position(self, bone.u64());
-                let angle =
-                    self.angle_to_target(&local_player, &bone_pos, &self.target.previous_aim_punch);
+            if grenade {
+                let angle = self.target_grenade.as_ref().unwrap().view_angles;
                 let fov = angles_to_fov(&local_player.view_angles(self), &angle);
                 if fov < smallest_fov {
-                    smallest_fov = fov;
                     smallest_angle = angle;
+                }
+            } else {
+                for bone in &config.bones {
+                    let bone_pos = target.unwrap().bone_position(self, bone.u64());
+                    let angle = self.angle_to_target(
+                        &local_player,
+                        &bone_pos,
+                        &self.target.previous_aim_punch,
+                    );
+                    let fov = angles_to_fov(&local_player.view_angles(self), &angle);
+                    if fov < smallest_fov {
+                        smallest_fov = fov;
+                        smallest_angle = angle;
+                    }
                 }
             }
             smallest_angle
@@ -77,7 +90,7 @@ impl CS2 {
             return;
         }
 
-        if !target.is_valid(self) {
+        if !grenade && !target.unwrap().is_valid(self) {
             return;
         }
 
@@ -96,7 +109,7 @@ impl CS2 {
         let mouse_angles = vec2(
             aim_angles.y / sensitivity * 50.0,
             -aim_angles.x / sensitivity * 50.0,
-        ) / (config.smooth + 1.0).clamp(1.0, 20.0);
+        ) / (if grenade { 1.0 } else { config.smooth + 1.0 }).clamp(1.0, 20.0);
 
         mouse.move_rel(&mouse_angles);
     }

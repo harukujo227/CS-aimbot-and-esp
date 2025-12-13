@@ -54,11 +54,6 @@ impl CS2 {
         };
         self.target.previous_aim_punch = aim_punch;
 
-        if self.players.is_empty() {
-            self.target.reset();
-            return;
-        }
-
         let aimbot_config = self.aimbot_config(config);
         let targeting_mode = &aimbot_config.targeting_mode;
         let max_fov = aimbot_config.fov;
@@ -75,6 +70,50 @@ impl CS2 {
             && !player.is_valid(self)
         {
             self.target.reset();
+        }
+
+        let player_weapon = local_player.weapon(self);
+        let player_position = local_player.position(self);
+
+        self.target_grenade = None;
+
+        'grenades: {
+            let Ok(grenades) = self.grenades.lock() else {
+                break 'grenades;
+            };
+            let Some(grenades) = grenades.get(&self.current_map()) else {
+                break 'grenades;
+            };
+
+            for grenade in grenades {
+                if player_weapon != grenade.weapon {
+                    continue;
+                }
+                let distance = (player_position - grenade.position).length();
+                if distance > 24.0 {
+                    continue;
+                }
+
+                let angle = grenade.view_angles;
+                let fov = angles_to_fov(&view_angles, &angle);
+
+                let fov_limit = max_fov;
+                if fov > fov_limit {
+                    continue;
+                }
+
+                self.target_grenade = Some(grenade.clone());
+            }
+
+            // prioritizes grenade over players (to trigger this, you must be very close to the grenade position and look near the angle)
+            if self.target_grenade.is_some() {
+                return;
+            }
+        }
+
+        if self.players.is_empty() {
+            self.target.reset();
+            return;
         }
 
         let target_friendlies = aimbot_config.target_friendlies;

@@ -202,6 +202,7 @@ impl App {
         // fov circle
         if self.config.hud.fov_circle && data.in_game {
             let weapon_config = self.aimbot_config(&data.weapon);
+
             let aim_fov = weapon_config.fov;
 
             if weapon_config.distance_adjusted_fov {
@@ -764,7 +765,10 @@ impl App {
         let position = data.local_player.position;
         let map = &data.map_name;
 
-        let Some(grenades) = self.grenades.get(map) else {
+        let Ok(grenades) = self.grenades.lock() else {
+            return;
+        };
+        let Some(grenades) = grenades.get(map) else {
             return;
         };
 

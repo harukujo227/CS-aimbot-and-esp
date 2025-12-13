@@ -26,6 +26,7 @@ use crate::{
     math::{angles_from_vector, vec2_clamp},
     os::{mouse::Mouse, process::Process},
     parser::bvh::Bvh,
+    ui::grenades::{Grenade, GrenadeList},
 };
 
 pub mod bones;
@@ -55,6 +56,8 @@ pub struct CS2 {
     weapon: Weapon,
     planted_c4: Option<PlantedC4>,
     previous_sound_times: RefCell<HashMap<u64, Option<Instant>>>,
+    grenades: Arc<Mutex<GrenadeList>>,
+    target_grenade: Option<Grenade>,
 }
 
 impl Game for CS2 {
@@ -163,7 +166,7 @@ impl Game for CS2 {
         let mut previous_sound_times = self.previous_sound_times.borrow_mut();
 
         let all_players = std::iter::once(&local_player).chain(&self.players);
-        
+
         for player in all_players {
             let steam_id = player.steam_id(self);
             let current_sound = player.is_making_sound(self);
@@ -192,9 +195,12 @@ impl Game for CS2 {
                 color: player.color(self),
                 rotation: player.rotation(self),
                 sound: player.is_making_sound(self),
-                last_sound_time: current_sound_times.get(&player.steam_id(self)).copied().flatten(),
+                last_sound_time: current_sound_times
+                    .get(&player.steam_id(self))
+                    .copied()
+                    .flatten(),
             };
-            
+
             if !self.is_ffa() && player.team(self) == local_team {
                 data.friendlies.push(player_data);
             } else {
@@ -287,7 +293,7 @@ impl Game for CS2 {
 }
 
 impl CS2 {
-    pub fn new(bvh: Arc<Mutex<HashMap<String, Bvh>>>) -> Self {
+    pub fn new(bvh: Arc<Mutex<HashMap<String, Bvh>>>, grenades: Arc<Mutex<GrenadeList>>) -> Self {
         Self {
             is_valid: false,
             process: Process::new(-1),
@@ -305,6 +311,8 @@ impl CS2 {
             weapon: Weapon::default(),
             planted_c4: None,
             previous_sound_times: RefCell::new(HashMap::new()),
+            grenades,
+            target_grenade: None,
         }
     }
 

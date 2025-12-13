@@ -22,7 +22,7 @@ use crate::{
     os::mouse::DeviceStatus,
     parser::bvh::Bvh,
     ui::{
-        grenades::{Grenade, GrenadeList, read_grenades},
+        grenades::{Grenade, GrenadeList},
         gui::{Tab, aimbot::AimbotTab},
         trail::Trail,
         window_context::WindowContext,
@@ -53,7 +53,7 @@ pub struct App {
     #[allow(unused)]
     pub trails: HashMap<u64, Trail>,
 
-    pub grenades: GrenadeList,
+    pub grenades: Arc<Mutex<GrenadeList>>,
     pub new_grenade: Grenade,
     pub current_grenade: Option<(String, usize)>,
 
@@ -73,13 +73,12 @@ impl App {
         rx: Receiver<Message>,
         data: Arc<Mutex<Data>>,
         bvh: Arc<Mutex<HashMap<String, Bvh>>>,
+        grenades: Arc<Mutex<GrenadeList>>,
     ) -> Self {
         // read config
         let config = parse_config(&CONFIG_PATH.join(DEFAULT_CONFIG_NAME));
         // override config if invalid
         write_config(&config, &CONFIG_PATH.join(DEFAULT_CONFIG_NAME));
-
-        let grenades = read_grenades();
 
         let ret = Self {
             gui: None,

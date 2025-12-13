@@ -6,7 +6,11 @@ use std::{
 
 use crossbeam::channel::{bounded, unbounded};
 
-use crate::{data::Data, parser::parse_maps, ui::app::App};
+use crate::{
+    data::Data,
+    parser::parse_maps,
+    ui::{app::App, grenades::read_grenades},
+};
 
 mod config;
 mod constants;
@@ -65,6 +69,8 @@ fn main() {
     let data = Arc::new(Mutex::new(Data::default()));
     let data_game = data.clone();
     let data_radar = data.clone();
+    let grenades = Arc::new(Mutex::new(read_grenades()));
+    let grenades_game = grenades.clone();
 
     std::thread::spawn(move || {
         os::crash::install_crash_handler();
@@ -74,7 +80,7 @@ fn main() {
     let tx_game = tx.clone();
     std::thread::spawn(move || {
         os::crash::install_crash_handler();
-        game::GameManager::new(tx_game, rx_game, data_game, bvh_game).run();
+        game::GameManager::new(tx_game, rx_game, data_game, bvh_game, grenades_game).run();
     });
     log::info!("started game thread");
 
@@ -92,7 +98,7 @@ fn main() {
         }
     };
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
-    let mut app = App::new(tx, rx_gui, data, bvh_gui);
+    let mut app = App::new(tx, rx_gui, data, bvh_gui, grenades);
     event_loop.run_app(&mut app).unwrap();
     log::info!("exiting");
 }
