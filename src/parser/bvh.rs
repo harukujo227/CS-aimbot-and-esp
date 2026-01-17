@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{BufReader, BufWriter},
+    io::{BufWriter, Read as _},
 };
 
 use glam::Vec3;
@@ -156,13 +156,13 @@ impl Bvh {
 
     pub fn save(&self, file: &mut File) {
         let mut writer = BufWriter::new(file);
-        bincode::serde::encode_into_std_write(self, &mut writer, bincode::config::standard())
-            .unwrap();
+        postcard::to_io(self, &mut writer).unwrap();
     }
 
     pub fn load(file: &mut File) -> Option<Self> {
-        let mut reader = BufReader::new(file);
-        bincode::serde::decode_from_std_read(&mut reader, bincode::config::standard()).ok()
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer).ok()?;
+        postcard::from_bytes(&buffer).ok()
     }
 
     pub fn insert(&mut self, triangle: Triangle) -> usize {
