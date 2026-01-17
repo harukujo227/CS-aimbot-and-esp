@@ -309,7 +309,7 @@ impl App {
             ui.horizontal(|ui| {
                 if ui
                     .add(
-                        DragValue::new(&mut self.weapon_config().triggerbot.additional_duration_ms)
+                        DragValue::new(&mut self.weapon_config().triggerbot.shot_duration)
                             .range(0..=2000)
                             .speed(10.0),
                     )

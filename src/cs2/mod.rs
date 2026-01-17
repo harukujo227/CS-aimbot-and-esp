@@ -9,12 +9,11 @@ use glam::{IVec2, Mat4, Vec2, Vec3};
 
 use crate::{
     config::{AimbotConfig, Config, KeyMode, RcsConfig, TriggerbotConfig},
-    constants::cs2::{self, TEAM_CT, TEAM_T, class},
+    constants::cs2::{self, TEAM_CT, TEAM_T},
     cs2::{
         bones::Bones,
         entity::{
-            Entity, EntityInfo, GrenadeInfo, inferno::Inferno, molotov::Molotov,
-            planted_c4::PlantedC4, player::Player, smoke::Smoke, weapon::Weapon,
+            Entity, EntityInfo, GrenadeInfo, planted_c4::PlantedC4, player::Player, weapon::Weapon,
         },
         features::{aimbot::Aimbot, esp_toggle::EspToggle, rcs::Recoil, triggerbot::Triggerbot},
         key_codes::KeyCode,
@@ -52,7 +51,7 @@ pub struct CS2 {
     recoil: Recoil,
     aim: Aimbot,
     trigger: Triggerbot,
-    wallhack: EspToggle,
+    esp: EspToggle,
     weapon: Weapon,
     planted_c4: Option<PlantedC4>,
     previous_sound_times: RefCell<HashMap<u64, Option<Instant>>>,
@@ -307,7 +306,7 @@ impl CS2 {
             recoil: Recoil::default(),
             aim: Aimbot::default(),
             trigger: Triggerbot::default(),
-            wallhack: EspToggle::default(),
+            esp: EspToggle::default(),
             weapon: Weapon::default(),
             planted_c4: None,
             previous_sound_times: RefCell::new(HashMap::new()),
@@ -401,147 +400,6 @@ impl CS2 {
             1.0
         } else {
             5.0 - (distance / 125.0)
-        }
-    }
-
-    fn cache_entities(&mut self) {
-        self.players.clear();
-        self.entities.clear();
-        self.planted_c4 = None;
-
-        let Some(local_player) = Player::local_player(self) else {
-            return;
-        };
-
-        const NUM_BUCKETS: usize = 64;
-        let bucket_pointers = self
-            .process
-            .read_vec(self.offsets.interface.entity, 0x8 * NUM_BUCKETS);
-        for bucket_index in 0..64 {
-            let bucket_pointer =
-                *bytemuck::from_bytes(&bucket_pointers[bucket_index * 8..(bucket_index + 1) * 8]);
-            self.get_entities_in_bucket(bucket_index as u64, bucket_pointer, &local_player);
-        }
-    }
-
-    fn get_entities_in_bucket(
-        &mut self,
-        bucket_index: u64,
-        bucket_ptr: u64,
-        local_player: &Player,
-    ) {
-        if bucket_ptr == 0 || bucket_ptr >> 48 != 0 {
-            return;
-        }
-        const IDENTITIES_PER_BUCKET: usize = 512;
-        let bucket = self.process.read_vec(
-            bucket_ptr,
-            IDENTITIES_PER_BUCKET * self.offsets.entity_identity.size as usize,
-        );
-        for index_in_bucket in 0..IDENTITIES_PER_BUCKET {
-            let identity_offset = index_in_bucket * self.offsets.entity_identity.size as usize;
-
-            let entity: u64 = *bytemuck::from_bytes(&bucket[identity_offset..identity_offset + 8]);
-            if entity == 0 {
-                continue;
-            }
-
-            let handle_start = identity_offset + 0x10;
-            let handle: u32 = *bytemuck::from_bytes(&bucket[handle_start..handle_start + 4]);
-            let handle_index = handle & 0x7FFF;
-            let entity_index =
-                (bucket_index as usize * IDENTITIES_PER_BUCKET + index_in_bucket) as u32;
-            if entity_index != handle_index {
-                continue;
-            }
-
-            let class_info_ptr: u64 =
-                *bytemuck::from_bytes(&bucket[identity_offset + 8..identity_offset + 16]);
-            let class_info: u64 = self.process.read(class_info_ptr + 0x30);
-            let class_name_ptr: u64 = self.process.read(class_info + 0x08);
-            let class = self.process.read_string(class_name_ptr);
-
-            match class.as_str() {
-                class::PLAYER_CONTROLLER => {
-                    let Some(player) = Player::from_controller(entity, self) else {
-                        continue;
-                    };
-
-                    if !player.is_valid(self) {
-                        continue;
-                    }
-
-                    if let Some(target) = player.spectator_target(self) {
-                        let spectator_id = player.steam_id(self);
-                        let target_pawn = target.pawn;
-                        let local_pawn = local_player.pawn;
-
-                        if target_pawn == local_pawn {
-                            let spectator_name = player.name(self);
-                            let local_steam_id = local_player.steam_id(self);
-                            self.dead_spectators.borrow_mut().push((
-                                spectator_name,
-                                spectator_id,
-                                local_steam_id,
-                            ));
-                        }
-                    }
-
-                    if player == *local_player {
-                        self.target.local_pawn_index = (handle as u64 & 0x7FFF) - 1;
-                    } else {
-                        self.players.push(player);
-                    }
-                }
-                class::PLANTED_C4 => {
-                    let planted_c4 = PlantedC4::new(entity);
-                    if planted_c4.is_relevant(self) {
-                        self.planted_c4 = Some(planted_c4)
-                    }
-                }
-                class::INFERNO => {
-                    self.entities.push(Entity::Inferno(Inferno::new(entity)));
-                }
-                class::SMOKE => {
-                    self.entities.push(Entity::Smoke(Smoke::new(entity)));
-                }
-                class::MOLOTOV => self.entities.push(Entity::Molotov(Molotov::new(entity))),
-                class::FLASHBANG => self.entities.push(Entity::Flashbang(entity)),
-                class::HE_GRENADE => self.entities.push(Entity::HeGrenade(entity)),
-                class::DECOY => self.entities.push(Entity::Decoy(entity)),
-                _ => {
-                    // check if weapon
-                    let entity_identity: u64 = self.process.read(entity + 0x10);
-                    if entity_identity == 0 {
-                        continue;
-                    }
-
-                    let name_pointer = self.process.read(entity_identity + 0x20);
-                    if name_pointer == 0 {
-                        continue;
-                    }
-
-                    let name = self.process.read_string(name_pointer);
-
-                    if name.starts_with("weapon_") {
-                        if self.entity_has_owner(entity) {
-                            continue;
-                        }
-
-                        let weapon = Weapon::from_handle(entity, self);
-
-                        self.entities.push(Entity::Weapon { weapon, entity })
-                    }
-                }
-            }
-
-            // m_designerName
-            /*let name_pointer: u64 =
-                *bytemuck::from_bytes(&bucket[identity_offset + 0x20..identity_offset + 0x28]);
-            let Some(entity) = self.entity_type(entity, name_pointer) else {
-                continue;
-            };
-            self.entities.push(entity);*/
         }
     }
 }

@@ -151,13 +151,13 @@ pub struct TriggerbotConfig {
     pub enable_override: bool,
     pub enabled: bool,
     pub delay: RangeInclusive<u64>,
+    pub shot_duration: u64,
     pub mode: KeyMode,
     pub flash_check: bool,
     pub scope_check: bool,
     pub velocity_check: bool,
     pub velocity_threshold: f32,
     pub head_only: bool,
-    pub additional_duration_ms: u32,
 }
 
 impl Default for TriggerbotConfig {
@@ -166,13 +166,13 @@ impl Default for TriggerbotConfig {
             enable_override: false,
             enabled: false,
             delay: 100..=200,
+            shot_duration: 200,
             mode: KeyMode::Hold,
             flash_check: true,
             scope_check: true,
             velocity_check: true,
             velocity_threshold: 100.0,
             head_only: false,
-            additional_duration_ms: 200,
         }
     }
 }
