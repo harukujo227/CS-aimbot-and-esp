@@ -62,7 +62,7 @@ impl CS2 {
 
         let Some(view_matrix) = self
             .process
-            .scan("4C 8D 0D ? ? ? ? 4C 89 E6 4C 8D 05", offsets.library.client)
+            .scan("C6 83 ? ? 00 00 01 4C 8D 05", offsets.library.client)
         else {
             log::warn!("could not find view matrix offset");
             return None;
