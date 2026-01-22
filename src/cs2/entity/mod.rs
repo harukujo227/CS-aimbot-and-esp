@@ -1,12 +1,20 @@
 use glam::Vec3;
 use serde::Serialize;
 
-use crate::{constants::cs2::class, cs2::{
-    CS2,
-    entity::{
-        inferno::{Inferno, InfernoInfo}, molotov::{Molotov, MolotovInfo}, planted_c4::PlantedC4, player::Player, smoke::{Smoke, SmokeInfo}, weapon::Weapon
+use crate::{
+    constants::cs2::class,
+    cs2::{
+        CS2,
+        entity::{
+            inferno::{Inferno, InfernoInfo},
+            molotov::{Molotov, MolotovInfo},
+            planted_c4::PlantedC4,
+            player::Player,
+            smoke::{Smoke, SmokeInfo},
+            weapon::Weapon,
+        },
     },
-}};
+};
 
 pub mod inferno;
 pub mod molotov;
@@ -107,13 +115,12 @@ impl CS2 {
                 continue;
             }
 
-            let class_info_ptr: u64 =
-                *bytemuck::from_bytes(&bucket[identity_offset + 8..identity_offset + 16]);
-            let class_info: u64 = self.process.read(class_info_ptr + 0x30);
-            let class_name_ptr: u64 = self.process.read(class_info + 0x08);
-            let class = self.process.read_string(class_name_ptr);
+            let vtable: u64 = self.process.read(entity);
+            let rtti: u64 = self.process.read(vtable - 0x8);
+            let name_ptr: u64 = self.process.read(rtti + 0x8);
+            let name = self.process.read_string(name_ptr);
 
-            match class.as_str() {
+            match name.as_str() {
                 class::PLAYER_CONTROLLER => {
                     let Some(player) = Player::from_controller(entity, self) else {
                         continue;
