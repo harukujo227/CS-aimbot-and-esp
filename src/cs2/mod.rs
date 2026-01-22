@@ -360,11 +360,11 @@ impl CS2 {
 
     // convars
     fn get_sensitivity(&self) -> f32 {
-        self.process.read(self.offsets.convar.sensitivity + 0x50)
+        self.process.read(self.offsets.convar.sensitivity + 0x58)
     }
 
     fn is_ffa(&self) -> bool {
-        self.process.read::<u8>(self.offsets.convar.ffa + 0x50) == 1
+        self.process.read::<u8>(self.offsets.convar.ffa + 0x58) == 1
     }
 
     fn is_custom_game_mode(&self) -> bool {
