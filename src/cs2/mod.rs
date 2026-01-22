@@ -392,7 +392,7 @@ impl CS2 {
     fn current_map(&self) -> String {
         let global_vars: u64 = self.process.read(self.offsets.direct.global_vars);
         self.process
-            .read_string(self.process.read(global_vars + 0x190))
+            .read_string(self.process.read(global_vars + 0x198))
     }
 
     fn distance_scale(&self, distance: f32) -> f32 {
