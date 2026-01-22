@@ -67,9 +67,10 @@ impl CS2 {
             log::warn!("could not find view matrix offset");
             return None;
         };
+
         offsets.direct.view_matrix =
             self.process
-                .get_relative_address(view_matrix + 0x0A, 0x03, 0x07);
+                .get_relative_address(view_matrix + 0x0A, 0x0, 0x04);
 
         let Some(sdl_window) = self
             .process
