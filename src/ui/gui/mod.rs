@@ -1,4 +1,4 @@
-use egui::{Align, CollapsingHeader, Context, Ui};
+use egui::{Align, Context, Ui};
 
 use crate::{
     config::{BASE_PATH, VERSION, WeaponConfig, write_config},
