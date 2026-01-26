@@ -1,4 +1,6 @@
-use egui::{CollapsingHeader, Color32, DragValue, Sense, Ui};
+use egui::{CollapsingHeader, Color32, DragValue, Sense, Ui, Widget};
+
+use crate::cs2::key_codes::KeyCode;
 
 pub fn collapsing_open(ui: &mut Ui, title: &str, add_body: impl FnOnce(&mut Ui)) {
     CollapsingHeader::new(title)
@@ -18,7 +20,9 @@ pub fn checkbox(ui: &mut Ui, label: &str, value: &mut bool) -> bool {
 }
 
 pub fn checkbox_hover(ui: &mut Ui, label: &str, hover_text: &str, value: &mut bool) -> bool {
-    ui.checkbox(value, label).on_hover_text(hover_text).changed()
+    ui.checkbox(value, label)
+        .on_hover_text(hover_text)
+        .changed()
 }
 
 pub fn drag(ui: &mut Ui, label: &str, drag: DragValue) -> bool {
@@ -77,4 +81,24 @@ pub fn color_picker(ui: &mut Ui, label: &str, color: &mut Color32) -> bool {
     }
 
     changed
+}
+
+pub struct Keybind<'gui> {
+    keycode: &'gui mut KeyCode,
+    listening: bool,
+}
+
+impl<'gui> Keybind<'gui> {
+    pub fn new(keycode: &'gui mut KeyCode) -> Self {
+        Self {
+            keycode,
+            listening: false,
+        }
+    }
+}
+
+impl<'gui> Widget for Keybind<'gui> {
+    fn ui(self, ui: &mut Ui) -> egui::Response {
+        ui.button("")
+    }
 }

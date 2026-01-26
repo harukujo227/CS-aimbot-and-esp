@@ -240,6 +240,28 @@ impl KeyCode {
         }
     }
 
+    pub fn from_egui(keycode: egui::Key) -> Option<Self> {
+        Some(match keycode {
+            Key::Num0 => Self::Key0,
+            Key::Num1 => Self::Key1,
+            Key::Num2 => Self::Key2,
+            Key::Num3 => Self::Key3,
+            Key::Num4 => Self::Key4,
+            Key::Num5 => Self::Key5,
+            Key::Num6 => Self::Key6,
+            Key::Num7 => Self::Key7,
+            Key::Num8 => Self::Key8,
+            Key::Num9 => Self::Key9,
+
+            Key::A => Self::KeyA,
+            Key::B => Self::KeyB,
+            Key::C => Self::KeyC,
+            Key::D => Self::KeyD,
+            Key::E => Self::KeyE,
+            _ => return None,
+        })
+    }
+
     pub fn u64(self) -> u64 {
         self as u64
     }
