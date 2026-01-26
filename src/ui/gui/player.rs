@@ -3,7 +3,10 @@ use strum::IntoEnumIterator as _;
 
 use crate::{
     cs2::key_codes::KeyCode,
-    ui::{app::App, gui::collapsing_open},
+    ui::{
+        app::App,
+        gui::{collapsing_open, helpers::color_picker},
+    },
 };
 
 impl App {
@@ -20,34 +23,26 @@ impl App {
                 });
 
                 collapsing_open(ui, "Colors", |ui| {
-                    if let Some(color) = self.color_picker(
+                    if color_picker(
                         ui,
-                        &self.config.player.box_visible_color,
                         "Box (visible)",
+                        &mut self.config.player.box_visible_color,
                     ) {
-                        self.config.player.box_visible_color = color;
                         self.send_config();
                     }
 
-                    if let Some(color) = self.color_picker(
+                    if color_picker(
                         ui,
-                        &self.config.player.box_invisible_color,
                         "Box (invisible)",
+                        &mut self.config.player.box_invisible_color,
                     ) {
-                        self.config.player.box_invisible_color = color;
                         self.send_config();
                     }
 
-                    if let Some(color) =
-                        self.color_picker(ui, &self.config.player.skeleton_color, "Skeleton")
-                    {
-                        self.config.player.skeleton_color = color;
+                    if color_picker(ui, "Skeleton", &mut self.config.player.skeleton_color) {
                         self.send_config();
                     }
-                    if let Some(color) =
-                        self.color_picker(ui, &self.config.player.sound.color, "Sound ESP")
-                    {
-                        self.config.player.sound.color = color;
+                    if color_picker(ui, "Sound ESP", &mut self.config.player.sound.color) {
                         self.send_config();
                     }
                 });

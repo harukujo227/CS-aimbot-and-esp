@@ -2,9 +2,15 @@ use egui::{DragValue, Ui};
 use strum::IntoEnumIterator as _;
 
 use crate::{
-    config::{KeyMode, TargetingMode},
-    cs2::{bones::Bones, entity::weapon::Weapon, key_codes::KeyCode},
-    ui::{app::App, drag_range::DragRange, gui::collapsing_open},
+    cs2::{bones::Bones, entity::weapon::Weapon},
+    ui::{
+        app::App,
+        drag_range::DragRange,
+        gui::{
+            collapsing_open,
+            helpers::{checkbox, checkbox_hover, combo_box, drag, scroll},
+        },
+    },
 };
 
 #[derive(PartialEq)]
@@ -35,125 +41,92 @@ impl App {
         ui.separator();
         ui.columns(2, |cols| {
             let left = &mut cols[0];
-            egui::ScrollArea::vertical()
-                .auto_shrink([false, true])
-                .id_salt("aimbot_left")
-                .show(left, |left| {
-                    self.aimbot_left(left);
-                });
+            scroll(left, "aimbot_left", |ui| self.aimbot_left(ui));
 
             let right = &mut cols[1];
-            egui::ScrollArea::vertical()
-                .auto_shrink([false, true])
-                .id_salt("aimbot_right")
-                .show(right, |right| {
-                    self.aimbot_right(right);
-                });
+            scroll(right, "aimbot_right", |ui| self.aimbot_right(ui));
         });
     }
 
     fn aimbot_left(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Aimbot", |ui| {
-            egui::ComboBox::new("aimbot_hotkey", "Hotkey")
-                .selected_text(format!("{:?}", self.config.aim.aimbot_hotkey))
-                .show_ui(ui, |ui| {
-                    for key_code in KeyCode::iter() {
-                        let text = format!("{:?}", &key_code);
-                        if ui
-                            .selectable_value(&mut self.config.aim.aimbot_hotkey, key_code, text)
-                            .clicked()
-                        {
-                            self.send_config();
-                        }
-                    }
-                });
+            if combo_box(
+                ui,
+                "aimbot_hotkey",
+                "Hotkey",
+                &mut self.config.aim.aimbot_hotkey,
+            ) {
+                self.send_config();
+            }
 
             if self.aimbot_tab == AimbotTab::Weapon
-                && ui
-                    .checkbox(
-                        &mut self.weapon_config().aimbot.enable_override,
-                        "Enable Override",
-                    )
-                    .on_hover_text("Enable aimbot settings override for a specific weapon")
-                    .changed()
-            {
-                self.send_config();
-            }
-
-            if ui
-                .checkbox(&mut self.weapon_config().aimbot.enabled, "Enable Aimbot")
-                .changed()
-            {
-                self.send_config();
-            }
-
-            egui::ComboBox::new("aimbot_mode", "Mode")
-                .selected_text(format!("{:?}", self.weapon_config().aimbot.mode))
-                .show_ui(ui, |ui| {
-                    for mode in KeyMode::iter() {
-                        let text = format!("{:?}", &mode);
-                        if ui
-                            .selectable_value(&mut self.weapon_config().aimbot.mode, mode, text)
-                            .clicked()
-                        {
-                            self.send_config();
-                        }
-                    }
-                });
-
-            if ui
-                .checkbox(
-                    &mut self.weapon_config().aimbot.target_friendlies,
-                    "Target Friendlies",
+                && checkbox_hover(
+                    ui,
+                    "Enable Override",
+                    "Enable aimbot settings override for a specific weapon",
+                    &mut self.weapon_config().aimbot.enable_override,
                 )
-                .on_hover_text("Only active in custom game modes (workshop/custom maps)")
-                .changed()
             {
                 self.send_config();
             }
 
-            if ui
-                .checkbox(
-                    &mut self.weapon_config().aimbot.distance_adjusted_fov,
-                    "Distance-Adjusted FOV",
-                )
-                .on_hover_text("Adjusts FOV based on target distance")
-                .changed()
-            {
+            if checkbox(
+                ui,
+                "Enable Aimbot",
+                &mut self.weapon_config().aimbot.enabled,
+            ) {
                 self.send_config();
             }
 
-            ui.horizontal(|ui| {
-                if ui
-                    .add(
-                        DragValue::new(&mut self.weapon_config().aimbot.fov)
-                            .range(0.1..=360.0)
-                            .suffix("°")
-                            .speed(0.02)
-                            .max_decimals(1),
-                    )
-                    .changed()
-                {
-                    self.send_config();
-                }
-                ui.label("FOV");
-            });
+            if combo_box(
+                ui,
+                "aimbot_mode",
+                "Mode",
+                &mut self.weapon_config().aimbot.mode,
+            ) {
+                self.send_config();
+            }
 
-            ui.horizontal(|ui| {
-                if ui
-                    .add(
-                        DragValue::new(&mut self.weapon_config().aimbot.smooth)
-                            .range(0.0..=20.0)
-                            .speed(0.02)
-                            .max_decimals(1),
-                    )
-                    .on_hover_text("Smooth the aimbot movements\nSetting it to 0 will instantly snap to the target")
-                    .changed()
-                {
-                    self.send_config();
-                }
-                ui.label("Smooth");
-            });
+            if checkbox_hover(
+                ui,
+                "Target Friendlies",
+                "Only active in custom game modes (workshop/custom maps)",
+                &mut self.weapon_config().aimbot.target_friendlies,
+            ) {
+                self.send_config();
+            }
+
+            if checkbox_hover(
+                ui,
+                "Distance-Adjusted FOV",
+                "Adjusts FOV based on target distance",
+                &mut self.weapon_config().aimbot.distance_adjusted_fov,
+            ) {
+                self.send_config();
+            }
+
+            if drag(
+                ui,
+                "FOV",
+                DragValue::new(&mut self.weapon_config().aimbot.fov)
+                    .range(0.1..=360.0)
+                    .suffix("°")
+                    .speed(0.02)
+                    .max_decimals(1),
+            ) {
+                self.send_config();
+            }
+
+            if drag(
+                ui,
+                "Smooth",
+                DragValue::new(&mut self.weapon_config().aimbot.smooth)
+                    .range(0.0..=20.0)
+                    .speed(0.02)
+                    .max_decimals(1),
+            ) {
+                self.send_config();
+            }
 
             ui.horizontal(|ui| {
                 if ui
@@ -172,23 +145,14 @@ impl App {
                 ui.label("Start Bullet");
             });
 
-            egui::ComboBox::new("targeting_mode", "Targeting Mode")
-                .selected_text(format!("{:?}", self.weapon_config().aimbot.targeting_mode))
-                .show_ui(ui, |ui| {
-                    for mode in TargetingMode::iter() {
-                        let text = format!("{:?}", &mode);
-                        if ui
-                            .selectable_value(
-                                &mut self.weapon_config().aimbot.targeting_mode,
-                                mode,
-                                text,
-                            )
-                            .clicked()
-                        {
-                            self.send_config();
-                        }
-                    }
-                });
+            if combo_box(
+                ui,
+                "targeting_mode",
+                "Targeting Mode",
+                &mut self.weapon_config().aimbot.targeting_mode,
+            ) {
+                self.send_config();
+            }
         });
 
         ui.collapsing("Checks", |ui| {
@@ -254,23 +218,14 @@ impl App {
                 self.send_config();
             }
 
-            egui::ComboBox::new("triggerbot_hotkey", "Hotkey")
-                .selected_text(format!("{:?}", self.config.aim.triggerbot_hotkey))
-                .show_ui(ui, |ui| {
-                    for key_code in KeyCode::iter() {
-                        let text = format!("{:?}", &key_code);
-                        if ui
-                            .selectable_value(
-                                &mut self.config.aim.triggerbot_hotkey,
-                                key_code,
-                                text,
-                            )
-                            .clicked()
-                        {
-                            self.send_config();
-                        }
-                    }
-                });
+            if combo_box(
+                ui,
+                "triggerbot_hotkey",
+                "Hotkey",
+                &mut self.config.aim.triggerbot_hotkey,
+            ) {
+                self.send_config();
+            }
 
             ui.horizontal(|ui| {
                 if ui
@@ -285,19 +240,14 @@ impl App {
                 ui.label("Delay (ms)");
             });
 
-            egui::ComboBox::new("triggerbot_mode", "Mode")
-                .selected_text(format!("{:?}", self.weapon_config().triggerbot.mode))
-                .show_ui(ui, |ui| {
-                    for mode in KeyMode::iter() {
-                        let text = format!("{:?}", &mode);
-                        if ui
-                            .selectable_value(&mut self.weapon_config().triggerbot.mode, mode, text)
-                            .clicked()
-                        {
-                            self.send_config();
-                        }
-                    }
-                });
+            if combo_box(
+                ui,
+                "triggerbot_mode",
+                "Mode",
+                &mut self.weapon_config().triggerbot.mode,
+            ) {
+                self.send_config();
+            }
 
             if ui
                 .checkbox(&mut self.weapon_config().triggerbot.head_only, "Head Only")

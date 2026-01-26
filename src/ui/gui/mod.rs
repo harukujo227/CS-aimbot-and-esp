@@ -1,4 +1,4 @@
-use egui::{Align, CollapsingHeader, Color32, Context, DragValue, Ui};
+use egui::{Align, CollapsingHeader, Context, Ui};
 
 use crate::{
     config::{BASE_PATH, VERSION, WeaponConfig, write_config},
@@ -13,6 +13,7 @@ use crate::{
 pub mod aimbot;
 mod config;
 mod grenade;
+mod helpers;
 mod hud;
 mod player;
 mod radar;
@@ -159,33 +160,6 @@ impl App {
                     }
                 });
         });
-    }
-
-    fn color_picker(&self, ui: &mut Ui, color: &Color32, label: &str) -> Option<Color32> {
-        let [mut r, mut g, mut b, mut a] = color.to_array();
-        let res = ui
-            .horizontal(|ui| {
-                let (response, painter) =
-                    ui.allocate_painter(ui.spacing().interact_size, egui::Sense::hover());
-                painter.rect_filled(
-                    response.rect,
-                    ui.style().visuals.widgets.inactive.corner_radius,
-                    *color,
-                );
-                let mut res = ui.add(DragValue::new(&mut r).prefix("r: "));
-                res = res.union(ui.add(DragValue::new(&mut g).prefix("g: ")));
-                res = res.union(ui.add(DragValue::new(&mut b).prefix("b: ")));
-                res = res.union(ui.add(DragValue::new(&mut a).prefix("a: ")));
-                ui.label(label);
-                res
-            })
-            .inner;
-
-        if res.changed() {
-            Some(Color32::from_rgba_unmultiplied(r, g, b, a))
-        } else {
-            None
-        }
     }
 
     pub fn render(&mut self) {

@@ -1,6 +1,9 @@
 use egui::{DragValue, Ui};
 
-use crate::ui::{app::App, gui::collapsing_open};
+use crate::ui::{
+    app::App,
+    gui::{collapsing_open, helpers::color_picker},
+};
 
 impl App {
     pub fn unsafe_settings(&mut self, ui: &mut Ui) {
@@ -40,9 +43,7 @@ impl App {
                 self.send_config();
             }
 
-            if let Some(color) = self.color_picker(ui, &self.config.misc.smoke_color, "Smoke Color")
-            {
-                self.config.misc.smoke_color = color;
+            if color_picker(ui, "Smoke Color", &mut self.config.misc.smoke_color) {
                 self.send_config();
             }
         });

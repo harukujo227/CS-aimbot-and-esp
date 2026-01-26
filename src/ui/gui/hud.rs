@@ -1,6 +1,9 @@
 use egui::{DragValue, Ui};
 
-use crate::ui::{app::App, gui::collapsing_open};
+use crate::ui::{
+    app::App,
+    gui::{collapsing_open, helpers::color_picker},
+};
 
 impl App {
     pub fn hud_settings(&mut self, ui: &mut Ui) {
@@ -16,17 +19,11 @@ impl App {
                 });
 
                 collapsing_open(ui, "Colors", |ui| {
-                    if let Some(color) =
-                        self.color_picker(ui, &self.config.hud.text_color, "Text Color")
-                    {
-                        self.config.hud.text_color = color;
+                    if color_picker(ui, "Text Color", &mut self.config.hud.text_color) {
                         self.send_config();
                     }
 
-                    if let Some(color) =
-                        self.color_picker(ui, &self.config.hud.crosshair_color, "Crosshair Color")
-                    {
-                        self.config.hud.crosshair_color = color;
+                    if color_picker(ui, "Crosshair Color", &mut self.config.hud.crosshair_color) {
                         self.send_config();
                     }
                 });
@@ -39,57 +36,51 @@ impl App {
                         self.send_config();
                     }
 
-                    if let Some(color) = self.color_picker(
+                    if color_picker(
                         ui,
-                        &self.config.hud.smoke_trail_color,
                         "Smoke Trail Color",
+                        &mut self.config.hud.smoke_trail_color,
                     ) {
-                        self.config.hud.smoke_trail_color = color;
                         self.send_config();
                     }
 
-                    if let Some(color) = self.color_picker(
+                    if color_picker(
                         ui,
-                        &self.config.hud.molotov_trail_color,
                         "Molotov Trail Color",
+                        &mut self.config.hud.molotov_trail_color,
                     ) {
-                        self.config.hud.molotov_trail_color = color;
                         self.send_config();
                     }
 
-                    if let Some(color) = self.color_picker(
+                    if color_picker(
                         ui,
-                        &self.config.hud.incendiary_trail_color,
                         "Incendiary Trail Color",
+                        &mut self.config.hud.incendiary_trail_color,
                     ) {
-                        self.config.hud.incendiary_trail_color = color;
                         self.send_config();
                     }
 
-                    if let Some(color) = self.color_picker(
+                    if color_picker(
                         ui,
-                        &self.config.hud.flash_trail_color,
                         "Flash Trail Color",
+                        &mut self.config.hud.flash_trail_color,
                     ) {
-                        self.config.hud.flash_trail_color = color;
                         self.send_config();
                     }
 
-                    if let Some(color) = self.color_picker(
+                    if color_picker(
                         ui,
-                        &self.config.hud.he_trail_color,
                         "HE Grenade Trail Color",
+                        &mut self.config.hud.he_trail_color,
                     ) {
-                        self.config.hud.he_trail_color = color;
                         self.send_config();
                     }
 
-                    if let Some(color) = self.color_picker(
+                    if color_picker(
                         ui,
-                        &self.config.hud.decoy_trail_color,
                         "Decoy Trail Color",
+                        &mut self.config.hud.decoy_trail_color,
                     ) {
-                        self.config.hud.decoy_trail_color = color;
                         self.send_config();
                     }
                 });
