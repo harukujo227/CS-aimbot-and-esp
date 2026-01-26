@@ -6,7 +6,7 @@ use crate::{
         app::App,
         color::Colors,
         grenades::{Grenade, write_grenades},
-        gui::collapsing_open,
+        gui::helpers::collapsing_open,
     },
 };
 

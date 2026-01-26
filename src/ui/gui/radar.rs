@@ -2,7 +2,7 @@ use egui::Ui;
 
 use crate::{
     message::{Message, RadarStatus, Target},
-    ui::{app::App, color::Colors, gui::collapsing_open},
+    ui::{app::App, color::Colors, gui::helpers::collapsing_open},
 };
 
 impl App {

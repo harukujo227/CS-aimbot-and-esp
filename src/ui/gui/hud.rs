@@ -2,7 +2,7 @@ use egui::{DragValue, Ui};
 
 use crate::ui::{
     app::App,
-    gui::{collapsing_open, helpers::color_picker},
+    gui::helpers::{collapsing_open, color_picker},
 };
 
 impl App {

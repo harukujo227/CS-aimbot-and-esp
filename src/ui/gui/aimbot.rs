@@ -6,10 +6,7 @@ use crate::{
     ui::{
         app::App,
         drag_range::DragRange,
-        gui::{
-            collapsing_open,
-            helpers::{checkbox, checkbox_hover, combo_box, drag, scroll},
-        },
+        gui::helpers::{checkbox, checkbox_hover, collapsing_open, combo_box, drag, scroll},
     },
 };
 

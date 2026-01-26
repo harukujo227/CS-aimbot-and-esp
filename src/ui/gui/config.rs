@@ -2,7 +2,7 @@ use egui::{Align, Button, Context, Ui};
 
 use crate::{
     config::{CONFIG_PATH, Config, available_configs, delete_config, parse_config, write_config},
-    ui::{app::App, color::Colors, gui::collapsing_open},
+    ui::{app::App, color::Colors, gui::helpers::collapsing_open},
 };
 
 impl App {

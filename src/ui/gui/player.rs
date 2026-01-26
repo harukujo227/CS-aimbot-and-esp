@@ -5,7 +5,7 @@ use crate::{
     cs2::key_codes::KeyCode,
     ui::{
         app::App,
-        gui::{collapsing_open, helpers::color_picker},
+        gui::helpers::{collapsing_open, color_picker},
     },
 };
 

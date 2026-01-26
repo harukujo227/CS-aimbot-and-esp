@@ -112,6 +112,7 @@ impl App {
         self.add_trails();
         let data = &self.data.lock().unwrap();
 
+        self.update_window(data);
         self.overlay_debug(&painter, data);
 
         for player in &data.players {
@@ -142,6 +143,7 @@ impl App {
 
         self.draw_bomb_timer(&painter, data);
         self.draw_fov_circle(&painter, data);
+        self.draw_sniper_crosshair(&painter, data);
 
         if data.aimbot_active {
             self.text(

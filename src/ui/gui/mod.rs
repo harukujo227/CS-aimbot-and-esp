@@ -203,9 +203,3 @@ impl App {
         }
     }
 }
-
-fn collapsing_open(ui: &mut Ui, title: &str, add_body: impl FnOnce(&mut Ui)) {
-    CollapsingHeader::new(title)
-        .default_open(true)
-        .show(ui, add_body);
-}
