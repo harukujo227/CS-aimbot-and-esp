@@ -83,12 +83,14 @@ pub fn color_picker(ui: &mut Ui, label: &str, color: &mut Color32) -> bool {
     changed
 }
 
+#[allow(unused)]
 pub struct Keybind<'gui> {
     keycode: &'gui mut KeyCode,
     listening: bool,
 }
 
 impl<'gui> Keybind<'gui> {
+    #[allow(unused)]
     pub fn new(keycode: &'gui mut KeyCode) -> Self {
         Self {
             keycode,

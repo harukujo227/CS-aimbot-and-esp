@@ -25,7 +25,7 @@ impl App {
 
         if let Some(pos) = world_to_screen(&data.bomb.position, data) {
             self.text(
-                &painter,
+                painter,
                 format!("{:.3}", data.bomb.timer),
                 pos,
                 Align2::CENTER_CENTER,
@@ -33,7 +33,7 @@ impl App {
             );
             if data.bomb.being_defused {
                 self.text(
-                    &painter,
+                    painter,
                     format!("defusing {:.3}", data.bomb.defuse_remain_time),
                     pos2(pos.x, pos.y + self.config.hud.font_size),
                     Align2::CENTER_CENTER,
@@ -63,11 +63,11 @@ impl App {
         let aim_fov = weapon_config.fov;
 
         if weapon_config.distance_adjusted_fov {
-            self.draw_distance_scaled_fov_circle(&painter, data, aim_fov, 125.0, Color32::GREEN);
-            self.draw_distance_scaled_fov_circle(&painter, data, aim_fov, 250.0, Color32::YELLOW);
-            self.draw_distance_scaled_fov_circle(&painter, data, aim_fov, 500.0, Color32::RED);
+            self.draw_distance_scaled_fov_circle(painter, data, aim_fov, 125.0, Color32::GREEN);
+            self.draw_distance_scaled_fov_circle(painter, data, aim_fov, 250.0, Color32::YELLOW);
+            self.draw_distance_scaled_fov_circle(painter, data, aim_fov, 500.0, Color32::RED);
         } else {
-            self.draw_simple_fov_circle(&painter, data, aim_fov, Color32::WHITE);
+            self.draw_simple_fov_circle(painter, data, aim_fov, Color32::WHITE);
         }
     }
 
