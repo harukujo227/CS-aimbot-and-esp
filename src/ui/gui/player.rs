@@ -1,52 +1,45 @@
 use egui::Ui;
-use strum::IntoEnumIterator as _;
 
-use crate::{
-    cs2::key_codes::KeyCode,
-    ui::{
-        app::App,
-        gui::helpers::{collapsing_open, color_picker},
-    },
+use crate::ui::{
+    app::App,
+    gui::helpers::{collapsing_open, color_picker, combo_box, keybind, scroll},
 };
 
 impl App {
     pub fn player_settings(&mut self, ui: &mut Ui) {
-        egui::ScrollArea::vertical()
-            .auto_shrink([false, true])
-            .id_salt("player")
-            .show(ui, |ui| {
-                ui.columns(2, |cols| {
-                    let left = &mut cols[0];
-                    self.player_left(left);
-                    let right = &mut cols[1];
-                    self.player_right(right);
-                });
-
-                collapsing_open(ui, "Colors", |ui| {
-                    if color_picker(
-                        ui,
-                        "Box (visible)",
-                        &mut self.config.player.box_visible_color,
-                    ) {
-                        self.send_config();
-                    }
-
-                    if color_picker(
-                        ui,
-                        "Box (invisible)",
-                        &mut self.config.player.box_invisible_color,
-                    ) {
-                        self.send_config();
-                    }
-
-                    if color_picker(ui, "Skeleton", &mut self.config.player.skeleton_color) {
-                        self.send_config();
-                    }
-                    if color_picker(ui, "Sound ESP", &mut self.config.player.sound.color) {
-                        self.send_config();
-                    }
-                });
+        scroll(ui, "player", |ui| {
+            ui.columns(2, |cols| {
+                let left = &mut cols[0];
+                self.player_left(left);
+                let right = &mut cols[1];
+                self.player_right(right);
             });
+
+            collapsing_open(ui, "Colors", |ui| {
+                if color_picker(
+                    ui,
+                    "Box (visible)",
+                    &mut self.config.player.box_visible_color,
+                ) {
+                    self.send_config();
+                }
+
+                if color_picker(
+                    ui,
+                    "Box (invisible)",
+                    &mut self.config.player.box_invisible_color,
+                ) {
+                    self.send_config();
+                }
+
+                if color_picker(ui, "Skeleton", &mut self.config.player.skeleton_color) {
+                    self.send_config();
+                }
+                if color_picker(ui, "Sound ESP", &mut self.config.player.sound.color) {
+                    self.send_config();
+                }
+            });
+        });
     }
 
     fn player_left(&mut self, ui: &mut Ui) {
@@ -58,19 +51,14 @@ impl App {
                 self.send_config();
             }
 
-            egui::ComboBox::new("esp_hotkey", "ESP Hotkey")
-                .selected_text(format!("{:?}", self.config.player.esp_hotkey))
-                .show_ui(ui, |ui| {
-                    for key_code in KeyCode::iter() {
-                        let text = format!("{:?}", &key_code);
-                        if ui
-                            .selectable_value(&mut self.config.player.esp_hotkey, key_code, text)
-                            .clicked()
-                        {
-                            self.send_config();
-                        }
-                    }
-                });
+            if keybind(
+                ui,
+                "esp_hotkey",
+                "ESP Hotkey",
+                &mut self.config.player.esp_hotkey,
+            ) {
+                self.send_config();
+            }
 
             if ui
                 .checkbox(&mut self.config.player.show_friendlies, "Show Friendlies")
@@ -80,53 +68,22 @@ impl App {
                 self.send_config();
             }
 
-            egui::ComboBox::new("draw_box", "Box")
-                .selected_text(format!("{:?}", self.config.player.draw_box))
-                .show_ui(ui, |ui| {
-                    use crate::config::DrawMode;
+            if combo_box(ui, "draw_box", "Box", &mut self.config.player.draw_box) {
+                self.send_config();
+            }
 
-                    for mode in DrawMode::iter() {
-                        let text = format!("{:?}", &mode);
-                        if ui
-                            .selectable_value(&mut self.config.player.draw_box, mode, text)
-                            .clicked()
-                        {
-                            self.send_config();
-                        }
-                    }
-                });
+            if combo_box(ui, "box_mode", "Box Mode", &mut self.config.player.box_mode) {
+                self.send_config();
+            }
 
-            egui::ComboBox::new("box_mode", "Box Mode")
-                .selected_text(format!("{:?}", self.config.player.box_mode))
-                .show_ui(ui, |ui| {
-                    use crate::config::BoxMode;
-
-                    for mode in BoxMode::iter() {
-                        let text = format!("{:?}", &mode);
-                        if ui
-                            .selectable_value(&mut self.config.player.box_mode, mode, text)
-                            .clicked()
-                        {
-                            self.send_config();
-                        }
-                    }
-                });
-
-            egui::ComboBox::new("draw_skeleton", "Skeleton")
-                .selected_text(format!("{:?}", self.config.player.draw_skeleton))
-                .show_ui(ui, |ui| {
-                    use crate::config::DrawMode;
-
-                    for mode in DrawMode::iter() {
-                        let text = format!("{:?}", &mode);
-                        if ui
-                            .selectable_value(&mut self.config.player.draw_skeleton, mode, text)
-                            .clicked()
-                        {
-                            self.send_config();
-                        }
-                    }
-                });
+            if combo_box(
+                ui,
+                "draw_skeleton",
+                "Skeleton",
+                &mut self.config.player.draw_skeleton,
+            ) {
+                self.send_config();
+            }
 
             if ui
                 .checkbox(&mut self.config.player.head_circle, "Head Circle")

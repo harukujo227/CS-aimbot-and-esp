@@ -240,7 +240,7 @@ impl Default for PlayerConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            esp_hotkey: KeyCode::KeyX,
+            esp_hotkey: KeyCode::X,
             show_friendlies: false,
             draw_box: DrawMode::Color,
             box_mode: BoxMode::Gap,

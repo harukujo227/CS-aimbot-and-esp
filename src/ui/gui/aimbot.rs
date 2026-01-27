@@ -2,11 +2,13 @@ use egui::{DragValue, Ui};
 use strum::IntoEnumIterator as _;
 
 use crate::{
-    cs2::{bones::Bones, entity::weapon::Weapon},
+    cs2::bones::Bones,
     ui::{
         app::App,
         drag_range::DragRange,
-        gui::helpers::{checkbox, checkbox_hover, collapsing_open, combo_box, drag, scroll},
+        gui::helpers::{
+            checkbox, checkbox_hover, collapsing_open, combo_box, drag, keybind, scroll,
+        },
     },
 };
 
@@ -22,17 +24,7 @@ impl App {
             ui.selectable_value(&mut self.aimbot_tab, AimbotTab::Global, "Global");
             ui.selectable_value(&mut self.aimbot_tab, AimbotTab::Weapon, "Weapon");
             if self.aimbot_tab == AimbotTab::Weapon {
-                egui::ComboBox::new("aimbot_weapon", "Weapon")
-                    .selected_text(format!("{:?}", self.aimbot_weapon))
-                    .show_ui(ui, |ui| {
-                        for weapon in Weapon::iter() {
-                            if weapon == Weapon::Unknown {
-                                continue;
-                            }
-                            let text = format!("{:?}", weapon);
-                            ui.selectable_value(&mut self.aimbot_weapon, weapon, text);
-                        }
-                    });
+                combo_box(ui, "aimbot_weapon", "Weapon", &mut self.aimbot_weapon);
             }
         });
         ui.separator();
@@ -47,7 +39,7 @@ impl App {
 
     fn aimbot_left(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Aimbot", |ui| {
-            if combo_box(
+            if keybind(
                 ui,
                 "aimbot_hotkey",
                 "Hotkey",
@@ -215,7 +207,7 @@ impl App {
                 self.send_config();
             }
 
-            if combo_box(
+            if keybind(
                 ui,
                 "triggerbot_hotkey",
                 "Hotkey",
