@@ -12,7 +12,7 @@ egui = "0.33"
 egui_glow = { version = "0.33", features = ["winit"] }
 egui-winit = { version = "0.33", default-features = false, features = ["x11"] }
 epaint = { version = "0.33", features = ["serde"] }
-glam = { version = "0.30", features = ["bytemuck", "serde"] }
+glam = { version = "0.31", features = ["bytemuck", "serde"] }
 glutin = { version = "0.32", default-features = false, features = [
     "x11",
     "egl",
@@ -22,7 +22,7 @@ glutin-winit = { version = "0.5", default-features = false, features = [
     "egl",
 ] }
 log = "0.4"
-nix = { version = "0.30", features = ["ioctl"] }
+nix = { version = "0.31", features = ["ioctl"] }
 parking_lot = "0.12"
 postcard = { version = "1.1", features = ["use-std"] }
 rand = "0.9"
