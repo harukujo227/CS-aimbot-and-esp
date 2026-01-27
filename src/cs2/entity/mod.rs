@@ -73,6 +73,8 @@ impl CS2 {
             return;
         };
 
+        self.weapon = local_player.weapon(self);
+
         const NUM_BUCKETS: usize = 64;
         let bucket_pointers = self
             .process
