@@ -92,7 +92,7 @@ impl App {
             available_configs: available_configs(),
             new_config_name: String::new(),
 
-            game_status: GameStatus::GameNotStarted,
+            game_status: GameStatus::NotStarted,
             radar_status: RadarStatus::Disconnected,
             display_scale: 1.0,
             trails: HashMap::new(),

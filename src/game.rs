@@ -69,8 +69,8 @@ impl GameManager {
     }
 
     pub fn run(&mut self) {
-        self.send_game_message(Message::GameStatus(GameStatus::GameNotStarted));
-        let mut previous_status = GameStatus::GameNotStarted;
+        self.send_game_message(Message::GameStatus(GameStatus::NotStarted));
+        let mut previous_status = GameStatus::NotStarted;
         loop {
             let start = Instant::now();
             while let Ok(message) = self.rx.try_recv() {
@@ -79,14 +79,14 @@ impl GameManager {
 
             if !self.game.is_valid() {
                 if previous_status == GameStatus::Working {
-                    self.send_game_message(Message::GameStatus(GameStatus::GameNotStarted));
-                    previous_status = GameStatus::GameNotStarted;
+                    self.send_game_message(Message::GameStatus(GameStatus::NotStarted));
+                    previous_status = GameStatus::NotStarted;
                 }
                 self.game.setup();
             }
 
             if self.game.is_valid() {
-                if previous_status == GameStatus::GameNotStarted {
+                if previous_status == GameStatus::NotStarted {
                     self.send_game_message(Message::GameStatus(GameStatus::Working));
                     previous_status = GameStatus::Working;
                 }

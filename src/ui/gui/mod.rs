@@ -67,7 +67,7 @@ impl App {
                     ui.label(egui::RichText::new(format!("{}", self.game_status)).color(
                         match self.game_status {
                             GameStatus::Working => Colors::GREEN,
-                            GameStatus::GameNotStarted => Colors::YELLOW,
+                            GameStatus::NotStarted => Colors::YELLOW,
                         },
                     ));
                 });

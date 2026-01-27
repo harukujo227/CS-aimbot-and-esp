@@ -8,14 +8,14 @@ use crate::config::Config;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum GameStatus {
     Working,
-    GameNotStarted,
+    NotStarted,
 }
 
 impl Display for GameStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             GameStatus::Working => write!(f, "Working"),
-            GameStatus::GameNotStarted => write!(f, "Game Not Started"),
+            GameStatus::NotStarted => write!(f, "Not Started"),
         }
     }
 }

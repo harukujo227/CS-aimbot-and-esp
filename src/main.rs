@@ -1,10 +1,11 @@
-use std::{collections::HashMap, io::Write, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use crossbeam::channel::{bounded, unbounded};
 use parking_lot::Mutex;
 
 use crate::{
     data::Data,
+    os::log::FileLogger,
     parser::parse_maps,
     ui::{app::App, grenades::read_grenades},
 };
@@ -26,12 +27,8 @@ mod ui;
 compile_error!("only linux is supported.");
 
 fn main() {
-    let env = env_logger::Env::new();
-    env_logger::builder()
-        .format(|buf, record| writeln!(buf, "[{}] {}", record.level(), record.args()))
-        .filter_level(log::LevelFilter::Off)
-        .filter_module("deadlocked", log::LevelFilter::Info)
-        .parse_env(env)
+    FileLogger::new("deadlocked.log", log::Level::Info)
+        .unwrap()
         .init();
 
     let args: Vec<String> = std::env::args().collect();
@@ -79,7 +76,6 @@ fn main() {
         os::crash::install_crash_handler();
         game::GameManager::new(tx_game, rx_game, data_game, bvh_game, grenades_game).run();
     });
-    log::info!("started game thread");
 
     let tx_radar = tx.clone();
     std::thread::spawn(move || {
@@ -97,5 +93,4 @@ fn main() {
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
     let mut app = App::new(tx, rx_gui, data, bvh_gui, grenades);
     event_loop.run_app(&mut app).unwrap();
-    log::info!("exiting");
 }
