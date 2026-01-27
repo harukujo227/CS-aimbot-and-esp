@@ -19,7 +19,6 @@ use crate::{
     cs2::entity::weapon::Weapon,
     data::Data,
     message::{Envelope, GameStatus, Message, RadarStatus, Target},
-    os::mouse::DeviceStatus,
     parser::bvh::Bvh,
     ui::{
         grenades::{Grenade, GrenadeList},
@@ -46,8 +45,6 @@ pub struct App {
     pub bvh: Arc<Mutex<HashMap<String, Bvh>>>,
 
     pub game_status: GameStatus,
-    pub mouse_status: DeviceStatus,
-    pub selected_mouse: Option<String>,
     pub radar_status: RadarStatus,
     pub display_scale: f32,
     #[allow(unused)]
@@ -97,7 +94,6 @@ impl App {
             new_config_name: String::new(),
 
             game_status: GameStatus::GameNotStarted,
-            mouse_status: DeviceStatus::Disconnected,
             radar_status: RadarStatus::Disconnected,
             display_scale: 1.0,
             trails: HashMap::new(),
@@ -105,8 +101,6 @@ impl App {
             grenades,
             new_grenade: Grenade::new(),
             current_grenade: None,
-
-            selected_mouse: None,
 
             current_tab: Tab::Aimbot,
             aimbot_tab: AimbotTab::Global,
@@ -167,7 +161,6 @@ impl ApplicationHandler for App {
         while let Ok(message) = self.rx.try_recv() {
             match message {
                 Message::GameStatus(status) => self.game_status = status,
-                Message::MouseStatus(status) => self.mouse_status = status,
                 Message::RadarStatus(status) => self.radar_status = status,
                 _ => {}
             }

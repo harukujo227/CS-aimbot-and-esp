@@ -4,6 +4,7 @@ version = "4.2.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0"
 arboard = { version = "3.6", default-features = false }
 bytemuck = "1.24"
 crossbeam = "0.8"

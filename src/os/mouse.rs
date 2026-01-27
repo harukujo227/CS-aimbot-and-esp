@@ -1,19 +1,13 @@
 use std::{
-    fs::{self, File, OpenOptions, read_dir},
+    fs::File,
     io::Write,
-    os::unix::fs::FileTypeExt,
+    os::fd::AsRawFd,
+    sync::atomic::{AtomicBool, Ordering},
     time::{SystemTime, UNIX_EPOCH},
 };
 
 use glam::{IVec2, Vec2};
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum DeviceStatus {
-    Working(String),
-    Disconnected,
-    PermissionsRequired,
-    NotFound,
-}
+use nix::{ioctl_none, ioctl_write_int, ioctl_write_ptr, libc::c_ulong};
 
 #[derive(Debug, Clone, Copy)]
 struct Timeval {
@@ -44,6 +38,50 @@ impl InputEvent {
     }
 }
 
+#[repr(C)]
+struct DeviceSetup {
+    id: InputId,
+    name: [u8; 80],
+    ff_effects_max: u32,
+}
+
+#[repr(C)]
+struct InputId {
+    bustype: u16,
+    vendor: u16,
+    product: u16,
+    version: u16,
+}
+
+const DEVICE_SETUP: DeviceSetup = DeviceSetup {
+    id: InputId {
+        // usb
+        bustype: 0x03,
+        // texas instruments
+        vendor: 0x0451,
+        // ti-84 silver
+        // yes, this is a calculator, sending mouse inputs
+        product: 0xe008,
+        version: 1,
+    },
+    // "TI-84 Plus Silver Calculator"
+    name: [
+        84, 73, 45, 56, 52, 32, 80, 108, 117, 115, 32, 83, 105, 108, 118, 101, 114, 32, 67, 97,
+        108, 99, 117, 108, 97, 116, 111, 114, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0,
+    ],
+    ff_effects_max: 0,
+};
+
+const UINPUT_IOCTL_BASE: c_ulong = b'U' as c_ulong;
+ioctl_none!(ui_dev_create, UINPUT_IOCTL_BASE, 1);
+ioctl_none!(ui_dev_destroy, UINPUT_IOCTL_BASE, 2);
+ioctl_write_int!(ui_set_evbit, UINPUT_IOCTL_BASE, 100);
+ioctl_write_int!(ui_set_keybit, UINPUT_IOCTL_BASE, 101);
+ioctl_write_int!(ui_set_relbit, UINPUT_IOCTL_BASE, 102);
+ioctl_write_ptr!(ui_dev_setup, UINPUT_IOCTL_BASE, 3, DeviceSetup);
+
 const EV_SYN: u16 = 0x00;
 const EV_KEY: u16 = 0x01;
 const EV_REL: u16 = 0x02;
@@ -52,58 +90,35 @@ const AXIS_X: u16 = 0x00;
 const AXIS_Y: u16 = 0x01;
 const BTN_LEFT: u16 = 0x110;
 
-#[derive(Debug, Clone)]
-pub struct MouseDevice {
-    pub path: String,
-    pub name: String,
-    pub event_name: String,
-}
-
-impl MouseDevice {
-    pub fn open(&self) -> Result<Mouse, std::io::Error> {
-        let file = OpenOptions::new().write(true).open(&self.path)?;
-        Ok(Mouse {
-            file,
-            status: DeviceStatus::Working(self.name.clone()),
-        })
-    }
-
-    pub fn try_open(&self) -> Mouse {
-        match self.open() {
-            Ok(mouse) => mouse,
-            Err(_) => {
-                log::warn!("please add your user to the input group or execute with sudo");
-                log::warn!(
-                    "without this, mouse movements will be written to /dev/null and discarded"
-                );
-                let file = OpenOptions::new().write(true).open("/dev/null").unwrap();
-                Mouse {
-                    file,
-                    status: DeviceStatus::PermissionsRequired,
-                }
-            }
-        }
-    }
-}
-
 pub struct Mouse {
     file: File,
-    pub status: DeviceStatus,
 }
 
+static CREATED: AtomicBool = AtomicBool::new(false);
 impl Mouse {
-    pub fn open() -> Self {
-        let devices = discover_mice();
-        if let Some(device) = devices.first() {
-            device.try_open()
-        } else {
-            let file = OpenOptions::new().write(true).open("/dev/null").unwrap();
-            log::warn!("no mouse found");
-            Mouse {
-                file,
-                status: DeviceStatus::NotFound,
-            }
+    pub fn open() -> anyhow::Result<Self> {
+        if CREATED.swap(true, Ordering::Relaxed) {
+            return Err(anyhow::anyhow!("mouse already initialized"));
         }
+        let file = File::options().write(true).open("/dev/uinput")?;
+        let fd = file.as_raw_fd();
+
+        unsafe {
+            // enable event types
+            ui_set_evbit(fd, EV_SYN as u64)?;
+            ui_set_evbit(fd, EV_KEY as u64)?;
+            ui_set_evbit(fd, EV_REL as u64)?;
+
+            ui_set_relbit(fd, AXIS_X as u64)?;
+            ui_set_relbit(fd, AXIS_Y as u64)?;
+
+            ui_set_keybit(fd, BTN_LEFT as u64)?;
+
+            ui_dev_setup(fd, &DEVICE_SETUP)?;
+            ui_dev_create(fd)?;
+        }
+
+        Ok(Self { file })
     }
 
     pub fn move_rel(&mut self, coords: &Vec2) {
@@ -175,113 +190,11 @@ impl Mouse {
         self.file.write_all(&press.bytes()).unwrap();
         self.file.write_all(&syn.bytes()).unwrap();
     }
-
-    pub fn valid(&mut self) -> bool {
-        self.file.write_all(&SYN.bytes()).is_ok()
-    }
 }
 
-fn is_mouse_device(event_name: &str) -> bool {
-    let caps = decode_capabilities(&format!(
-        "/sys/class/input/{}/device/capabilities/rel",
-        event_name
-    ));
-    if caps.is_empty() {
-        return false;
+impl Drop for Mouse {
+    fn drop(&mut self) {
+        let _ = unsafe { ui_dev_destroy(self.file.as_raw_fd()) };
+        CREATED.store(false, Ordering::Relaxed);
     }
-    caps[AXIS_X as usize] && caps[AXIS_Y as usize]
-}
-
-pub fn discover_mice() -> Vec<MouseDevice> {
-    let mut devices = Vec::new();
-
-    let Ok(entries) = read_dir("/dev/input") else {
-        return devices;
-    };
-
-    for file in entries {
-        let Ok(entry) = file else {
-            continue;
-        };
-        if !entry.file_type().unwrap().is_char_device() {
-            continue;
-        }
-
-        let name = entry.file_name().into_string().unwrap();
-        if !name.starts_with("event") {
-            continue;
-        }
-
-        if !is_mouse_device(&name) {
-            continue;
-        }
-
-        let device_name = fs::read_to_string(format!("/sys/class/input/{}/device/name", name))
-            .unwrap_or_else(|_| "Unknown Device".to_string())
-            .trim()
-            .to_string();
-
-        let path = format!("/dev/input/{}", name);
-
-        devices.push(MouseDevice {
-            path,
-            name: device_name,
-            event_name: name,
-        });
-    }
-
-    devices
-}
-
-pub fn get_mouse_by_name(name: &str) -> Option<MouseDevice> {
-    discover_mice()
-        .into_iter()
-        .find(|device| device.name.to_lowercase().contains(&name.to_lowercase()))
-}
-
-const SYN: InputEvent = InputEvent {
-    time: Timeval {
-        seconds: 0,
-        microseconds: 0,
-    },
-    event_type: EV_SYN,
-    code: SYN_REPORT,
-    value: 0,
-};
-
-fn hex_to_reversed_binary(hex_char: char) -> Vec<bool> {
-    let value = match hex_char {
-        '0'..='9' => hex_char as u8 - b'0',
-        'a'..='f' => hex_char as u8 - b'a' + 10,
-        'A'..='F' => hex_char as u8 - b'A' + 10,
-        _ => 0,
-    };
-    (0..4).map(|i| (value >> i) & 1 == 1).collect()
-}
-
-pub fn decode_capabilities(filename: &str) -> Vec<bool> {
-    let Ok(content) = std::fs::read_to_string(filename) else {
-        return Vec::new();
-    };
-
-    let mut binary_out = Vec::new();
-    let mut hex_count = 0;
-
-    // line has to be processed in reverse (why?)
-    for c in content.chars().rev().filter(|&c| c != '\n') {
-        if c == ' ' {
-            binary_out.extend(std::iter::repeat_n(false, 4 * (16 - hex_count)));
-            hex_count = 0;
-        } else if c.is_ascii_hexdigit() {
-            binary_out.extend(hex_to_reversed_binary(c));
-            hex_count += 1;
-        }
-    }
-
-    // pad final group if incomplete
-    if (1..16).contains(&hex_count) {
-        binary_out.extend(std::iter::repeat_n(false, 4 * (16 - hex_count)));
-    }
-
-    binary_out
 }

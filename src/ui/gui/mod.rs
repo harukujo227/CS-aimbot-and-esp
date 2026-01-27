@@ -3,10 +3,7 @@ use egui::{Align, Context, Ui};
 use crate::{
     config::{BASE_PATH, VERSION, WeaponConfig, write_config},
     message::{Envelope, GameStatus, Message, Target},
-    os::{
-        crash::report_error,
-        mouse::{DeviceStatus, discover_mice},
-    },
+    os::crash::report_error,
     ui::{app::App, color::Colors, gui::aimbot::AimbotTab},
 };
 
@@ -114,51 +111,6 @@ impl App {
                         GameStatus::GameNotStarted => Colors::YELLOW,
                     }),
             );
-
-            let mouse_text = match &self.mouse_status {
-                DeviceStatus::Working(name) => name,
-                DeviceStatus::PermissionsRequired => {
-                    "mouse input only works when user is in input group"
-                }
-                DeviceStatus::Disconnected => "mouse was disconnected",
-                DeviceStatus::NotFound => "no mouse was found",
-            };
-
-            let color = match &self.mouse_status {
-                DeviceStatus::Working(_) => Colors::SUBTEXT,
-                _ => Colors::YELLOW,
-            };
-            ui.label(
-                egui::RichText::new(mouse_text)
-                    .line_height(Some(8.0))
-                    .color(color),
-            );
-
-            egui::ComboBox::new("mouse_device", "")
-                .selected_text(
-                    self.selected_mouse
-                        .as_deref()
-                        .unwrap_or("No device selected"),
-                )
-                .show_ui(ui, |ui| {
-                    for device in discover_mice() {
-                        let label = format!("{} ({})", device.name, device.event_name);
-                        if ui
-                            .selectable_label(
-                                self.selected_mouse.as_deref() == Some(&device.event_name),
-                                &label,
-                            )
-                            .clicked()
-                        {
-                            self.selected_mouse = Some(device.event_name.clone());
-
-                            self.send_message(
-                                Message::SelectMouse(device.event_name.clone()),
-                                Target::Game,
-                            );
-                        }
-                    }
-                });
         });
     }
 

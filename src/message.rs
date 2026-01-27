@@ -3,7 +3,7 @@ use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{config::Config, os::mouse::DeviceStatus};
+use crate::config::Config;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum GameStatus {
@@ -39,11 +39,9 @@ impl Display for RadarStatus {
 pub enum Message {
     Config(Box<Config>),
     GameStatus(GameStatus),
-    MouseStatus(DeviceStatus),
     RadarStatus(RadarStatus),
     ChangeRadarUrl(String),
     RadarSetEnabled(bool),
-    SelectMouse(String),
 }
 
 #[derive(Clone, Debug)]
