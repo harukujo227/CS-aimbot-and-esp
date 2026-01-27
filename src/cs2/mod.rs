@@ -1,11 +1,7 @@
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::{collections::HashMap, sync::Arc};
 
 use glam::{IVec2, Mat4, Vec2, Vec3};
+use parking_lot::Mutex;
 
 use crate::{
     config::{AimbotConfig, Config, KeyMode, RcsConfig, TriggerbotConfig},
@@ -45,8 +41,6 @@ pub struct CS2 {
     bvh: Arc<Mutex<HashMap<String, Bvh>>>,
     target: Target,
     players: Vec<Player>,
-    previous_spectators: RefCell<HashMap<u64, u64>>,
-    dead_spectators: RefCell<Vec<(String, u64, u64)>>,
     entities: Vec<Entity>,
     recoil: Recoil,
     aim: Aimbot,
@@ -54,7 +48,6 @@ pub struct CS2 {
     esp: EspToggle,
     weapon: Weapon,
     planted_c4: Option<PlantedC4>,
-    previous_sound_times: RefCell<HashMap<u64, Option<Instant>>>,
     grenades: Arc<Mutex<GrenadeList>>,
     target_grenade: Option<Grenade>,
 }
@@ -129,15 +122,6 @@ impl Game for CS2 {
         data.spectators.clear();
         data.spectator_names.clear();
 
-        let mut current_spectators = HashMap::new();
-
-        let dead_spectators = {
-            let mut dead_specs = self.dead_spectators.borrow_mut();
-            let specs = dead_specs.clone();
-            dead_specs.clear();
-            specs
-        };
-
         let sdl_window = self.process.read::<u64>(self.offsets.direct.sdl_window);
         if sdl_window == 0 {
             data.window_position = Vec2::ZERO;
@@ -161,21 +145,6 @@ impl Game for CS2 {
             data.in_game = false;
             return;
         }
-        let mut current_sound_times = HashMap::with_capacity(self.players.len() + 1);
-        let mut previous_sound_times = self.previous_sound_times.borrow_mut();
-
-        let all_players = std::iter::once(&local_player).chain(&self.players);
-
-        for player in all_players {
-            let steam_id = player.steam_id(self);
-            let current_sound = player.is_making_sound(self);
-            let last_sound_time = if current_sound.is_some() {
-                Some(Instant::now())
-            } else {
-                previous_sound_times.get(&steam_id).copied().flatten()
-            };
-            current_sound_times.insert(steam_id, last_sound_time);
-        }
 
         for player in &self.players {
             let player_data = PlayerData {
@@ -194,10 +163,6 @@ impl Game for CS2 {
                 color: player.color(self),
                 rotation: player.rotation(self),
                 sound: player.is_making_sound(self),
-                last_sound_time: current_sound_times
-                    .get(&player.steam_id(self))
-                    .copied()
-                    .flatten(),
             };
 
             if !self.is_ffa() && player.team(self) == local_team {
@@ -223,10 +188,7 @@ impl Game for CS2 {
             color: local_player.color(self),
             rotation: local_player.rotation(self),
             sound: None,
-            last_sound_time: None,
         };
-
-        std::mem::swap(&mut *previous_sound_times, &mut current_sound_times);
 
         data.entities = self
             .entities
@@ -268,14 +230,6 @@ impl Game for CS2 {
         };
         data.wallhack_active = self.esp_enabled(config);
 
-        for (spectator_name, spectator_id, target_id) in dead_spectators {
-            data.spectators.push((spectator_id, target_id));
-            data.spectator_names.push((spectator_name, target_id));
-            current_spectators.insert(spectator_id, target_id);
-        }
-
-        *self.previous_spectators.borrow_mut() = current_spectators;
-
         data.view_matrix = self.process.read::<Mat4>(self.offsets.direct.view_matrix);
         data.view_angles = local_player.view_angles(self);
 
@@ -300,8 +254,6 @@ impl CS2 {
             bvh,
             target: Target::default(),
             players: Vec::with_capacity(64),
-            previous_spectators: RefCell::new(HashMap::new()),
-            dead_spectators: RefCell::new(Vec::new()),
             entities: Vec::with_capacity(128),
             recoil: Recoil::default(),
             aim: Aimbot::default(),
@@ -309,7 +261,6 @@ impl CS2 {
             esp: EspToggle::default(),
             weapon: Weapon::default(),
             planted_c4: None,
-            previous_sound_times: RefCell::new(HashMap::new()),
             grenades,
             target_grenade: None,
         }

@@ -32,9 +32,7 @@ impl App {
     fn grenade_list(&mut self, ui: &mut Ui) {
         let mut should_write = false;
 
-        let Ok(mut grenades) = self.grenades.lock() else {
-            return;
-        };
+        let mut grenades = self.grenades.lock();
         for (map, grenades) in grenades.iter_mut() {
             let mut delete_grenade_index = None;
 
@@ -74,7 +72,7 @@ impl App {
 
     fn record_grenade(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Add Grenade", |ui| {
-            let data = self.data.lock().unwrap();
+            let data = self.data.lock();
 
             if !data.in_game {
                 ui.label("Not in game.");
@@ -103,9 +101,7 @@ impl App {
             ui.checkbox(&mut self.new_grenade.modifiers.run, "Run");
 
             if ui.button("Save").clicked() {
-                let Ok(mut grenades) = self.grenades.lock() else {
-                    return;
-                };
+                let mut grenades = self.grenades.lock();
 
                 let map = &data.map_name;
                 let grenade_list = match grenades.get_mut(map) {
@@ -136,9 +132,7 @@ impl App {
                 None => return,
             };
 
-            let Ok(mut grenades) = self.grenades.lock() else {
-                return;
-            };
+            let mut grenades = self.grenades.lock();
             let Some(grenades) = grenades.get_mut(map) else {
                 return;
             };

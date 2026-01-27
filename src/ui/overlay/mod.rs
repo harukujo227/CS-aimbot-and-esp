@@ -1,15 +1,13 @@
-use std::time::Instant;
-
 use egui::{Align2, Color32, Context, Painter, Pos2, Shape, Stroke, pos2};
 use glam::{Vec3, vec3};
 
 use crate::{
     config::AimbotConfig,
     cs2::entity::weapon::Weapon,
-    data::{Data, SoundType},
+    data::{Data, PlayerData, SoundType},
     math::world_to_screen,
     parser::bvh::{Aabb, Triangle},
-    ui::{app::App, grenades::Grenade, trail::Trail},
+    ui::{app::App, grenades::Grenade},
 };
 
 mod entity;
@@ -17,36 +15,23 @@ mod hud;
 mod player;
 
 impl App {
-    fn draw_sound_esp(
-        &self,
-        painter: &egui::Painter,
-        player: &crate::data::PlayerData,
-        data: &crate::data::Data,
-    ) {
+    fn draw_sound_esp(&self, painter: &egui::Painter, player: &PlayerData, data: &Data) {
         if !self.config.player.sound.enabled {
             return;
         }
 
-        let Some(last_sound_time) = player.last_sound_time else {
+        let Some((time, sound)) = self.player_sounds.get(&player.steam_id) else {
             return;
         };
 
-        let fadeout_duration = self.config.player.sound.fadeout_duration.as_secs_f32();
-        let time_since_sound = (Instant::now() - last_sound_time).as_secs_f32();
-
-        if time_since_sound >= fadeout_duration {
-            return;
-        }
-
-        let opacity = 1.0 - time_since_sound / fadeout_duration;
+        let fadeout_duration = self.config.player.sound.fadeout_duration;
+        let opacity = 1.0 - time.elapsed().as_secs_f32() / fadeout_duration.as_secs_f32();
 
         let distance_sq = (player.position - data.local_player.position).length_squared();
-        let sound_radius_sq = match player.sound {
-            Some(SoundType::Gunshot) => (self.config.player.sound.gunshot_diameter * 0.5).powi(2),
-            Some(SoundType::Weapon) => (self.config.player.sound.weapon_diameter * 0.5).powi(2),
-            Some(SoundType::Footstep) | None => {
-                (self.config.player.sound.footstep_diameter * 0.5).powi(2)
-            }
+        let sound_radius_sq = match sound {
+            SoundType::Gunshot => (self.config.player.sound.gunshot_diameter * 0.5).powi(2),
+            SoundType::Weapon => (self.config.player.sound.weapon_diameter * 0.5).powi(2),
+            SoundType::Footstep => (self.config.player.sound.footstep_diameter * 0.5).powi(2),
         };
 
         if distance_sq > sound_radius_sq {
@@ -109,8 +94,9 @@ impl App {
         ctx.set_pixels_per_point(1.0);
         let painter = ctx.layer_painter(egui::LayerId::background());
 
-        self.add_trails();
-        let data = &self.data.lock().unwrap();
+        self.update_trails();
+        self.update_player_sounds();
+        let data = &self.data.lock();
 
         self.update_window(data);
         self.overlay_debug(&painter, data);
@@ -130,10 +116,6 @@ impl App {
                 }
             }
         }
-
-        let now = Instant::now();
-        self.trails
-            .retain(|_k, trail| now - trail.last_update < Trail::MAX_AGE);
 
         if self.config.hud.dropped_weapons || self.config.hud.grenade_trails {
             for entity in &data.entities {
@@ -171,39 +153,6 @@ impl App {
             );
         }
 
-        if self.config.hud.spectators {
-            let mut spectators_watching_me = Vec::new();
-            for (spectator_name, target_id) in &data.spectator_names {
-                if *target_id == data.local_player.steam_id {
-                    spectators_watching_me.push(spectator_name.clone());
-                }
-            }
-
-            if !spectators_watching_me.is_empty() {
-                let mut offset = 10.0;
-
-                self.text(
-                    &painter,
-                    format!("{} watching you", spectators_watching_me.len()),
-                    pos2(data.window_size.x - 300.0, offset),
-                    Align2::LEFT_TOP,
-                    Some(Color32::from_rgb(255, 100, 100)),
-                );
-                offset += self.config.hud.font_size + 5.0;
-
-                for spectator_name in spectators_watching_me {
-                    self.text(
-                        &painter,
-                        format!("• {}", spectator_name),
-                        pos2(data.window_size.x - 290.0, offset),
-                        Align2::LEFT_TOP,
-                        Some(Color32::WHITE),
-                    );
-                    offset += self.config.hud.font_size;
-                }
-            }
-        }
-
         self.grenade_manager(data, &painter);
 
         if self.config.hud.debug_bvh {
@@ -231,7 +180,7 @@ impl App {
     }
 
     fn debug_bvh(&self, data: &Data, painter: &Painter) {
-        let all_bvhs = self.bvh.lock().unwrap();
+        let all_bvhs = self.bvh.lock();
         let Some(bvh) = all_bvhs.get(&data.map_name) else {
             return;
         };
@@ -308,9 +257,7 @@ impl App {
         let position = data.local_player.position;
         let map = &data.map_name;
 
-        let Ok(grenades) = self.grenades.lock() else {
-            return;
-        };
+        let grenades = self.grenades.lock();
         let Some(grenades) = grenades.get(map) else {
             return;
         };

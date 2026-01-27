@@ -116,13 +116,6 @@ impl App {
             {
                 self.send_config();
             }
-
-            if ui
-                .checkbox(&mut self.config.hud.spectators, "Spectator List")
-                .changed()
-            {
-                self.send_config();
-            }
         });
     }
 

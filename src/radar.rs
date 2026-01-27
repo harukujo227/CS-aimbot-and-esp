@@ -1,10 +1,7 @@
-use std::{
-    net::TcpStream,
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use std::{net::TcpStream, sync::Arc, time::Duration};
 
 use crossbeam::channel::{Receiver, Sender};
+use parking_lot::Mutex;
 use serde::Deserialize;
 use tungstenite::{WebSocket, client};
 use uuid::Uuid;
@@ -76,7 +73,7 @@ impl Radar {
         if let Some(websocket) = &mut self.websocket
             && !should_reconnect
         {
-            let data = self.data.lock().unwrap();
+            let data = self.data.lock();
 
             if data.in_game {
                 let message_string = message(&data, &self.uuid);

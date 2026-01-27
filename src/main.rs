@@ -1,10 +1,7 @@
-use std::{
-    collections::HashMap,
-    io::Write,
-    sync::{Arc, Mutex},
-};
+use std::{collections::HashMap, io::Write, sync::Arc};
 
 use crossbeam::channel::{bounded, unbounded};
+use parking_lot::Mutex;
 
 use crate::{
     data::Data,

@@ -130,22 +130,6 @@ impl CS2 {
                         continue;
                     }
 
-                    if let Some(target) = player.spectator_target(self) {
-                        let spectator_id = player.steam_id(self);
-                        let target_pawn = target.pawn;
-                        let local_pawn = local_player.pawn;
-
-                        if target_pawn == local_pawn {
-                            let spectator_name = player.name(self);
-                            let local_steam_id = local_player.steam_id(self);
-                            self.dead_spectators.borrow_mut().push((
-                                spectator_name,
-                                spectator_id,
-                                local_steam_id,
-                            ));
-                        }
-                    }
-
                     if player == *local_player {
                         self.target.local_pawn_index = (handle as u64 & 0x7FFF) - 1;
                     } else {

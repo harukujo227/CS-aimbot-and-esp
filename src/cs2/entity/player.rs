@@ -132,6 +132,7 @@ impl Player {
     }
 
     /// returns a pawn-only player
+    #[allow(unused)]
     pub fn spectator_target(&self, cs2: &CS2) -> Option<Self> {
         let observer_services: u64 = cs2
             .process
@@ -392,7 +393,7 @@ impl Player {
 
     pub fn visible(&self, cs2: &CS2, local_player: &Player) -> bool {
         let map_name = cs2.current_map();
-        let bvh_map = cs2.bvh.lock().unwrap();
+        let bvh_map = cs2.bvh.lock();
         if let Some(bvh) = bvh_map.get(&map_name) {
             let eye_pos = local_player.eye_position(cs2);
             const CHECKED_BONES: [Bones; 5] = [
@@ -524,22 +525,6 @@ impl CS2 {
                 Some(player) => player,
                 None => continue,
             };
-
-            if let Some(target) = player.spectator_target(self) {
-                let spectator_id = player.steam_id(self);
-                let target_pawn = target.pawn;
-                let local_pawn = local_player.pawn;
-
-                if target_pawn == local_pawn {
-                    let spectator_name = player.name(self);
-                    let local_steam_id = local_player.steam_id(self);
-                    self.dead_spectators.borrow_mut().push((
-                        spectator_name,
-                        spectator_id,
-                        local_steam_id,
-                    ));
-                }
-            }
 
             if !player.is_valid(self) {
                 continue;

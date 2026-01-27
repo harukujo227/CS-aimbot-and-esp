@@ -144,8 +144,8 @@ impl App {
         }
     }
 
-    pub fn add_trails(&mut self) {
-        let data = self.data.lock().unwrap();
+    pub fn update_trails(&mut self) {
+        let data = self.data.lock();
         for entity in &data.entities {
             let (entity, position) = match entity {
                 EntityInfo::Inferno(info) => (info.entity, info.position),
@@ -172,5 +172,9 @@ impl App {
                 );
             }
         }
+
+        let now = Instant::now();
+        self.trails
+            .retain(|_k, trail| now.duration_since(trail.last_update) < Trail::MAX_AGE);
     }
 }

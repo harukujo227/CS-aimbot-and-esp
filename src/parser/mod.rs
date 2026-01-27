@@ -4,11 +4,12 @@ use std::{
     io::{BufReader, Read, Write as _},
     path::{Path, PathBuf},
     process::Command,
-    sync::{Arc, Mutex},
+    sync::Arc,
 };
 
 use bytemuck::AnyBitPattern;
 use glam::{Mat4, Quat, Vec2, Vec3, Vec4};
+use parking_lot::Mutex;
 
 use crate::{
     os::crash::{self, report_error},
@@ -201,14 +202,7 @@ fn parse_map(
         };
         if let Some(map_bvh) = Bvh::load(&mut bvh_file) {
             log::debug!("loaded bvh for {map_name}");
-            match bvh.lock() {
-                Ok(lock) => lock,
-                Err(err) => {
-                    log::error!("failed to lock bvh mutex ({map_name}): {err}");
-                    return;
-                }
-            }
-            .insert(map_name, map_bvh);
+            bvh.lock().insert(map_name, map_bvh);
             return;
         }
     }
@@ -302,14 +296,7 @@ fn parse_map(
     };
     map_bvh.save(&mut bvh_file);
     log::info!("parsed bvh for {map_name}");
-    match bvh.lock() {
-        Ok(lock) => lock,
-        Err(err) => {
-            log::error!("failed to lock bvh mutex ({map_name}): {err}");
-            return;
-        }
-    }
-    .insert(map_name, map_bvh);
+    bvh.lock().insert(map_name, map_bvh);
 }
 
 #[derive(PartialEq)]

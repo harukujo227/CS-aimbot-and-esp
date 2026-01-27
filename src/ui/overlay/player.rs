@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use egui::{Align2, Color32, FontId, Painter, Stroke, pos2};
 use glam::vec3;
 
@@ -225,5 +227,21 @@ impl App {
         let height = spine.y - neck.y;
         let pos = pos2(neck.x - (spine.x - neck.x) / 2.0, neck.y - height / 2.0);
         painter.circle_stroke(pos, height / 2.0, stroke);
+    }
+
+    pub fn update_player_sounds(&mut self) {
+        let data = self.data.lock();
+
+        for player in &data.players {
+            let Some(sound) = &player.sound else {
+                continue;
+            };
+
+            self.player_sounds
+                .insert(player.steam_id, (Instant::now(), *sound));
+        }
+
+        self.player_sounds
+            .retain(|_, (time, _)| time.elapsed() < self.config.player.sound.fadeout_duration);
     }
 }

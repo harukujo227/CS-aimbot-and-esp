@@ -1,11 +1,7 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-    thread::sleep,
-    time::Instant,
-};
+use std::{collections::HashMap, sync::Arc, thread::sleep, time::Instant};
 
 use crossbeam::channel::{Receiver, Sender};
+use parking_lot::Mutex;
 
 use crate::{
     config::{
@@ -95,10 +91,10 @@ impl GameManager {
                     previous_status = GameStatus::Working;
                 }
                 self.game.run(&self.config, &mut self.mouse);
-                let mut data = self.data.lock().unwrap();
+                let mut data = self.data.lock();
                 self.game.data(&self.config, &mut data);
             } else {
-                *self.data.lock().unwrap() = Data::default();
+                *self.data.lock() = Data::default();
             }
 
             if self.game.is_valid() {

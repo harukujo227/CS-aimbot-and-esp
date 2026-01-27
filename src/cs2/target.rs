@@ -78,9 +78,7 @@ impl CS2 {
         self.target_grenade = None;
 
         'grenades: {
-            let Ok(grenades) = self.grenades.lock() else {
-                break 'grenades;
-            };
+            let grenades = self.grenades.lock();
             let Some(grenades) = grenades.get(&self.current_map()) else {
                 break 'grenades;
             };

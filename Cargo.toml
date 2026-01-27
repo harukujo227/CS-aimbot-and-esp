@@ -14,10 +14,17 @@ egui-winit = { version = "0.33", default-features = false, features = ["x11"] }
 env_logger = { version = "0.11", default-features = false }
 epaint = { version = "0.33", features = ["serde"] }
 glam = { version = "0.30", features = ["bytemuck", "serde"] }
-glutin = "0.32"
-glutin-winit = "0.5"
+glutin = { version = "0.32", default-features = false, features = [
+    "x11",
+    "egl",
+] }
+glutin-winit = { version = "0.5", default-features = false, features = [
+    "x11",
+    "egl",
+] }
 log = "0.4"
 nix = { version = "0.30", features = ["ioctl"] }
+parking_lot = "0.12"
 postcard = { version = "1.1", features = ["use-std"] }
 rand = "0.9"
 rand_distr = "0.5"
@@ -28,8 +35,8 @@ toml = "0.9"
 tungstenite = "0.28"
 ureq = { version = "3.0", features = ["json"] }
 url = "2.5"
-winit = { version = "0.30", default-features = false, features = ["x11"] }
 uuid = { version = "1.18", features = ["v4", "serde"] }
+winit = { version = "0.30", default-features = false, features = ["x11"] }
 
 [build-dependencies]
 copy_to_output = "2.2"

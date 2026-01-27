@@ -1,12 +1,13 @@
 use std::{
     collections::HashMap,
     path::PathBuf,
-    sync::{Arc, Mutex},
+    sync::Arc,
     time::{Duration, Instant},
 };
 
 use arboard::Clipboard;
 use crossbeam::channel::{Receiver, Sender};
+use parking_lot::Mutex;
 use winit::{
     application::ApplicationHandler,
     event::{StartCause, WindowEvent},
@@ -17,7 +18,7 @@ use crate::{
         CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, available_configs, parse_config, write_config,
     },
     cs2::entity::weapon::Weapon,
-    data::Data,
+    data::{Data, SoundType},
     message::{Envelope, GameStatus, Message, RadarStatus, Target},
     parser::bvh::Bvh,
     ui::{
@@ -39,16 +40,14 @@ pub struct App {
 
     pub tx: Sender<Envelope>,
     pub rx: Receiver<Message>,
-    #[allow(unused)]
     pub data: Arc<Mutex<Data>>,
-    #[allow(unused)]
     pub bvh: Arc<Mutex<HashMap<String, Bvh>>>,
 
     pub game_status: GameStatus,
     pub radar_status: RadarStatus,
     pub display_scale: f32,
-    #[allow(unused)]
     pub trails: HashMap<u64, Trail>,
+    pub player_sounds: HashMap<u64, (Instant, SoundType)>,
 
     pub grenades: Arc<Mutex<GrenadeList>>,
     pub new_grenade: Grenade,
@@ -97,6 +96,7 @@ impl App {
             radar_status: RadarStatus::Disconnected,
             display_scale: 1.0,
             trails: HashMap::new(),
+            player_sounds: HashMap::new(),
 
             grenades,
             new_grenade: Grenade::new(),
@@ -155,7 +155,7 @@ impl ApplicationHandler for App {
     fn window_event(
         &mut self,
         event_loop: &winit::event_loop::ActiveEventLoop,
-        #[allow(unused)] window_id: winit::window::WindowId,
+        window_id: winit::window::WindowId,
         event: WindowEvent,
     ) {
         while let Ok(message) = self.rx.try_recv() {
