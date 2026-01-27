@@ -11,7 +11,6 @@ crossbeam = "0.8"
 egui = "0.33"
 egui_glow = { version = "0.33", features = ["winit"] }
 egui-winit = { version = "0.33", default-features = false, features = ["x11"] }
-env_logger = { version = "0.11", default-features = false }
 epaint = { version = "0.33", features = ["serde"] }
 glam = { version = "0.30", features = ["bytemuck", "serde"] }
 glutin = { version = "0.32", default-features = false, features = [
