@@ -1,7 +1,7 @@
-use egui::{Align, Context, Ui};
+use egui::{Align, Context};
 
 use crate::{
-    config::{BASE_PATH, VERSION, WeaponConfig, write_config},
+    config::{WeaponConfig, write_config},
     message::{Envelope, GameStatus, Message, Target},
     os::crash::report_error,
     ui::{app::App, color::Colors, gui::aimbot::AimbotTab},
@@ -63,29 +63,24 @@ impl App {
                             .status()
                             .unwrap();
                     }
-                    if ui.button("Config Folder").clicked() {
-                        std::process::Command::new("xdg-open")
-                            .arg(BASE_PATH.as_os_str())
-                            .status()
-                            .unwrap();
-                    }
-                    ui.label(VERSION);
+
+                    ui.label(egui::RichText::new(format!("{}", self.game_status)).color(
+                        match self.game_status {
+                            GameStatus::Working => Colors::GREEN,
+                            GameStatus::GameNotStarted => Colors::YELLOW,
+                        },
+                    ));
                 });
             });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            self.add_game_status(ui);
-            ui.separator();
-
-            match self.current_tab {
-                Tab::Aimbot => self.aimbot_settings(ui),
-                Tab::Player => self.player_settings(ui),
-                Tab::Hud => self.hud_settings(ui),
-                Tab::Radar => self.radar_settings(ui),
-                Tab::Grenades => self.grenade_settings(ui),
-                Tab::Unsafe => self.unsafe_settings(ui),
-                Tab::Config => self.config_settings(ui, ctx),
-            }
+        egui::CentralPanel::default().show(ctx, |ui| match self.current_tab {
+            Tab::Aimbot => self.aimbot_settings(ui),
+            Tab::Player => self.player_settings(ui),
+            Tab::Hud => self.hud_settings(ui),
+            Tab::Radar => self.radar_settings(ui),
+            Tab::Grenades => self.grenade_settings(ui),
+            Tab::Unsafe => self.unsafe_settings(ui),
+            Tab::Config => self.config_settings(ui, ctx),
         });
     }
 
@@ -99,19 +94,6 @@ impl App {
         } else {
             &mut self.config.aim.global
         }
-    }
-
-    fn add_game_status(&mut self, ui: &mut Ui) {
-        ui.horizontal_top(|ui| {
-            ui.label(
-                egui::RichText::new(format!("{}", self.game_status))
-                    .line_height(Some(8.0))
-                    .color(match self.game_status {
-                        GameStatus::Working => Colors::GREEN,
-                        GameStatus::GameNotStarted => Colors::YELLOW,
-                    }),
-            );
-        });
     }
 
     pub fn render(&mut self) {

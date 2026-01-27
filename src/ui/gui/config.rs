@@ -1,7 +1,10 @@
 use egui::{Align, Button, Context, Ui};
 
 use crate::{
-    config::{CONFIG_PATH, Config, available_configs, delete_config, parse_config, write_config},
+    config::{
+        BASE_PATH, CONFIG_PATH, Config, available_configs, delete_config, parse_config,
+        write_config,
+    },
     ui::{app::App, color::Colors, gui::helpers::collapsing_open},
 };
 
@@ -49,6 +52,13 @@ impl App {
                 self.config = Config::default();
                 self.send_config();
                 log::info!("loaded default config");
+            }
+
+            if ui.button("Config Folder").clicked() {
+                std::process::Command::new("xdg-open")
+                    .arg(BASE_PATH.as_os_str())
+                    .status()
+                    .unwrap();
             }
         });
 
