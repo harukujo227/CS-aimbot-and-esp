@@ -392,9 +392,7 @@ impl Player {
     }
 
     pub fn visible(&self, cs2: &CS2, local_player: &Player) -> bool {
-        let map_name = cs2.current_map();
-        let bvh_map = cs2.bvh.lock();
-        if let Some(bvh) = bvh_map.get(&map_name) {
+        if let Some(bvh) = &cs2.bvh {
             let eye_pos = local_player.eye_position(cs2);
             const CHECKED_BONES: [Bones; 5] = [
                 Bones::Head,

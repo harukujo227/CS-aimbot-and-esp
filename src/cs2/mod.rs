@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use glam::{IVec2, Mat4, Vec2, Vec3};
 use parking_lot::Mutex;
@@ -20,7 +20,7 @@ use crate::{
     game::Game,
     math::{angles_from_vector, vec2_clamp},
     os::{mouse::Mouse, process::Process},
-    parser::bvh::Bvh,
+    parser::{bvh::Bvh, load_map},
     ui::grenades::{Grenade, GrenadeList},
 };
 
@@ -38,7 +38,8 @@ pub struct CS2 {
     is_valid: bool,
     process: Process,
     offsets: Offsets,
-    bvh: Arc<Mutex<HashMap<String, Bvh>>>,
+    bvh: Option<Bvh>,
+    current_bvh: String,
     target: Target,
     players: Vec<Player>,
     entities: Vec<Entity>,
@@ -87,6 +88,7 @@ impl Game for CS2 {
 
         // self.cache_players();
         self.cache_entities();
+        self.check_bvh();
 
         for entity in &self.entities {
             if let Entity::Smoke(smoke) = entity {
@@ -246,12 +248,13 @@ impl Game for CS2 {
 }
 
 impl CS2 {
-    pub fn new(bvh: Arc<Mutex<HashMap<String, Bvh>>>, grenades: Arc<Mutex<GrenadeList>>) -> Self {
+    pub fn new(grenades: Arc<Mutex<GrenadeList>>) -> Self {
         Self {
             is_valid: false,
             process: Process::new(-1),
             offsets: Offsets::default(),
-            bvh,
+            bvh: None,
+            current_bvh: String::new(),
             target: Target::default(),
             players: Vec::with_capacity(64),
             entities: Vec::with_capacity(128),
@@ -351,6 +354,17 @@ impl CS2 {
             1.0
         } else {
             5.0 - (distance / 125.0)
+        }
+    }
+
+    fn check_bvh(&mut self) {
+        let current_map = self.current_map();
+        if current_map != self.current_bvh {
+            self.bvh = load_map(&current_map);
+            if self.bvh.is_some() {
+                log::info!("loaded bvh for {current_map}");
+                self.current_bvh = current_map;
+            }
         }
     }
 }

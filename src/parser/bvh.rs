@@ -308,6 +308,7 @@ impl Bvh {
         }
     }
 
+    #[allow(unused)]
     pub fn triangles_near(&self, position: Vec3, radius: f32) -> Vec<&Triangle> {
         let mut result = Vec::new();
         if let Some(root) = self.root {
@@ -316,6 +317,7 @@ impl Bvh {
         result
     }
 
+    #[allow(unused)]
     pub fn aabbs_near(&self, position: Vec3, radius: f32) -> Vec<&Aabb> {
         let mut result = Vec::new();
         if let Some(root) = self.root {
@@ -324,6 +326,7 @@ impl Bvh {
         result
     }
 
+    #[allow(unused)]
     fn collect_triangles_near<'a>(
         &'a self,
         node_idx: usize,
@@ -354,6 +357,7 @@ impl Bvh {
         }
     }
 
+    #[allow(unused)]
     fn collect_aabbs_near<'a>(
         &'a self,
         node_idx: usize,
@@ -378,6 +382,7 @@ impl Bvh {
         }
     }
 
+    #[allow(unused)]
     fn sphere_aabb_intersect(&self, sphere_center: Vec3, sphere_radius: f32, aabb: &Aabb) -> bool {
         let closest_point = sphere_center.clamp(aabb.min, aabb.max);
         let distance_sq = (sphere_center - closest_point).length_squared();

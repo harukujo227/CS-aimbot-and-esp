@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc, thread::sleep, time::Instant};
+use std::{sync::Arc, thread::sleep, time::Instant};
 
 use crossbeam::channel::{Receiver, Sender};
 use parking_lot::Mutex;
@@ -11,7 +11,6 @@ use crate::{
     data::Data,
     message::{Envelope, GameStatus, Message, Target},
     os::mouse::Mouse,
-    parser::bvh::Bvh,
     ui::grenades::GrenadeList,
 };
 
@@ -36,7 +35,6 @@ impl GameManager {
         tx: Sender<Envelope>,
         rx: Receiver<Message>,
         data: Arc<Mutex<Data>>,
-        bvh: Arc<Mutex<HashMap<String, Bvh>>>,
         grenades: Arc<Mutex<GrenadeList>>,
     ) -> Self {
         let mouse = Mouse::open().unwrap();
@@ -47,7 +45,7 @@ impl GameManager {
             data,
             config: Config::default(),
             mouse,
-            game: CS2::new(bvh, grenades),
+            game: CS2::new(grenades),
         };
 
         let config_path = CONFIG_PATH.join(DEFAULT_CONFIG_NAME);

@@ -20,7 +20,6 @@ use crate::{
     cs2::entity::weapon::Weapon,
     data::{Data, SoundType},
     message::{Envelope, GameStatus, Message, RadarStatus, Target},
-    parser::bvh::Bvh,
     ui::{
         grenades::{Grenade, GrenadeList},
         gui::{Tab, aimbot::AimbotTab},
@@ -41,7 +40,6 @@ pub struct App {
     pub tx: Sender<Envelope>,
     pub rx: Receiver<Message>,
     pub data: Arc<Mutex<Data>>,
-    pub bvh: Arc<Mutex<HashMap<String, Bvh>>>,
 
     pub game_status: GameStatus,
     pub radar_status: RadarStatus,
@@ -68,7 +66,6 @@ impl App {
         tx: Sender<Envelope>,
         rx: Receiver<Message>,
         data: Arc<Mutex<Data>>,
-        bvh: Arc<Mutex<HashMap<String, Bvh>>>,
         grenades: Arc<Mutex<GrenadeList>>,
     ) -> Self {
         // read config
@@ -86,7 +83,6 @@ impl App {
             tx,
             rx,
             data,
-            bvh,
             config,
             current_config: CONFIG_PATH.join(DEFAULT_CONFIG_NAME),
             available_configs: available_configs(),

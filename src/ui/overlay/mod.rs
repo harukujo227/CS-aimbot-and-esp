@@ -6,7 +6,6 @@ use crate::{
     cs2::entity::weapon::Weapon,
     data::{Data, PlayerData, SoundType},
     math::world_to_screen,
-    parser::bvh::{Aabb, Triangle},
     ui::{app::App, grenades::Grenade},
 };
 
@@ -154,10 +153,6 @@ impl App {
         }
 
         self.grenade_manager(data, &painter);
-
-        if self.config.hud.debug_bvh {
-            self.debug_bvh(data, &painter);
-        }
     }
 
     fn update_window(&self, data: &Data) {
@@ -177,80 +172,6 @@ impl App {
                 data.window_size.x.max(1.0),
                 data.window_size.y.max(1.0),
             ));
-    }
-
-    fn debug_bvh(&self, data: &Data, painter: &Painter) {
-        let all_bvhs = self.bvh.lock();
-        let Some(bvh) = all_bvhs.get(&data.map_name) else {
-            return;
-        };
-
-        if self.config.hud.bvh_aabbs {
-            let aabbs = bvh.aabbs_near(data.local_player.position, 200.0);
-            for aabb in aabbs {
-                self.aabb_box(aabb, data, painter);
-            }
-        }
-
-        if self.config.hud.bvh_triangles {
-            let triangles = bvh.triangles_near(data.local_player.position, 200.0);
-            for triangle in triangles {
-                self.triangle(triangle, data, painter);
-            }
-        }
-    }
-
-    fn triangle(&self, triangle: &Triangle, data: &Data, painter: &Painter) {
-        let Some(v1) = world_to_screen(&triangle.v0, data) else {
-            return;
-        };
-        let Some(v2) = world_to_screen(&triangle.v1, data) else {
-            return;
-        };
-        let Some(v3) = world_to_screen(&triangle.v2, data) else {
-            return;
-        };
-        painter.line(vec![v1, v2, v3], Stroke::new(1.0, Color32::WHITE));
-    }
-
-    fn aabb_box(&self, aabb: &Aabb, data: &Data, painter: &Painter) {
-        let min = aabb.min();
-        let max = aabb.max();
-
-        let corners = [
-            Vec3::new(min.x, min.y, min.z),
-            Vec3::new(max.x, min.y, min.z),
-            Vec3::new(min.x, max.y, min.z),
-            Vec3::new(max.x, max.y, min.z),
-            Vec3::new(min.x, min.y, max.z),
-            Vec3::new(max.x, min.y, max.z),
-            Vec3::new(min.x, max.y, max.z),
-            Vec3::new(max.x, max.y, max.z),
-        ];
-
-        let screen_points: Vec<Option<Pos2>> =
-            corners.iter().map(|p| world_to_screen(p, data)).collect();
-
-        let edges = [
-            (0, 1),
-            (1, 3),
-            (3, 2),
-            (2, 0),
-            (4, 5),
-            (5, 7),
-            (7, 6),
-            (6, 4),
-            (0, 4),
-            (1, 5),
-            (2, 6),
-            (3, 7),
-        ];
-
-        for (i, j) in edges.iter() {
-            if let (Some(p0), Some(p1)) = (screen_points[*i], screen_points[*j]) {
-                painter.line_segment([p0, p1], Stroke::new(1.0, Color32::WHITE));
-            }
-        }
     }
 
     fn grenade_manager(&self, data: &Data, painter: &Painter) {

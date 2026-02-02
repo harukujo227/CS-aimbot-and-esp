@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use crossbeam::channel::{bounded, unbounded};
 use parking_lot::Mutex;
@@ -45,15 +45,11 @@ fn main() {
         return;
     }
 
-    let bvh = Arc::new(Mutex::new(HashMap::new()));
-    let bvh_game = bvh.clone();
-    let bvh_gui = bvh.clone();
-
     let force_reparse = args.iter().any(|arg| arg == "--force-reparse");
     let use_system_binary = args.iter().any(|arg| arg == "--local-s2v");
     std::thread::spawn(move || {
         os::crash::install_crash_handler();
-        parse_maps(bvh, force_reparse, use_system_binary);
+        parse_maps(force_reparse, use_system_binary);
     });
 
     let (tx, rx) = unbounded();
@@ -74,7 +70,7 @@ fn main() {
     let tx_game = tx.clone();
     std::thread::spawn(move || {
         os::crash::install_crash_handler();
-        game::GameManager::new(tx_game, rx_game, data_game, bvh_game, grenades_game).run();
+        game::GameManager::new(tx_game, rx_game, data_game, grenades_game).run();
     });
 
     let tx_radar = tx.clone();
@@ -91,6 +87,6 @@ fn main() {
         }
     };
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
-    let mut app = App::new(tx, rx_gui, data, bvh_gui, grenades);
+    let mut app = App::new(tx, rx_gui, data, grenades);
     event_loop.run_app(&mut app).unwrap();
 }

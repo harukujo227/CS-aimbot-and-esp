@@ -4,12 +4,10 @@ use std::{
     io::{BufReader, Read, Write as _},
     path::{Path, PathBuf},
     process::Command,
-    sync::Arc,
 };
 
 use bytemuck::AnyBitPattern;
 use glam::{Mat4, Quat, Vec2, Vec3, Vec4};
-use parking_lot::Mutex;
 
 use crate::{
     os::crash::{self, report_error},
@@ -18,11 +16,7 @@ use crate::{
 
 pub mod bvh;
 
-pub fn parse_maps(
-    bvh: Arc<Mutex<HashMap<String, Bvh>>>,
-    mut force_reparse: bool,
-    use_system_binary: bool,
-) {
+pub fn parse_maps(mut force_reparse: bool, use_system_binary: bool) {
     crash::info();
     let source2viewer = exe_path().join("source2viewer/Source2Viewer-CLI");
     if !source2viewer.exists() && !use_system_binary {
@@ -157,9 +151,8 @@ pub fn parse_maps(
         for map in chunk {
             let map = map.clone();
             let maps_dir = maps_dir.clone();
-            let bvh_thread = bvh.clone();
             let thread = std::thread::spawn(move || {
-                parse_map(&map, &maps_dir, bvh_thread, force_reparse);
+                parse_map(&map, &maps_dir, force_reparse);
             });
             threads.push(thread);
         }
@@ -181,30 +174,14 @@ pub fn parse_maps(
     log::info!("loaded map info");
 }
 
-fn parse_map(
-    map: &str,
-    maps_dir: &Path,
-    bvh: Arc<Mutex<HashMap<String, Bvh>>>,
-    force_reparse: bool,
-) {
+fn parse_map(map: &str, maps_dir: &Path, force_reparse: bool) {
     let map_name = map.replace(".vpk", "");
     let bvh_name = format!("{map_name}.bvh");
     let bvh_path = maps_dir.join(bvh_name);
 
     if bvh_path.exists() && !force_reparse {
-        let mut bvh_file = match File::open(&bvh_path) {
-            Ok(file) => file,
-            Err(err) => {
-                log::error!("could not open {bvh_path:?}: {err}");
-                report_error(err);
-                return;
-            }
-        };
-        if let Some(map_bvh) = Bvh::load(&mut bvh_file) {
-            log::debug!("loaded bvh for {map_name}");
-            bvh.lock().insert(map_name, map_bvh);
-            return;
-        }
+        log::debug!("bvh for {map_name} exists");
+        return;
     }
 
     let geom_dir = maps_dir.join("geometry/maps").join(&map_name);
@@ -296,7 +273,6 @@ fn parse_map(
     };
     map_bvh.save(&mut bvh_file);
     log::info!("parsed bvh for {map_name}");
-    bvh.lock().insert(map_name, map_bvh);
 }
 
 #[derive(PartialEq)]
@@ -588,4 +564,21 @@ fn read_bytes(reader: &mut impl Read, count: usize) -> Vec<u8> {
     let mut buf = vec![0u8; count];
     reader.read_exact(&mut buf).unwrap();
     buf
+}
+
+pub fn load_map(map_name: &str) -> Option<Bvh> {
+    let maps_dir = maps_dir().ok()?;
+    let bvh_name = if map_name.ends_with(".vpk") {
+        map_name.replace(".vpk", ".bvh")
+    } else {
+        let mut name = map_name.to_owned();
+        name.push_str(".bvh");
+        name
+    };
+    let bvh_path = maps_dir.join(bvh_name);
+    if !bvh_path.exists() {
+        return None;
+    }
+    let mut bvh_file = File::open(&bvh_path).ok()?;
+    Bvh::load(&mut bvh_file)
 }

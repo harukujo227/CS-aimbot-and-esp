@@ -306,9 +306,6 @@ pub struct HudConfig {
     pub font_size: f32,
     pub icon_size: f32,
     pub debug: bool,
-    pub debug_bvh: bool,
-    pub bvh_aabbs: bool,
-    pub bvh_triangles: bool,
 }
 
 impl Default for HudConfig {
@@ -332,9 +329,6 @@ impl Default for HudConfig {
             font_size: 16.0,
             icon_size: 20.0,
             debug: false,
-            debug_bvh: false,
-            bvh_aabbs: false,
-            bvh_triangles: false,
         }
     }
 }
