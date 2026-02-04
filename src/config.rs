@@ -187,9 +187,6 @@ impl Default for AimConfig {
     fn default() -> Self {
         let mut weapons = HashMap::new();
         for weapon in Weapon::iter() {
-            if weapon == Weapon::Unknown {
-                continue;
-            }
             weapons.insert(weapon, WeaponConfig::default());
         }
 
