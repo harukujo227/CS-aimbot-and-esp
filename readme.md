@@ -139,6 +139,8 @@ The game still thinks it's running in 16:9 resolution. This cannot be fixed.
 
 Your compositor or window manager doesn't support transparency, or it's not enabled.
 
+On KDE, go into the `Display and Monitor` settings, then `Compositor`, and tick `Enable compositor on startup`.
+
 ### The overlay shows but I can't click anything
 
 The window couldn't be made click-through. This is a window manager/compositor limitation.
