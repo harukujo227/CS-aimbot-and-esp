@@ -186,6 +186,8 @@ impl ApplicationHandler for App {
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::WaitUntil(
                     self.next_frame_time,
                 ));
+                gui.request_redraw();
+                overlay.request_redraw();
                 self.render();
             }
             _ => {
