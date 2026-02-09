@@ -13,6 +13,8 @@ git clone --recursive https://github.com/avitran0/deadlocked
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
+Also make sure that the `uinput` kernel module is loaded.
+
 Running NixOS or Fedora Atomic? See [OS-Specific Setup](os-setup.md).
 
 ## Running
