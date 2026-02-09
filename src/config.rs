@@ -408,18 +408,22 @@ pub fn parse_config(path: &Path) -> Config {
         return Config::default();
     }
 
-    let config_string = read_to_string(path).unwrap();
+    let Ok(config_string) = read_to_string(path) else {
+        return Config::default();
+    };
+
     let config = toml::from_str(&config_string);
     if config.is_err() {
         log::warn!("config file invalid");
+    } else {
+        log::info!("loaded config {:?}", path.file_name().unwrap());
     }
-    log::info!("loaded config {:?}", path.file_name().unwrap());
     config.unwrap_or_default()
 }
 
 pub fn write_config(config: &Config, path: &Path) {
     let out = toml::to_string(&config).unwrap();
-    std::fs::write(path, out).unwrap();
+    let _ = std::fs::write(path, out);
 }
 
 pub fn delete_config(path: &Path) {
@@ -427,13 +431,18 @@ pub fn delete_config(path: &Path) {
         return;
     }
 
-    std::fs::remove_file(path).unwrap();
-    log::info!("deleted config {:?}", path.file_name().unwrap());
+    if std::fs::remove_file(path).is_ok() {
+        log::info!("deleted config {:?}", path.file_name().unwrap());
+    }
 }
 
 pub fn available_configs() -> Vec<PathBuf> {
     let mut files = Vec::with_capacity(8);
-    for path in std::fs::read_dir::<&Path>(CONFIG_PATH.as_ref()).unwrap() {
+    let Ok(dir) = std::fs::read_dir::<&Path>(CONFIG_PATH.as_ref()) else {
+        return files;
+    };
+
+    for path in dir {
         let Ok(file) = path else {
             continue;
         };
