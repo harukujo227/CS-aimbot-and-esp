@@ -38,13 +38,6 @@ fn main() {
     // and don't support disabling the maximize button
     unsafe { std::env::remove_var("WAYLAND_DISPLAY") };
 
-    if let Ok(username) = std::env::var("USER")
-        && username == "root"
-    {
-        log::error!("start without sudo, and add your user to the input group.");
-        return;
-    }
-
     let force_reparse = args.iter().any(|arg| arg == "--force-reparse");
     let use_system_binary = args.iter().any(|arg| arg == "--local-s2v");
     std::thread::spawn(move || {
