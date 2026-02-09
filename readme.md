@@ -7,7 +7,7 @@ simple cs2 aimbot and esp, for linux only.
 ## Setup
 
 ```bash
-sudo usermod -aG input $(whoami)
+./setup.sh
 # Restart your machine (required)
 git clone --recursive https://github.com/avitran0/deadlocked
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
