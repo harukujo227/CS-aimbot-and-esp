@@ -58,7 +58,7 @@ pub fn combo_box<T: std::fmt::Debug + strum::IntoEnumIterator + PartialEq>(
 }
 
 pub fn color_picker(ui: &mut Ui, label: &str, color: &mut Color32) -> bool {
-    let [mut r, mut g, mut b, mut a] = color.to_array();
+    let [mut r, mut g, mut b, mut a] = color.to_srgba_unmultiplied();
     let res = ui
         .horizontal(|ui| {
             let (response, painter) =
@@ -79,7 +79,7 @@ pub fn color_picker(ui: &mut Ui, label: &str, color: &mut Color32) -> bool {
 
     let changed = res.changed();
     if changed {
-        *color = Color32::from_rgb(r, g, b);
+        *color = Color32::from_rgba_premultiplied(r, g, b, a);
     }
 
     changed
