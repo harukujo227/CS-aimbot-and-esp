@@ -230,6 +230,7 @@ pub struct PlayerConfig {
     pub player_name: bool,
     pub weapon_icon: bool,
     pub tags: bool,
+    pub visible_only: bool,
     pub sound: SoundConfig,
 }
 
@@ -251,6 +252,7 @@ impl Default for PlayerConfig {
             player_name: true,
             weapon_icon: true,
             tags: true,
+            visible_only: false,
             sound: SoundConfig::default(),
         }
     }

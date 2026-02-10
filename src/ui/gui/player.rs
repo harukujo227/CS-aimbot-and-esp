@@ -2,7 +2,9 @@ use egui::Ui;
 
 use crate::ui::{
     app::App,
-    gui::helpers::{collapsing_open, color_picker, combo_box, keybind, scroll},
+    gui::helpers::{
+        checkbox, checkbox_hover, collapsing_open, color_picker, combo_box, keybind, scroll,
+    },
 };
 
 impl App {
@@ -44,10 +46,7 @@ impl App {
 
     fn player_left(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Players", |ui| {
-            if ui
-                .checkbox(&mut self.config.player.enabled, "Enable")
-                .changed()
-            {
+            if checkbox(ui, "Enable", &mut self.config.player.enabled) {
                 self.send_config();
             }
 
@@ -60,11 +59,12 @@ impl App {
                 self.send_config();
             }
 
-            if ui
-                .checkbox(&mut self.config.player.show_friendlies, "Show Friendlies")
-                .on_hover_text("Only active in custom game modes (workshop/custom maps)")
-                .changed()
-            {
+            if checkbox_hover(
+                ui,
+                "Show Friendlies",
+                "Only active in custom game modes (workshop/custom maps)",
+                &mut self.config.player.show_friendlies,
+            ) {
                 self.send_config();
             }
 
@@ -85,19 +85,26 @@ impl App {
                 self.send_config();
             }
 
-            if ui
-                .checkbox(&mut self.config.player.head_circle, "Head Circle")
-                .changed()
-            {
+            if checkbox(ui, "Head Circle", &mut self.config.player.head_circle) {
+                self.send_config();
+            }
+
+            if checkbox_hover(
+                ui,
+                "Visible Only",
+                "Only show visible players",
+                &mut self.config.player.visible_only,
+            ) {
                 self.send_config();
             }
         });
         ui.collapsing("Sound ESP", |ui| {
-            if ui
-                .checkbox(&mut self.config.player.sound.enabled, "Enabled")
-                .on_hover_text("Show a circle under players when they make sound")
-                .changed()
-            {
+            if checkbox_hover(
+                ui,
+                "Enabled",
+                "Show a circle under players when they make sound",
+                &mut self.config.player.sound.enabled,
+            ) {
                 self.send_config();
             }
 
