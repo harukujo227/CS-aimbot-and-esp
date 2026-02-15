@@ -1,8 +1,8 @@
 # deadlocked
 
-simple cs2 aimbot and esp, for linux only.
+![Matrix](https://img.shields.io/matrix/open-source-cs2-hacking%3Amatrix.org?style=for-the-badge&logo=matrix&label=Matrix)
 
-[![Open Source CS2 Hacking](https://badgen.net/discord/members/eXjG4Ar9Sx)](https://discord.gg/eXjG4Ar9Sx)
+simple cs2 aimbot and esp, for linux only.
 
 ## Setup
 
