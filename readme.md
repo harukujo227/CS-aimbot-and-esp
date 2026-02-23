@@ -10,7 +10,7 @@ simple cs2 aimbot and esp, for linux only.
 ```bash
 ./setup.sh
 # Restart your machine (required)
-git clone --recursive https://github.com/avitran0/deadlocked
+git clone https://github.com/avitran0/deadlocked
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
