@@ -482,7 +482,6 @@ dependencies = [
  "glam",
  "glutin",
  "glutin-winit",
- "log",
  "nix",
  "parking_lot",
  "postcard",
@@ -495,6 +494,7 @@ dependencies = [
  "tungstenite",
  "ureq",
  "url",
+ "utils",
  "uuid",
  "winit",
 ]
@@ -2365,6 +2365,15 @@ name = "utf8_iter"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
+
+[[package]]
+name = "utils"
+version = "0.1.0"
+source = "git+https://github.com/avitran0/utils#c8febf7d08e0e8ff5f8de008f59528c9a497f4ca"
+dependencies = [
+ "log",
+ "parking_lot",
+]
 
 [[package]]
 name = "uuid"

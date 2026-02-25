@@ -1,5 +1,7 @@
 use std::time::Instant;
 
+use utils::log;
+
 use crate::{
     constants::cs2,
     cs2::{CS2, offsets::Offsets, schema::Schema},

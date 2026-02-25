@@ -1,4 +1,5 @@
 use egui::Ui;
+use utils::log;
 
 use crate::{
     message::{Message, RadarStatus, Target},

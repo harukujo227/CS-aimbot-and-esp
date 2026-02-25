@@ -4,6 +4,7 @@ use crossbeam::channel::{Receiver, Sender};
 use parking_lot::Mutex;
 use serde::Deserialize;
 use tungstenite::{WebSocket, client};
+use utils::log;
 use uuid::Uuid;
 
 use crate::{

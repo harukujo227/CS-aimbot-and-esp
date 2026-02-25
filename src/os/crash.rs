@@ -8,6 +8,8 @@ use std::{
     time::Duration,
 };
 
+use utils::log;
+
 pub fn install_crash_handler() {
     let default_hook = panic::take_hook();
     panic::set_hook(Box::new(move |panic_hook_info| {
@@ -49,7 +51,7 @@ fn crash_handler(panic_info: &PanicHookInfo) {
         .post("https://deadlocked.holyhades64.workers.dev/stacktrace")
         .send_json(json);
 
-    log::error!("crash reported");
+    log::info!("crash reported");
 }
 
 const UNKNOWN: &str = "unknown";

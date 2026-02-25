@@ -8,6 +8,7 @@ use std::{
 use arboard::Clipboard;
 use crossbeam::channel::{Receiver, Sender};
 use parking_lot::Mutex;
+use utils::log;
 use winit::{
     application::ApplicationHandler,
     event::{StartCause, WindowEvent},

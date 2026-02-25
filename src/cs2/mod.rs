@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use glam::{IVec2, Mat4, Vec2, Vec3};
 use parking_lot::Mutex;
+use utils::log;
 
 use crate::{
     config::{AimbotConfig, Config, KeyMode, RcsConfig, TriggerbotConfig},

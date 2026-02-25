@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use crossbeam::channel::{bounded, unbounded};
 use parking_lot::Mutex;
+use utils::log::{self, Logger, LoggerOptions};
 
 use crate::{
     data::Data,
-    os::log::FileLogger,
     parser::parse_maps,
     ui::{app::App, grenades::read_grenades},
 };
@@ -27,9 +27,7 @@ mod ui;
 compile_error!("only linux is supported.");
 
 fn main() {
-    FileLogger::new("deadlocked.log", log::Level::Info)
-        .unwrap()
-        .init();
+    Logger::install(LoggerOptions::default().file("deadlocked.log").debug(true));
 
     let args: Vec<String> = std::env::args().collect();
     os::crash::install_crash_handler();
