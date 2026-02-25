@@ -37,9 +37,6 @@ impl App {
                 if color_picker(ui, "Skeleton", &mut self.config.player.skeleton_color) {
                     self.send_config();
                 }
-                if color_picker(ui, "Sound ESP", &mut self.config.player.sound.color) {
-                    self.send_config();
-                }
             });
         });
     }
@@ -107,25 +104,6 @@ impl App {
             ) {
                 self.send_config();
             }
-
-            ui.horizontal(|ui| {
-                let response = ui.add(
-                    egui::DragValue::new(&mut self.config.player.sound.circle_scale)
-                        .speed(0.1)
-                        .range(0.1..=3.0),
-                );
-
-                ui.label("Scale");
-
-                if ui.button("↺").on_hover_text("Reset").clicked() {
-                    self.config.player.sound.circle_scale = 1.0;
-                    self.send_config();
-                }
-
-                if response.changed() {
-                    self.send_config();
-                }
-            });
 
             ui.collapsing("Ranges", |ui| {
                 ui.horizontal(|ui| {

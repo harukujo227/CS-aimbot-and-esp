@@ -4,7 +4,7 @@ use glam::{Vec3, vec3};
 use crate::{
     config::AimbotConfig,
     cs2::entity::weapon::Weapon,
-    data::{Data, PlayerData, SoundType},
+    data::Data,
     math::world_to_screen,
     ui::{app::App, grenades::Grenade},
 };
@@ -14,72 +14,6 @@ mod hud;
 mod player;
 
 impl App {
-    fn draw_sound_esp(&self, painter: &egui::Painter, player: &PlayerData, data: &Data) {
-        if !self.config.player.sound.enabled {
-            return;
-        }
-
-        let Some((time, sound)) = self.player_sounds.get(&player.steam_id) else {
-            return;
-        };
-
-        let fadeout_duration = self.config.player.sound.fadeout_duration;
-        let opacity = 1.0 - time.elapsed().as_secs_f32() / fadeout_duration.as_secs_f32();
-
-        let distance_sq = (player.position - data.local_player.position).length_squared();
-        let sound_radius_sq = match sound {
-            SoundType::Gunshot => (self.config.player.sound.gunshot_diameter * 0.5).powi(2),
-            SoundType::Weapon => (self.config.player.sound.weapon_diameter * 0.5).powi(2),
-            SoundType::Footstep => (self.config.player.sound.footstep_diameter * 0.5).powi(2),
-        };
-
-        if distance_sq > sound_radius_sq {
-            return;
-        }
-
-        let distance = distance_sq.sqrt();
-
-        let Some(screen_pos) =
-            world_to_screen(&(player.position - Vec3::new(0.0, 0.0, 10.0)), data)
-        else {
-            return;
-        };
-
-        let player_height = player.head.z - player.position.z + 24.0;
-        let midpoint = player.position + Vec3::new(0.0, 0.0, player_height * 0.5);
-        let half_height = player_height * 0.5;
-        let top = midpoint + Vec3::new(0.0, 0.0, half_height);
-        let bottom = midpoint - Vec3::new(0.0, 0.0, half_height);
-
-        let (Some(top_screen), Some(bottom_screen)) =
-            (world_to_screen(&top, data), world_to_screen(&bottom, data))
-        else {
-            return;
-        };
-
-        let player_screen_height = (bottom_screen.y - top_screen.y).abs();
-        let is_gunshot = matches!(player.sound, Some(SoundType::Gunshot));
-        let scale_multiplier = if is_gunshot { 1.25 } else { 1.0 };
-        let visual_radius =
-            player_screen_height * self.config.player.sound.circle_scale * 0.07 * scale_multiplier;
-
-        let max_distance = match player.sound {
-            Some(SoundType::Gunshot) => self.config.player.sound.gunshot_diameter * 0.5,
-            Some(SoundType::Weapon) => self.config.player.sound.weapon_diameter * 0.5,
-            Some(SoundType::Footstep) | None => self.config.player.sound.footstep_diameter * 0.5,
-        };
-        let distance_factor = (distance / max_distance).min(1.0);
-        let alpha = (1.0 - distance_factor * 0.8) * opacity;
-        let color = self.config.player.sound.color.gamma_multiply(alpha);
-        let line_width = (2.0 * (1.0 + 1.0 / (distance * 0.01 + 1.0))).min(4.0);
-
-        painter.circle_stroke(
-            screen_pos,
-            visual_radius,
-            egui::Stroke::new(line_width, color),
-        );
-    }
-
     fn aimbot_config(&self, weapon: &Weapon) -> &AimbotConfig {
         if let Some(weapon_config) = self.config.aim.weapons.get(weapon)
             && weapon_config.aimbot.enable_override
@@ -101,16 +35,14 @@ impl App {
         self.overlay_debug(&painter, data);
 
         for player in &data.players {
-            self.draw_sound_esp(&painter, player, data);
-
-            if data.wallhack_active {
+            if data.esp_active {
                 self.draw_player(&painter, player, data);
             }
         }
 
         if self.config.player.show_friendlies && data.is_custom_mode {
             for player in &data.friendlies {
-                if data.wallhack_active {
+                if data.esp_active {
                     self.draw_player(&painter, player, data);
                 }
             }

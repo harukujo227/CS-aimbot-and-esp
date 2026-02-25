@@ -33,7 +33,7 @@ pub struct Data {
     pub window_size: Vec2,
     pub aimbot_active: bool,
     pub triggerbot_active: bool,
-    pub wallhack_active: bool,
+    pub esp_active: bool,
 }
 
 #[derive(Debug, Clone, Default, Serialize)]

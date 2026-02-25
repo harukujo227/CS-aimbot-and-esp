@@ -17,16 +17,34 @@ impl App {
             return;
         }
 
-        self.player_box(painter, player, data);
-        self.skeleton(painter, player, data);
+        let sound = self.player_sounds.get(&player.steam_id);
+        let sound_alpha = if self.config.player.sound.enabled {
+            let Some((time, _)) = sound else {
+                return;
+            };
+
+            if time.elapsed() > self.config.player.sound.fadeout_duration {
+                return;
+            }
+
+            Some(
+                1.0 - (time.elapsed().as_secs_f32()
+                    / self.config.player.sound.fadeout_duration.as_secs_f32()),
+            )
+        } else {
+            None
+        };
+
+        self.player_box(painter, player, data, sound_alpha);
+        self.skeleton(painter, player, data, sound_alpha);
     }
 
-    fn player_box(&self, painter: &Painter, player: &PlayerData, data: &Data) {
+    fn player_box(&self, painter: &Painter, player: &PlayerData, data: &Data, alpha: Option<f32>) {
         use crate::config::DrawMode;
 
         let health_color =
             self.health_color(player.health, self.config.player.box_visible_color.a());
-        let color = match &self.config.player.draw_box {
+        let mut color = match &self.config.player.draw_box {
             DrawMode::None => health_color,
             DrawMode::Health => health_color,
             DrawMode::Color => {
@@ -37,6 +55,14 @@ impl App {
                 }
             }
         };
+        if let Some(alpha) = alpha {
+            color = Color32::from_rgba_unmultiplied(
+                color.r(),
+                color.g(),
+                color.b(),
+                (alpha * 255.0) as u8,
+            );
+        }
         let stroke = Stroke::new(self.config.hud.line_width, color);
         let icon_font = FontId::monospace(self.config.hud.icon_size);
 
@@ -182,14 +208,22 @@ impl App {
         }
     }
 
-    fn skeleton(&self, painter: &Painter, player: &PlayerData, data: &Data) {
-        let color = match &self.config.player.draw_skeleton {
+    fn skeleton(&self, painter: &Painter, player: &PlayerData, data: &Data, alpha: Option<f32>) {
+        let mut color = match &self.config.player.draw_skeleton {
             DrawMode::None => return,
             DrawMode::Health => {
                 self.health_color(player.health, self.config.player.skeleton_color.a())
             }
             DrawMode::Color => self.config.player.skeleton_color,
         };
+        if let Some(alpha) = alpha {
+            color = Color32::from_rgba_unmultiplied(
+                color.r(),
+                color.g(),
+                color.b(),
+                (alpha * 255.0) as u8,
+            );
+        }
         let stroke = Stroke::new(self.config.hud.line_width, color);
 
         for (a, b) in &Bones::CONNECTIONS {

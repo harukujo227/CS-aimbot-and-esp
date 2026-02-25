@@ -229,7 +229,7 @@ impl Game for CS2 {
         } else {
             false
         };
-        data.wallhack_active = self.esp_enabled(config);
+        data.esp_active = self.esp_enabled(config);
 
         data.view_matrix = self.process.read::<Mat4>(self.offsets.direct.view_matrix);
         data.view_angles = local_player.view_angles(self);
