@@ -6,7 +6,7 @@ use glam::vec3;
 use crate::{
     config::{BoxMode, DrawMode},
     cs2::bones::Bones,
-    data::{Data, PlayerData},
+    data::{Data, PlayerData, SoundType},
     math::world_to_screen,
     ui::app::App,
 };
@@ -19,9 +19,19 @@ impl App {
 
         let sound = self.player_sounds.get(&player.steam_id);
         let sound_alpha = if self.config.player.sound.enabled {
-            let Some((time, _)) = sound else {
+            let Some((time, sound)) = sound else {
                 return;
             };
+
+            let local_player = &data.local_player;
+            let max_distance = match sound {
+                SoundType::Footstep => self.config.player.sound.footstep_diameter,
+                SoundType::Gunshot => self.config.player.sound.gunshot_diameter,
+                SoundType::Weapon => self.config.player.sound.weapon_diameter,
+            };
+            if local_player.position.distance(player.position) > max_distance {
+                return;
+            }
 
             if time.elapsed() > self.config.player.sound.fadeout_duration {
                 return;
