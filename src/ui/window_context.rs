@@ -202,6 +202,12 @@ impl WindowContext {
     }
 }
 
+impl Drop for WindowContext {
+    fn drop(&mut self) {
+        self.egui_glow.destroy();
+    }
+}
+
 fn prep_ctx(ctx: &mut egui::Context, accent_color: egui::Color32) {
     // add font
     let fira_sans = include_bytes!("../../resources/FiraSansIcons.ttf");

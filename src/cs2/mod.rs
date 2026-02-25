@@ -122,8 +122,6 @@ impl Game for CS2 {
         data.players.clear();
         data.friendlies.clear();
         data.entities.clear();
-        data.spectators.clear();
-        data.spectator_names.clear();
 
         let sdl_window = self.process.read::<u64>(self.offsets.direct.sdl_window);
         if sdl_window == 0 {
