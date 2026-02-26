@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
 use crossbeam::channel::{bounded, unbounded};
-use parking_lot::Mutex;
-use utils::log::{self, Logger, LoggerOptions};
+use utils::{
+    log::{self, Logger, LoggerOptions},
+    sync::Mutex,
+};
 
 use crate::{
     data::Data,

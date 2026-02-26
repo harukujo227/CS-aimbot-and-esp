@@ -1,10 +1,9 @@
 use std::{net::TcpStream, sync::Arc, time::Duration};
 
 use crossbeam::channel::{Receiver, Sender};
-use parking_lot::Mutex;
 use serde::Deserialize;
 use tungstenite::{WebSocket, client};
-use utils::log;
+use utils::{log, sync::Mutex};
 use uuid::Uuid;
 
 use crate::{
