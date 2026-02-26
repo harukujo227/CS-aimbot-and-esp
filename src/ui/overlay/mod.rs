@@ -355,12 +355,12 @@ fn convex_hull(points: &[Vec3]) -> Vec<Vec3> {
             .then(a.y.partial_cmp(&b.y).unwrap_or(std::cmp::Ordering::Equal))
     });
 
-    let mut deduped: Vec<Vec3> = Vec::new();
+    let mut deduped: Vec<Vec3> = Vec::with_capacity(sorted_points.len());
     for point in sorted_points {
-        if deduped.is_empty()
-            || point.x != deduped.last().unwrap().x
-            || point.y != deduped.last().unwrap().y
-        {
+        let is_duplicate = deduped
+            .last()
+            .is_some_and(|last| point.x == last.x && point.y == last.y);
+        if !is_duplicate {
             deduped.push(point);
         }
     }

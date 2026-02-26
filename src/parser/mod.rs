@@ -113,9 +113,9 @@ pub fn parse_maps(mut force_reparse: bool, use_system_binary: bool) {
     }
     for file in &files {
         let path = maps_dir.join(file);
-        let map_name = file.replace(".vpk", "");
+        let map_name = file.trim_end_matches(".vpk");
 
-        if maps_dir.join("geometry/maps").join(&map_name).exists() && !force_reparse {
+        if maps_dir.join("geometry/maps").join(map_name).exists() && !force_reparse {
             continue;
         }
 

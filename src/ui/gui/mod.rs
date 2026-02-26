@@ -59,10 +59,9 @@ impl App {
 
                 ui.with_layout(egui::Layout::bottom_up(Align::Min), |ui| {
                     if ui.button("Report Issue").clicked() {
-                        std::process::Command::new("xdg-open")
+                        let _ = std::process::Command::new("xdg-open")
                             .arg("https://github.com/avitran0/deadlocked/issues")
-                            .status()
-                            .unwrap();
+                            .status();
                     }
 
                     ui.label(egui::RichText::new(format!("{}", self.game_status)).color(

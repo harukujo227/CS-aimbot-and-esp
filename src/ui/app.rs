@@ -103,15 +103,19 @@ impl App {
             aimbot_weapon: Weapon::Ak47,
         };
         ret.send_config();
-        ret.send_message(
-            Message::RadarSetEnabled(ret.config.radar.enabled),
-            Target::Radar,
-        );
-        ret.send_message(
-            Message::ChangeRadarUrl(ret.config.radar.url.clone()),
-            Target::Radar,
-        );
+        ret.send_radar_config();
         ret
+    }
+
+    fn send_radar_config(&self) {
+        self.send_message(
+            Message::RadarSetEnabled(self.config.radar.enabled),
+            Target::Radar,
+        );
+        self.send_message(
+            Message::ChangeRadarUrl(self.config.radar.url.clone()),
+            Target::Radar,
+        );
     }
 
     fn create_window(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {

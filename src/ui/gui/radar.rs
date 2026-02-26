@@ -1,5 +1,6 @@
 use egui::Ui;
 use utils::log;
+use uuid::Uuid;
 
 use crate::{
     message::{Message, RadarStatus, Target},
@@ -7,6 +8,10 @@ use crate::{
 };
 
 impl App {
+    fn radar_link(&self, uuid: &Uuid) -> String {
+        format!("http://{}/?uuid={}", self.config.radar.url, uuid)
+    }
+
     pub fn radar_settings(&mut self, ui: &mut Ui) {
         egui::ScrollArea::vertical()
             .auto_shrink([false, true])
@@ -42,11 +47,10 @@ impl App {
                         self.save();
                     }
 
-                    if let RadarStatus::Connected(uuid) = &self.radar_status {
+                    if let RadarStatus::Connected(uuid) = self.radar_status {
                         ui.horizontal(|ui| {
                             if ui.button("Open").clicked() {
-                                let link =
-                                    format!("http://{}/?uuid={}", self.config.radar.url, uuid);
+                                let link = self.radar_link(&uuid);
                                 std::process::Command::new("xdg-open")
                                     .arg(&link)
                                     .status()
@@ -55,8 +59,7 @@ impl App {
                             }
 
                             if ui.button("Copy Link").clicked() {
-                                let link =
-                                    format!("http://{}/?uuid={}", self.config.radar.url, uuid);
+                                let link = self.radar_link(&uuid);
                                 log::info!("copied link ({link})");
                                 // ctx.copy_text(link);
                                 self.clipboard.set_text(link).unwrap();

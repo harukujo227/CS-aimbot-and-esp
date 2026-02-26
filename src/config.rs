@@ -414,8 +414,8 @@ pub fn parse_config(path: &Path) -> Config {
     let config = toml::from_str(&config_string);
     if config.is_err() {
         log::warn!("config file invalid");
-    } else {
-        log::info!("loaded config {:?}", path.file_name().unwrap());
+    } else if let Some(file_name) = path.file_name() {
+        log::info!("loaded config {:?}", file_name);
     }
     config.unwrap_or_default()
 }
@@ -430,8 +430,10 @@ pub fn delete_config(path: &Path) {
         return;
     }
 
-    if std::fs::remove_file(path).is_ok() {
-        log::info!("deleted config {:?}", path.file_name().unwrap());
+    if std::fs::remove_file(path).is_ok()
+        && let Some(file_name) = path.file_name()
+    {
+        log::info!("deleted config {:?}", file_name);
     }
 }
 
@@ -445,10 +447,17 @@ pub fn available_configs() -> Vec<PathBuf> {
         let Ok(file) = path else {
             continue;
         };
-        if !file.file_type().unwrap().is_file() {
+        let Ok(file_type) = file.file_type() else {
+            continue;
+        };
+        if !file_type.is_file() {
             continue;
         }
-        if !file.file_name().to_str().unwrap().ends_with(".toml") {
+        let file_name = file.file_name();
+        let Some(file_name) = file_name.to_str() else {
+            continue;
+        };
+        if !file_name.ends_with(".toml") {
             continue;
         }
         files.push(file.path())
