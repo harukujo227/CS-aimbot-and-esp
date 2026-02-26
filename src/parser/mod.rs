@@ -221,7 +221,21 @@ fn parse_map(map: &str, maps_dir: &Path, force_reparse: bool) {
         };
         let mut reader = BufReader::new(file);
         let elements = parse_dmx(&mut reader);
-        let vertex_element = elements.get("DmeVertexData_bind").unwrap();
+
+        // DmeMaterial_material.mtlName == "flags$kind"
+        let Some(material_element) = elements.get("DmeMaterial_material") else {
+            continue;
+        };
+        let Some(Attribute::String(material)) = material_element.attributes.get("mtlName") else {
+            continue;
+        };
+        if !material.starts_with('$') {
+            continue;
+        }
+
+        let Some(vertex_element) = elements.get("DmeVertexData_bind") else {
+            continue;
+        };
         let Some(Attribute::Vec3Array(vertices)) = vertex_element.attributes.get("position$0")
         else {
             continue;
