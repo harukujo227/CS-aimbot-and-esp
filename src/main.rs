@@ -29,7 +29,12 @@ mod ui;
 compile_error!("only linux is supported.");
 
 fn main() {
-    Logger::install(LoggerOptions::default().file("deadlocked.log").debug(true));
+    Logger::install(
+        LoggerOptions::default()
+            .file("deadlocked.log")
+            .debug(true)
+            .module(module_path!()),
+    );
 
     let args: Vec<String> = std::env::args().collect();
     os::crash::install_crash_handler();
