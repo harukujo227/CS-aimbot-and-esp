@@ -266,7 +266,7 @@ pub struct SoundConfig {
     pub footstep_diameter: f32,
     pub gunshot_diameter: f32,
     pub weapon_diameter: f32,
-    pub fadeout_duration: std::time::Duration,
+    pub fadeout_duration: f32,
 }
 
 impl Default for SoundConfig {
@@ -276,7 +276,7 @@ impl Default for SoundConfig {
             footstep_diameter: crate::constants::cs2::SOUND_ESP_FOOTSTEP_DIAMETER_DEFAULT,
             gunshot_diameter: crate::constants::cs2::SOUND_ESP_GUNSHOT_DIAMETER_DEFAULT,
             weapon_diameter: crate::constants::cs2::SOUND_ESP_WEAPON_DIAMETER_DEFAULT,
-            fadeout_duration: std::time::Duration::from_secs(1),
+            fadeout_duration: 1.0,
         }
     }
 }

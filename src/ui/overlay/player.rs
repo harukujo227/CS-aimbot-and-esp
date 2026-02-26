@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use egui::{Align2, Color32, FontId, Painter, Stroke, pos2};
 use glam::vec3;
@@ -33,14 +33,11 @@ impl App {
                 return;
             }
 
-            if time.elapsed() > self.config.player.sound.fadeout_duration {
+            if time.elapsed() > Duration::from_secs_f32(self.config.player.sound.fadeout_duration) {
                 return;
             }
 
-            Some(
-                1.0 - (time.elapsed().as_secs_f32()
-                    / self.config.player.sound.fadeout_duration.as_secs_f32()),
-            )
+            Some(1.0 - (time.elapsed().as_secs_f32() / self.config.player.sound.fadeout_duration))
         } else {
             None
         };
@@ -289,7 +286,8 @@ impl App {
                 .insert(player.steam_id, (Instant::now(), *sound));
         }
 
-        self.player_sounds
-            .retain(|_, (time, _)| time.elapsed() < self.config.player.sound.fadeout_duration);
+        self.player_sounds.retain(|_, (time, _)| {
+            time.elapsed() < Duration::from_secs_f32(self.config.player.sound.fadeout_duration)
+        });
     }
 }

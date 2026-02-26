@@ -1,9 +1,9 @@
-use egui::Ui;
+use egui::{DragValue, Ui};
 
 use crate::ui::{
     app::App,
     gui::helpers::{
-        checkbox, checkbox_hover, collapsing_open, color_picker, combo_box, keybind, scroll,
+        checkbox, checkbox_hover, collapsing_open, color_picker, combo_box, drag, keybind, scroll,
     },
 };
 
@@ -101,6 +101,16 @@ impl App {
                 "Enabled",
                 "Show a circle under players when they make sound",
                 &mut self.config.player.sound.enabled,
+            ) {
+                self.send_config();
+            }
+
+            if drag(
+                ui,
+                "Fadeout Time (s)",
+                DragValue::new(&mut self.config.player.sound.fadeout_duration)
+                    .range(0.0..=10.0)
+                    .speed(0.01),
             ) {
                 self.send_config();
             }
