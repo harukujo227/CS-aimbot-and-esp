@@ -19,25 +19,7 @@ impl App {
 
         let sound = self.player_sounds.get(&player.steam_id);
         let sound_alpha = if self.config.player.sound.enabled {
-            let Some((time, sound)) = sound else {
-                return;
-            };
-
-            let local_player = &data.local_player;
-            let max_distance = match sound {
-                SoundType::Footstep => self.config.player.sound.footstep_diameter,
-                SoundType::Gunshot => self.config.player.sound.gunshot_diameter,
-                SoundType::Weapon => self.config.player.sound.weapon_diameter,
-            };
-            if local_player.position.distance(player.position) > max_distance {
-                return;
-            }
-
-            if time.elapsed() > Duration::from_secs_f32(self.config.player.sound.fadeout_duration) {
-                return;
-            }
-
-            Some(1.0 - (time.elapsed().as_secs_f32() / self.config.player.sound.fadeout_duration))
+            self.player_sound_alpha(player, sound, data)
         } else {
             None
         };
@@ -46,8 +28,62 @@ impl App {
         self.skeleton(painter, player, data, sound_alpha);
     }
 
+    fn player_sound_alpha(
+        &self,
+        player: &PlayerData,
+        sound: Option<&(Instant, SoundType)>,
+        data: &Data,
+    ) -> Option<f32> {
+        if self.config.player.sound.show_visible && player.visible {
+            return Some(1.0);
+        }
+
+        let Some((time, sound)) = sound else {
+            return Some(0.0);
+        };
+
+        let local_player = &data.local_player;
+        let max_distance = match sound {
+            SoundType::Footstep => self.config.player.sound.footstep_diameter,
+            SoundType::Gunshot => self.config.player.sound.gunshot_diameter,
+            SoundType::Weapon => self.config.player.sound.weapon_diameter,
+        };
+        if local_player.position.distance(player.position) > max_distance {
+            return Some(0.0);
+        }
+
+        if time.elapsed() > self.total_sound_duration() {
+            return Some(0.0);
+        }
+
+        Some(
+            1.0 - ((time.elapsed().as_secs_f32() - self.config.player.sound.fadeout_start)
+                / self.config.player.sound.fadeout_duration),
+        )
+    }
+
+    fn total_sound_duration(&self) -> Duration {
+        Duration::from_secs_f32(
+            self.config.player.sound.fadeout_start + self.config.player.sound.fadeout_duration,
+        )
+    }
+
+    fn alpha(color: Color32, alpha: f32) -> Color32 {
+        Color32::from_rgba_unmultiplied(
+            color.r(),
+            color.g(),
+            color.b(),
+            (alpha.clamp(0.0, 1.0) * 255.0) as u8,
+        )
+    }
+
     fn player_box(&self, painter: &Painter, player: &PlayerData, data: &Data, alpha: Option<f32>) {
         use crate::config::DrawMode;
+
+        let alpha = match alpha {
+            Some(alpha) => alpha.clamp(0.0, 1.0),
+            None => 1.0,
+        };
 
         let health_color =
             self.health_color(player.health, self.config.player.box_visible_color.a());
@@ -62,14 +98,9 @@ impl App {
                 }
             }
         };
-        if let Some(alpha) = alpha {
-            color = Color32::from_rgba_unmultiplied(
-                color.r(),
-                color.g(),
-                color.b(),
-                (alpha * 255.0) as u8,
-            );
-        }
+
+        color = Self::alpha(color, alpha);
+
         let stroke = Stroke::new(self.config.hud.line_width, color);
         let icon_font = FontId::monospace(self.config.hud.icon_size);
 
@@ -136,7 +167,7 @@ impl App {
                     pos2(x, bl.y),
                     pos2(x, bl.y - (delta * player.health as f32 / 100.0)),
                 ],
-                Stroke::new(self.config.hud.line_width, health_color),
+                Stroke::new(self.config.hud.line_width, Self::alpha(health_color, alpha)),
             );
         }
 
@@ -154,20 +185,23 @@ impl App {
                     pos2(x, bl.y),
                     pos2(x, bl.y - (delta * player.armor as f32 / 100.0)),
                 ],
-                Stroke::new(self.config.hud.line_width, Color32::BLUE),
+                Stroke::new(
+                    self.config.hud.line_width,
+                    Self::alpha(Color32::BLUE, alpha),
+                ),
             );
         }
 
         let mut offset = 0.0;
         let font_size = self.config.hud.font_size;
-        let text_color = self.config.hud.text_color;
+        let text_color = Self::alpha(self.config.hud.text_color, alpha);
         if self.config.player.player_name {
             self.text(
                 painter,
                 &player.name,
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
-                None,
+                Some(text_color),
             );
             offset += font_size;
         }
@@ -224,12 +258,7 @@ impl App {
             DrawMode::Color => self.config.player.skeleton_color,
         };
         if let Some(alpha) = alpha {
-            color = Color32::from_rgba_unmultiplied(
-                color.r(),
-                color.g(),
-                color.b(),
-                (alpha * 255.0) as u8,
-            );
+            color = Self::alpha(color, alpha);
         }
         let stroke = Stroke::new(self.config.hud.line_width, color);
 
@@ -286,8 +315,8 @@ impl App {
                 .insert(player.steam_id, (Instant::now(), *sound));
         }
 
-        self.player_sounds.retain(|_, (time, _)| {
-            time.elapsed() < Duration::from_secs_f32(self.config.player.sound.fadeout_duration)
-        });
+        let total_duration = self.total_sound_duration();
+        self.player_sounds
+            .retain(|_, (time, _)| time.elapsed() < total_duration);
     }
 }

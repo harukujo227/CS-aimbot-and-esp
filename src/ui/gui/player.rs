@@ -95,6 +95,46 @@ impl App {
                 self.send_config();
             }
         });
+    }
+
+    fn player_right(&mut self, ui: &mut Ui) {
+        collapsing_open(ui, "Info", |ui| {
+            if ui
+                .checkbox(&mut self.config.player.health_bar, "Health Bar")
+                .changed()
+            {
+                self.send_config();
+            }
+
+            if ui
+                .checkbox(&mut self.config.player.armor_bar, "Armor Bar")
+                .changed()
+            {
+                self.send_config();
+            }
+
+            if ui
+                .checkbox(&mut self.config.player.player_name, "Player Name")
+                .changed()
+            {
+                self.send_config();
+            }
+
+            if ui
+                .checkbox(&mut self.config.player.weapon_icon, "Weapon Icon")
+                .changed()
+            {
+                self.send_config();
+            }
+
+            if ui
+                .checkbox(&mut self.config.player.tags, "Show Tags")
+                .changed()
+            {
+                self.send_config();
+            }
+        });
+
         ui.collapsing("Sound ESP", |ui| {
             if checkbox_hover(
                 ui,
@@ -111,6 +151,14 @@ impl App {
                 DragValue::new(&mut self.config.player.sound.fadeout_duration)
                     .range(0.0..=10.0)
                     .speed(0.01),
+            ) {
+                self.send_config();
+            }
+
+            if checkbox(
+                ui,
+                "Show Visible",
+                &mut self.config.player.sound.show_visible,
             ) {
                 self.send_config();
             }
@@ -173,45 +221,6 @@ impl App {
                     }
                 });
             });
-        });
-    }
-
-    fn player_right(&mut self, ui: &mut Ui) {
-        collapsing_open(ui, "Info", |ui| {
-            if ui
-                .checkbox(&mut self.config.player.health_bar, "Health Bar")
-                .changed()
-            {
-                self.send_config();
-            }
-
-            if ui
-                .checkbox(&mut self.config.player.armor_bar, "Armor Bar")
-                .changed()
-            {
-                self.send_config();
-            }
-
-            if ui
-                .checkbox(&mut self.config.player.player_name, "Player Name")
-                .changed()
-            {
-                self.send_config();
-            }
-
-            if ui
-                .checkbox(&mut self.config.player.weapon_icon, "Weapon Icon")
-                .changed()
-            {
-                self.send_config();
-            }
-
-            if ui
-                .checkbox(&mut self.config.player.tags, "Show Tags")
-                .changed()
-            {
-                self.send_config();
-            }
         });
     }
 }
