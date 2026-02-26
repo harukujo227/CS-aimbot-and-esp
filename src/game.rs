@@ -5,7 +5,7 @@ use utils::{log, sync::Mutex};
 
 use crate::{
     config::{
-        CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, LOOP_DURATION, SLEEP_DURATION, parse_config,
+        parse_config, Config, CONFIG_PATH, DEFAULT_CONFIG_NAME, LOOP_DURATION, SLEEP_DURATION,
     },
     cs2::CS2,
     data::Data,
@@ -75,15 +75,17 @@ impl GameManager {
                 self.parse_message(message);
             }
 
-            if !self.game.is_valid() {
+            let mut is_valid = self.game.is_valid();
+            if !is_valid {
                 if previous_status == GameStatus::Working {
                     self.send_game_message(Message::GameStatus(GameStatus::NotStarted));
                     previous_status = GameStatus::NotStarted;
                 }
                 self.game.setup();
+                is_valid = self.game.is_valid();
             }
 
-            if self.game.is_valid() {
+            if is_valid {
                 if previous_status == GameStatus::NotStarted {
                     self.send_game_message(Message::GameStatus(GameStatus::Working));
                     previous_status = GameStatus::Working;
@@ -95,7 +97,7 @@ impl GameManager {
                 *self.data.lock() = Data::default();
             }
 
-            if self.game.is_valid() {
+            if is_valid {
                 let elapsed = start.elapsed();
                 if elapsed < LOOP_DURATION {
                     sleep(LOOP_DURATION - elapsed);

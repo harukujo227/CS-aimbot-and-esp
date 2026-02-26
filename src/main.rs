@@ -40,8 +40,7 @@ fn main() {
 
     let force_reparse = args.iter().any(|arg| arg == "--force-reparse");
     let use_system_binary = args.iter().any(|arg| arg == "--local-s2v");
-    std::thread::spawn(move || {
-        os::crash::install_crash_handler();
+    spawn_with_crash_handler(move || {
         parse_maps(force_reparse, use_system_binary);
     });
 
@@ -55,20 +54,17 @@ fn main() {
     let grenades = Arc::new(Mutex::new(read_grenades()));
     let grenades_game = grenades.clone();
 
-    std::thread::spawn(move || {
-        os::crash::install_crash_handler();
+    spawn_with_crash_handler(move || {
         router::router(rx, tx_gui, tx_game, tx_radar);
     });
 
     let tx_game = tx.clone();
-    std::thread::spawn(move || {
-        os::crash::install_crash_handler();
+    spawn_with_crash_handler(move || {
         game::GameManager::new(tx_game, rx_game, data_game, grenades_game).run();
     });
 
     let tx_radar = tx.clone();
-    std::thread::spawn(move || {
-        os::crash::install_crash_handler();
+    spawn_with_crash_handler(move || {
         radar::Radar::new(tx_radar, rx_radar, data_radar).run();
     });
 
@@ -82,4 +78,14 @@ fn main() {
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
     let mut app = App::new(tx, rx_gui, data, grenades);
     event_loop.run_app(&mut app).unwrap();
+}
+
+fn spawn_with_crash_handler<F>(f: F)
+where
+    F: FnOnce() + Send + 'static,
+{
+    std::thread::spawn(move || {
+        os::crash::install_crash_handler();
+        f();
+    });
 }
