@@ -33,6 +33,7 @@ fn main() {
         LoggerOptions::default()
             .file("deadlocked.log")
             .debug(true)
+            .truncate(true)
             .module(module_path!()),
     );
 
