@@ -1,4 +1,5 @@
 use glam::Vec2;
+use utils::log;
 
 use crate::{
     config::Config,
@@ -69,6 +70,12 @@ impl CS2 {
         if (0.0..1.0).contains(&mouse_angle.y) {
             self.recoil.unaccounted.y = mouse_angle.y;
         }
+
+        log::debug!(
+            "rcs mouse movement: {:.2}/{:.2}",
+            mouse_angle.x,
+            mouse_angle.y
+        );
         mouse.move_rel(&mouse_angle)
     }
 }
