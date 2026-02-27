@@ -12,7 +12,7 @@ use crate::{
             Entity, EntityInfo, GrenadeInfo, planted_c4::PlantedC4, player::Player, weapon::Weapon,
         },
         features::{aimbot::Aimbot, esp_toggle::EspToggle, rcs::Recoil, triggerbot::Triggerbot},
-        key_codes::KeyCode,
+        input::Input,
         offsets::Offsets,
         target::Target,
     },
@@ -28,6 +28,7 @@ pub mod bones;
 pub mod entity;
 mod features;
 mod find_offsets;
+mod input;
 pub mod key_codes;
 mod offsets;
 mod schema;
@@ -38,6 +39,7 @@ pub struct CS2 {
     is_valid: bool,
     process: Process,
     offsets: Offsets,
+    input: Input,
     bvh: Option<Bvh>,
     current_bvh: String,
     target: Target,
@@ -85,6 +87,8 @@ impl Game for CS2 {
             log::debug!("process is no longer valid");
             return;
         }
+
+        self.input.update(&self.process, &self.offsets);
 
         // self.cache_players();
         self.cache_entities();
@@ -251,6 +255,7 @@ impl CS2 {
             is_valid: false,
             process: Process::new(-1),
             offsets: Offsets::default(),
+            input: Input::new(),
             bvh: None,
             current_bvh: String::new(),
             target: Target::default(),
@@ -324,16 +329,6 @@ impl CS2 {
         map.starts_with("workshop/")
             || map.starts_with("custom/")
             || !map.starts_with("de_") && !map.starts_with("cs_")
-    }
-
-    // misc
-    pub fn is_button_down(&self, button: &KeyCode) -> bool {
-        // what the actual fuck is happening here?
-        let value = self.process.read::<u32>(
-            self.offsets.interface.input
-                + (((button.u64() >> 5) * 4) + self.offsets.direct.button_state),
-        );
-        ((value >> (button.u64() & 31)) & 1) != 0
     }
 
     fn current_time(&self) -> f32 {

@@ -18,7 +18,6 @@ use crate::{
 pub struct Triggerbot {
     shot_start: Option<Instant>,
     shot_end: Option<Instant>,
-    previous_button_state: bool,
     pub active: bool,
 }
 
@@ -31,14 +30,12 @@ impl CS2 {
             return;
         }
 
-        let button_state = self.is_button_down(&hotkey);
-        if config.mode == KeyMode::Hold && !button_state {
+        if config.mode == KeyMode::Hold && !self.input.is_key_pressed(hotkey) {
             return;
         } else {
-            if button_state && !self.trigger.previous_button_state {
+            if self.input.key_just_pressed(hotkey) {
                 self.trigger.active = !self.trigger.active;
             }
-            self.trigger.previous_button_state = button_state;
             if !self.trigger.active {
                 return;
             }

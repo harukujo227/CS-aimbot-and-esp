@@ -176,7 +176,7 @@ impl KeyCode {
         }
     }
 
-    pub fn u64(self) -> u64 {
-        self as u64
+    pub fn usize(self) -> usize {
+        self as usize
     }
 }

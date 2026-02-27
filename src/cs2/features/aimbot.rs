@@ -10,7 +10,6 @@ use crate::{
 
 #[derive(Debug, Default)]
 pub struct Aimbot {
-    previous_button_state: bool,
     pub active: bool,
 }
 
@@ -25,14 +24,12 @@ impl CS2 {
 
         let grenade = self.target_grenade.is_some();
 
-        let button_state = self.is_button_down(&hotkey);
-        if config.mode == KeyMode::Hold && !button_state {
+        if config.mode == KeyMode::Hold && !self.input.is_key_pressed(hotkey) {
             return;
         } else {
-            if button_state && !self.aim.previous_button_state {
+            if self.input.key_just_pressed(hotkey) {
                 self.aim.active = !self.aim.active;
             }
-            self.aim.previous_button_state = button_state;
             if !self.aim.active {
                 return;
             }
