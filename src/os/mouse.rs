@@ -1,13 +1,10 @@
 use std::{
-    fs::File,
-    io::Write,
-    os::fd::AsRawFd,
-    sync::atomic::{AtomicBool, Ordering},
-    time::{SystemTime, UNIX_EPOCH},
+    fs::File, io::Write, os::fd::AsRawFd, path::Path, sync::atomic::{AtomicBool, Ordering}, time::{SystemTime, UNIX_EPOCH}
 };
 
 use glam::{IVec2, Vec2};
 use nix::{ioctl_none, ioctl_write_int, ioctl_write_ptr, libc::c_ulong};
+use utils::log;
 
 #[derive(Debug, Clone, Copy)]
 struct Timeval {
@@ -197,4 +194,21 @@ impl Drop for Mouse {
         let _ = unsafe { ui_dev_destroy(self.file.as_raw_fd()) };
         CREATED.store(false, Ordering::Relaxed);
     }
+}
+
+pub fn check_uinput() -> bool {
+    let path = Path::new("/dev/uinput");
+    if !path.exists() {
+        log::error!("the uinput kernel module is not loaded.");
+        log::error!("this module needs to be loaded for mouse input to work.");
+        log::error!("please carefully read the readme before using.");
+        return false;
+    }
+    if File::options().write(true).open(path).is_err() {
+        log::error!("user has no write permissions for /dev/uinput.");
+        log::error!("did you add your user to the input group?");
+        log::error!("please carefully read the readme before using.");
+        return false;
+    }
+    true
 }

@@ -8,6 +8,7 @@ use utils::{
 
 use crate::{
     data::Data,
+    os::mouse::check_uinput,
     parser::parse_maps,
     ui::{app::App, grenades::read_grenades},
 };
@@ -39,6 +40,10 @@ fn main() {
 
     let args: Vec<String> = std::env::args().collect();
     os::crash::install_crash_handler();
+
+    if !check_uinput() {
+        return;
+    }
 
     // this runs as x11 for now, because wayland decorations for winit are not good
     // and don't support disabling the maximize button
