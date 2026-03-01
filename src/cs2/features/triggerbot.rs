@@ -26,7 +26,7 @@ impl CS2 {
         let hotkey = config.aim.triggerbot_hotkey;
         let config = self.triggerbot_config(config);
 
-        if !config.enabled || self.trigger.shot_start.is_some() || self.trigger.shot_end.is_some() {
+        if !config.enabled {
             return;
         }
 
@@ -39,6 +39,10 @@ impl CS2 {
             if !self.trigger.active {
                 return;
             }
+        }
+
+        if self.trigger.shot_start.is_some() || self.trigger.shot_end.is_some() {
+            return;
         }
 
         let Some(local_player) = Player::local_player(self) else {

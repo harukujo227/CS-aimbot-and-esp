@@ -18,7 +18,7 @@ impl CS2 {
         let hotkey = config.aim.aimbot_hotkey;
         let config = self.aimbot_config(config);
 
-        if !config.enabled || (self.target.player.is_none() && self.target_grenade.is_none()) {
+        if !config.enabled {
             return;
         }
 
@@ -33,6 +33,10 @@ impl CS2 {
             if !self.aim.active {
                 return;
             }
+        }
+
+        if self.target.player.is_none() && self.target_grenade.is_none() {
+            return;
         }
 
         let target = self.target.player.as_ref();
