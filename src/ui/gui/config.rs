@@ -6,7 +6,7 @@ use crate::{
         BASE_PATH, CONFIG_PATH, Config, available_configs, delete_config, parse_config,
         write_config,
     },
-    ui::{app::App, color::Colors, gui::helpers::collapsing_open},
+    ui::{app::App, color::Colors, grenades::read_grenades, gui::helpers::collapsing_open},
 };
 
 impl App {
@@ -23,6 +23,11 @@ impl App {
             let right = &mut cols[1];
 
             collapsing_open(right, "Configs", |right| {
+                if right.button("Reload").clicked() {
+                    self.available_configs = available_configs();
+                    *self.grenades.lock() = read_grenades();
+                }
+
                 right.horizontal(|right| {
                     if right.button("+").clicked() && !self.new_config_name.is_empty() {
                         if !self.new_config_name.ends_with(".toml") {
