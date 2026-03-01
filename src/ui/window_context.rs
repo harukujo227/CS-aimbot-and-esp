@@ -39,7 +39,7 @@ impl WindowContext {
                 .with_window_level(winit::window::WindowLevel::AlwaysOnTop)
                 .with_override_redirect(true)
                 .with_x11_window_type(vec![WindowType::Tooltip])
-                .with_title("deadlocked")
+                .with_title("deadlocked_overlay")
         } else {
             winit::window::WindowAttributes::default()
                 .with_inner_size(winit::dpi::LogicalSize::new(750, 450))
