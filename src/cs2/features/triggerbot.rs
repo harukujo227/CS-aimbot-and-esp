@@ -30,14 +30,19 @@ impl CS2 {
             return;
         }
 
-        if config.mode == KeyMode::Hold && !self.input.is_key_pressed(hotkey) {
-            return;
-        } else {
-            if self.input.key_just_pressed(hotkey) {
-                self.trigger.active = !self.trigger.active;
+        match config.mode {
+            KeyMode::Hold => {
+                if !self.input.is_key_pressed(hotkey) {
+                    return;
+                }
             }
-            if !self.trigger.active {
-                return;
+            KeyMode::Toggle => {
+                if self.input.key_just_pressed(hotkey) {
+                    self.trigger.active = !self.trigger.active;
+                }
+                if !self.trigger.active {
+                    return;
+                }
             }
         }
 

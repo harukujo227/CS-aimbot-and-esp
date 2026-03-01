@@ -24,14 +24,19 @@ impl CS2 {
 
         let grenade = self.target_grenade.is_some();
 
-        if config.mode == KeyMode::Hold && !self.input.is_key_pressed(hotkey) {
-            return;
-        } else {
-            if self.input.key_just_pressed(hotkey) {
-                self.aim.active = !self.aim.active;
+        match config.mode {
+            KeyMode::Hold => {
+                if !self.input.is_key_pressed(hotkey) {
+                    return;
+                }
             }
-            if !self.aim.active {
-                return;
+            KeyMode::Toggle => {
+                if self.input.key_just_pressed(hotkey) {
+                    self.aim.active = !self.aim.active;
+                }
+                if !self.aim.active {
+                    return;
+                }
             }
         }
 
