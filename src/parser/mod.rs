@@ -29,7 +29,6 @@ pub fn parse_maps(mut force_reparse: bool, use_system_binary: bool) {
         Ok(dir) => dir,
         Err(err) => {
             log::warn!("could not find cs2 game directory: {err}");
-            report_error(err);
             return;
         }
     };
@@ -506,6 +505,7 @@ fn game_dir() -> Result<PathBuf, String> {
     };
     let steam_path = PathBuf::from(&home).join(".steam/steam");
     if !steam_path.exists() {
+        log::error!("please install steam native, not from flatpak.");
         return Err(format!(
             "could not locate steam directory ({home}/.steam/steam)"
         ));
