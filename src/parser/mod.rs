@@ -11,7 +11,7 @@ use glam::{Mat4, Quat, Vec2, Vec3, Vec4};
 use utils::log;
 
 use crate::{
-    os::crash::{self, report_error},
+    os::crash::{self},
     parser::bvh::{Bvh, Triangle},
 };
 
@@ -44,7 +44,6 @@ pub fn parse_maps(mut force_reparse: bool, use_system_binary: bool) {
         Ok(dir) => dir,
         Err(err) => {
             log::error!("could not find cs2 maps directory: {err}");
-            report_error(err);
             return;
         }
     };
@@ -194,7 +193,6 @@ fn parse_map(map: &str, maps_dir: &Path, force_reparse: bool) {
         Ok(dir) => dir,
         Err(err) => {
             log::warn!("could not read geometry directory: {err}");
-            report_error(err);
             return;
         }
     };

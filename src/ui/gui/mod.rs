@@ -4,7 +4,6 @@ use utils::log;
 use crate::{
     config::{WeaponConfig, write_config},
     message::{Envelope, GameStatus, Message, Target},
-    os::crash::report_error,
     ui::{app::App, color::Colors, gui::aimbot::AimbotTab},
 };
 
@@ -103,7 +102,6 @@ impl App {
 
         if let Err(err) = gui.make_current() {
             log::error!("could not make gui window current: {err}");
-            report_error(err);
             return;
         }
         gui.run(|ctx| (unsafe { &mut *self_ptr }).gui(ctx));
@@ -112,7 +110,6 @@ impl App {
 
         if let Err(err) = gui.swap_buffers() {
             log::error!("could not swap gui window buffers: {err}");
-            report_error(err);
             return;
         }
 
@@ -121,7 +118,6 @@ impl App {
         overlay.window().set_cursor_hittest(false).unwrap();
         if let Err(err) = overlay.make_current() {
             log::error!("could not make overlay window current: {err}");
-            report_error(err);
             return;
         }
 
@@ -133,7 +129,6 @@ impl App {
 
         if let Err(err) = overlay.swap_buffers() {
             log::error!("could not swap overlay window buffers: {err}");
-            report_error(err);
         }
     }
 }
