@@ -1,5 +1,5 @@
 #![allow(unused)]
-use egui::{Key, PointerButton};
+use egui::{Key, Modifiers, PointerButton};
 use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 
@@ -49,6 +49,9 @@ pub enum KeyCode {
     Delete,
     Home,
     End,
+    LeftShift = 80,
+    LeftAlt = 82,
+    LeftControl = 84,
     MouseLeft = 317,
     MouseRight,
     MouseMiddle,
@@ -162,6 +165,15 @@ impl KeyCode {
             Key::Delete => Self::Delete,
             Key::Home => Self::Home,
             Key::End => Self::End,
+            _ => return None,
+        })
+    }
+
+    pub fn from_egui_modifiers(modifiers: Modifiers) -> Option<Self> {
+        Some(match modifiers {
+            Modifiers::CTRL => Self::LeftControl,
+            Modifiers::SHIFT => Self::LeftShift,
+            Modifiers::ALT => Self::LeftAlt,
             _ => return None,
         })
     }

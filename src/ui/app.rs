@@ -10,7 +10,8 @@ use crossbeam::channel::{Receiver, Sender};
 use utils::{log, sync::Mutex};
 use winit::{
     application::ApplicationHandler,
-    event::{StartCause, WindowEvent},
+    event::{ElementState, StartCause, WindowEvent},
+    keyboard::NamedKey,
 };
 
 use crate::{
@@ -156,7 +157,7 @@ impl ApplicationHandler for App {
         &mut self,
         event_loop: &winit::event_loop::ActiveEventLoop,
         window_id: winit::window::WindowId,
-        event: WindowEvent,
+        window_event: WindowEvent,
     ) {
         while let Ok(message) = self.rx.try_recv() {
             match message {
@@ -181,10 +182,10 @@ impl ApplicationHandler for App {
             return;
         };
 
-        match event {
+        match &window_event {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Resized(new_size) => {
-                window.resize(new_size);
+                window.resize(*new_size);
             }
             WindowEvent::RedrawRequested => {
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::WaitUntil(
@@ -194,8 +195,36 @@ impl ApplicationHandler for App {
                 overlay.request_redraw();
                 self.render();
             }
+            WindowEvent::KeyboardInput {
+                event,
+                is_synthetic: false,
+                ..
+            } => {
+                if let winit::keyboard::Key::Named(key) = event.logical_key {
+                    let modifiers = match key {
+                        NamedKey::Control => Some(egui::Modifiers::CTRL),
+                        NamedKey::Shift => Some(egui::Modifiers::SHIFT),
+                        NamedKey::Alt => Some(egui::Modifiers::ALT),
+                        _ => None,
+                    };
+
+                    if let Some(modifiers) = modifiers {
+                        self.gui.as_mut().unwrap().process_modifier(
+                            modifiers,
+                            event.state == ElementState::Pressed,
+                            event.repeat,
+                        );
+                    }
+                }
+                let event_response = self.gui.as_mut().unwrap().process_event(&window_event);
+
+                if event_response.repaint {
+                    self.gui.as_ref().unwrap().request_redraw();
+                    self.overlay.as_ref().unwrap().request_redraw();
+                }
+            }
             _ => {
-                let event_response = self.gui.as_mut().unwrap().process_event(&event);
+                let event_response = self.gui.as_mut().unwrap().process_event(&window_event);
 
                 if event_response.repaint {
                     self.gui.as_ref().unwrap().request_redraw();

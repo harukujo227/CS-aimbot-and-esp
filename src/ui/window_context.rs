@@ -181,6 +181,19 @@ impl WindowContext {
         self.egui_glow.on_window_event(&self.window, event)
     }
 
+    pub fn process_modifier(&mut self, modifiers: egui::Modifiers, pressed: bool, repeat: bool) {
+        self.egui_glow.egui_ctx.input_mut(|i| {
+            i.events.push(egui::Event::Key {
+                key: egui::Key::F35,
+                physical_key: None,
+                pressed,
+                repeat,
+                modifiers,
+            });
+            println!("inserted keypress");
+        });
+    }
+
     pub fn request_redraw(&self) {
         self.window.request_redraw();
     }

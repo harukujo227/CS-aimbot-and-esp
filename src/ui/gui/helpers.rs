@@ -138,10 +138,18 @@ impl<'gui> Widget for Keybind<'gui> {
             let input = ui.input(|i| {
                 for event in &i.events {
                     if let Event::Key {
-                        key, pressed: true, ..
+                        key,
+                        pressed: true,
+                        modifiers,
+                        ..
                     } = event
                     {
-                        return KeyCode::from_egui(*key);
+                        dbg!(key);
+                        if *key == egui::Key::F35 {
+                            return KeyCode::from_egui_modifiers(*modifiers);
+                        } else {
+                            return KeyCode::from_egui(*key);
+                        }
                     }
 
                     if let Event::PointerButton {
