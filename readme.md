@@ -12,10 +12,10 @@ simple cs2 aimbot and esp, for linux only.
 ## Setup
 
 ```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+git clone https://github.com/avitran0/deadlocked
 ./setup.sh
 # Restart your machine (required)
-git clone https://github.com/avitran0/deadlocked
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
 Also make sure that the `uinput` kernel module is loaded.
