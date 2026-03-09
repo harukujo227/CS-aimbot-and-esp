@@ -10,15 +10,11 @@ use bytemuck::AnyBitPattern;
 use glam::{Mat4, Quat, Vec2, Vec3, Vec4};
 use utils::log;
 
-use crate::{
-    os::crash::{self},
-    parser::bvh::{Bvh, Triangle},
-};
+use crate::parser::bvh::{Bvh, Triangle};
 
 pub mod bvh;
 
 pub fn parse_maps(mut force_reparse: bool, use_system_binary: bool) {
-    crash::info();
     let source2viewer = exe_path().join("source2viewer/Source2Viewer-CLI");
     if !source2viewer.exists() && !use_system_binary {
         log::warn!("could not find source2viewer binary");

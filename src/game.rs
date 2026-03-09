@@ -1,7 +1,6 @@
 use std::{sync::Arc, thread::sleep, time::Instant};
 
-use crossbeam::channel::{Receiver, Sender};
-use utils::{log, sync::Mutex};
+use utils::{channel::Channel, log, sync::Mutex};
 
 use crate::{
     config::{
@@ -9,7 +8,7 @@ use crate::{
     },
     cs2::CS2,
     data::Data,
-    message::{Envelope, GameStatus, Message, Target},
+    message::{GameStatus, Message},
     os::mouse::Mouse,
     ui::grenades::GrenadeList,
 };
@@ -22,8 +21,7 @@ pub trait Game: std::fmt::Debug {
 }
 
 pub struct GameManager {
-    tx: Sender<Envelope>,
-    rx: Receiver<Message>,
+    channel: Channel<Message>,
     data: Arc<Mutex<Data>>,
     config: Config,
     mouse: Mouse,
@@ -32,8 +30,7 @@ pub struct GameManager {
 
 impl GameManager {
     pub fn new(
-        tx: Sender<Envelope>,
-        rx: Receiver<Message>,
+        channel: Channel<Message>,
         data: Arc<Mutex<Data>>,
         grenades: Arc<Mutex<GrenadeList>>,
     ) -> Self {
@@ -47,8 +44,7 @@ impl GameManager {
         };
 
         let mut game = Self {
-            tx,
-            rx,
+            channel,
             data,
             config: Config::default(),
             mouse,
@@ -64,11 +60,7 @@ impl GameManager {
     }
 
     fn send_game_message(&self, message: Message) {
-        let envelope = Envelope {
-            target: Target::Gui,
-            message,
-        };
-        if self.tx.send(envelope).is_err() {
+        if self.channel.send(message).is_err() {
             std::process::exit(1);
         }
     }
@@ -78,7 +70,7 @@ impl GameManager {
         let mut previous_status = GameStatus::NotStarted;
         loop {
             let start = Instant::now();
-            while let Ok(message) = self.rx.try_recv() {
+            while let Ok(message) = self.channel.try_receive() {
                 self.parse_message(message);
             }
 

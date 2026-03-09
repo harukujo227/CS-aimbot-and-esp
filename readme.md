@@ -107,10 +107,6 @@ Running NixOS or Fedora Atomic? See [OS-Specific Setup](os-setup.md).
 
 Configs are saved in `$XDG_CONFIG_HOME` with fallback to `$HOME/.config`. Otherwise they're saved alongside the executable.
 
-### How do I configure the radar?
-
-See [radar.md](radar.md)
-
 ### Which desktop environments and window managers are supported?
 
 **Best support:**
@@ -159,7 +155,3 @@ Your window manager doesn't support positioning or resizing windows.
 ### The overlay isn't on top of other windows
 
 Your window manager doesn't support always-on-top windows.
-
-### I'm paranoid and want to disable all web connectivity
-
-Run with the `NO_REQUESTS` environment variable set, e.g. `NO_REQUESTS=1 ./run.sh`

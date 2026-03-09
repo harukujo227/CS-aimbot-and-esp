@@ -5,9 +5,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use arboard::Clipboard;
-use crossbeam::channel::{Receiver, Sender};
-use utils::{log, sync::Mutex};
+use utils::{channel::Channel, log, sync::Mutex};
 use winit::{
     application::ApplicationHandler,
     event::{ElementState, StartCause, WindowEvent},
@@ -20,7 +18,7 @@ use crate::{
     },
     cs2::entity::weapon::Weapon,
     data::{Data, SoundType},
-    message::{Envelope, GameStatus, Message, RadarStatus, Target},
+    message::{GameStatus, Message},
     ui::{
         grenades::{Grenade, GrenadeList},
         gui::{Tab, aimbot::AimbotTab},
@@ -35,15 +33,12 @@ const FRAME_DURATION: Duration = Duration::from_micros(1_000_000 / FRAME_RATE);
 pub struct App {
     pub gui: Option<WindowContext>,
     pub overlay: Option<WindowContext>,
-    pub clipboard: Clipboard,
     next_frame_time: Instant,
 
-    pub tx: Sender<Envelope>,
-    pub rx: Receiver<Message>,
+    pub channel: Channel<Message>,
     pub data: Arc<Mutex<Data>>,
 
     pub game_status: GameStatus,
-    pub radar_status: RadarStatus,
     pub display_scale: f32,
     pub trails: HashMap<u64, Trail>,
     pub player_sounds: HashMap<u64, (Instant, SoundType)>,
@@ -64,8 +59,7 @@ pub struct App {
 
 impl App {
     pub fn new(
-        tx: Sender<Envelope>,
-        rx: Receiver<Message>,
+        channel: Channel<Message>,
         data: Arc<Mutex<Data>>,
         grenades: Arc<Mutex<GrenadeList>>,
     ) -> Self {
@@ -78,11 +72,9 @@ impl App {
             gui: None,
             overlay: None,
 
-            clipboard: Clipboard::new().unwrap(),
             next_frame_time: Instant::now() + FRAME_DURATION,
 
-            tx,
-            rx,
+            channel,
             data,
             config,
             current_config: CONFIG_PATH.join(DEFAULT_CONFIG_NAME),
@@ -90,7 +82,6 @@ impl App {
             new_config_name: String::new(),
 
             game_status: GameStatus::NotStarted,
-            radar_status: RadarStatus::Disconnected,
             display_scale: 1.0,
             trails: HashMap::new(),
             player_sounds: HashMap::new(),
@@ -104,19 +95,7 @@ impl App {
             aimbot_weapon: Weapon::Ak47,
         };
         ret.send_config();
-        ret.send_radar_config();
         ret
-    }
-
-    fn send_radar_config(&self) {
-        self.send_message(
-            Message::RadarSetEnabled(self.config.radar.enabled),
-            Target::Radar,
-        );
-        self.send_message(
-            Message::ChangeRadarUrl(self.config.radar.url.clone()),
-            Target::Radar,
-        );
     }
 
     fn create_window(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
@@ -159,11 +138,9 @@ impl ApplicationHandler for App {
         window_id: winit::window::WindowId,
         window_event: WindowEvent,
     ) {
-        while let Ok(message) = self.rx.try_recv() {
-            match message {
-                Message::GameStatus(status) => self.game_status = status,
-                Message::RadarStatus(status) => self.radar_status = status,
-                _ => {}
+        while let Ok(message) = self.channel.try_receive() {
+            if let Message::GameStatus(status) = message {
+                self.game_status = status
             }
         }
 

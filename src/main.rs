@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crossbeam::channel::{bounded, unbounded};
 use utils::{
+    channel::Channel,
     log::{self, Logger, LoggerOptions},
     sync::Mutex,
 };
@@ -22,8 +22,6 @@ mod math;
 mod message;
 mod os;
 mod parser;
-mod radar;
-mod router;
 mod ui;
 
 #[cfg(not(target_os = "linux"))]
@@ -39,7 +37,6 @@ fn main() {
     );
 
     let args: Vec<String> = std::env::args().collect();
-    os::crash::install_crash_handler();
 
     if !check_uinput() {
         return;
@@ -51,32 +48,18 @@ fn main() {
 
     let force_reparse = args.iter().any(|arg| arg == "--force-reparse");
     let use_system_binary = args.iter().any(|arg| arg == "--local-s2v");
-    spawn_with_crash_handler(move || {
+    std::thread::spawn(move || {
         parse_maps(force_reparse, use_system_binary);
     });
 
-    let (tx, rx) = unbounded();
-    let (tx_gui, rx_gui) = bounded(16);
-    let (tx_game, rx_game) = bounded(16);
-    let (tx_radar, rx_radar) = bounded(16);
+    let (channel_gui, channel_game) = Channel::new();
     let data = Arc::new(Mutex::new(Data::default()));
     let data_game = data.clone();
-    let data_radar = data.clone();
     let grenades = Arc::new(Mutex::new(read_grenades()));
     let grenades_game = grenades.clone();
 
-    spawn_with_crash_handler(move || {
-        router::router(rx, tx_gui, tx_game, tx_radar);
-    });
-
-    let tx_game = tx.clone();
-    spawn_with_crash_handler(move || {
-        game::GameManager::new(tx_game, rx_game, data_game, grenades_game).run();
-    });
-
-    let tx_radar = tx.clone();
-    spawn_with_crash_handler(move || {
-        radar::Radar::new(tx_radar, rx_radar, data_radar).run();
+    std::thread::spawn(move || {
+        game::GameManager::new(channel_game, data_game, grenades_game).run();
     });
 
     let event_loop = match winit::event_loop::EventLoop::new() {
@@ -87,16 +70,6 @@ fn main() {
         }
     };
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
-    let mut app = App::new(tx, rx_gui, data, grenades);
+    let mut app = App::new(channel_gui, data, grenades);
     event_loop.run_app(&mut app).unwrap();
-}
-
-fn spawn_with_crash_handler<F>(f: F)
-where
-    F: FnOnce() + Send + 'static,
-{
-    std::thread::spawn(move || {
-        os::crash::install_crash_handler();
-        f();
-    });
 }

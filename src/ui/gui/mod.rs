@@ -3,7 +3,7 @@ use utils::log;
 
 use crate::{
     config::{WeaponConfig, write_config},
-    message::{Envelope, GameStatus, Message, Target},
+    message::{GameStatus, Message},
     ui::{app::App, color::Colors, gui::aimbot::AimbotTab},
 };
 
@@ -13,7 +13,6 @@ mod grenade;
 mod helpers;
 mod hud;
 mod player;
-mod radar;
 mod r#unsafe;
 
 #[derive(PartialEq)]
@@ -21,7 +20,6 @@ pub enum Tab {
     Aimbot,
     Player,
     Hud,
-    Radar,
     Grenades,
     Unsafe,
     Config,
@@ -29,12 +27,12 @@ pub enum Tab {
 
 impl App {
     pub fn send_config(&self) {
-        self.send_message(Message::Config(Box::new(self.config.clone())), Target::Game);
+        self.send_message(Message::Config(Box::new(self.config.clone())));
         self.save();
     }
 
-    pub fn send_message(&self, message: Message, target: Target) {
-        if self.tx.send(Envelope { target, message }).is_err() {
+    pub fn send_message(&self, message: Message) {
+        if self.channel.send(message).is_err() {
             std::process::exit(1);
         }
     }
@@ -51,7 +49,6 @@ impl App {
                 ui.selectable_value(&mut self.current_tab, Tab::Aimbot, "\u{f04fe} Aimbot");
                 ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
                 ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
-                ui.selectable_value(&mut self.current_tab, Tab::Radar, "\u{f0437} Radar");
                 ui.selectable_value(&mut self.current_tab, Tab::Grenades, "\u{f0691} Grenades");
                 ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
                 ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
@@ -76,7 +73,6 @@ impl App {
             Tab::Aimbot => self.aimbot_settings(ui),
             Tab::Player => self.player_settings(ui),
             Tab::Hud => self.hud_settings(ui),
-            Tab::Radar => self.radar_settings(ui),
             Tab::Grenades => self.grenade_settings(ui),
             Tab::Unsafe => self.unsafe_settings(ui),
             Tab::Config => self.config_settings(ui, ctx),
