@@ -1,6 +1,10 @@
-use crate::os::crash::TIMEOUT_DURATION;
+use crate::os::{NO_REQUESTS, crash::TIMEOUT_DURATION};
 
 pub fn add_kill(steamid: u64, display_name: String) {
+    if *NO_REQUESTS {
+        return;
+    }
+
     std::thread::spawn(move || {
         let json =
             serde_json::json!({"steam_id": steamid.to_string(), "display_name": display_name});
