@@ -51,10 +51,13 @@ impl App {
                         ui.horizontal(|ui| {
                             if ui.button("Open").clicked() {
                                 let link = self.radar_link(&uuid);
-                                std::process::Command::new("xdg-open")
+                                if std::process::Command::new("xdg-open")
                                     .arg(&link)
                                     .status()
-                                    .unwrap();
+                                    .is_err()
+                                {
+                                    log::error!("xdg-open is not available");
+                                };
                                 log::info!("opened link ({link})");
                             }
 
