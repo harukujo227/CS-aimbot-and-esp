@@ -25,11 +25,11 @@ impl CS2 {
         }
 
         // new round
-        if kills == 0 {
+        if kills < self.leaderboard_data.kills {
             self.leaderboard_data.kills = 0;
         }
 
-        if kills == self.leaderboard_data.kills + 1 {
+        while self.leaderboard_data.kills < kills {
             self.leaderboard_data.kills += 1;
             leaderboard::add_kill(local_player.steam_id(self), local_player.name(self));
         }
