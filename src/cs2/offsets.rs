@@ -34,12 +34,13 @@ pub struct ConvarOffsets {
 
 #[derive(Debug, Default)]
 pub struct PlayerControllerOffsets {
-    pub steam_id: u64,     // u64 (m_steamID)
-    pub name: u64,         // Pointer -> String (m_iszPlayerName)
-    pub pawn: u64,         // Handle -> Pawn (m_hPawn)
-    pub desired_fov: u64,  // u32 (m_iDesiredFOV)
-    pub owner_entity: u64, // i32 (h_pOwnerEntity)
-    pub color: u64,        // i32 (m_iCompTeammateColor)
+    pub steam_id: u64,                 // u64 (m_steamID)
+    pub name: u64,                     // Pointer -> String (m_iszPlayerName)
+    pub pawn: u64,                     // Handle -> Pawn (m_hPawn)
+    pub desired_fov: u64,              // u32 (m_iDesiredFOV)
+    pub owner_entity: u64,             // i32 (h_pOwnerEntity)
+    pub color: u64,                    // i32 (m_iCompTeammateColor)
+    pub action_tracking_services: u64, // Pointer -> ActionTrackingServices (m_pActionTrackingServices)
 }
 
 #[derive(Debug, Default)]
@@ -102,7 +103,13 @@ pub struct InfernoOffsets {
 
 #[derive(Debug, Default)]
 pub struct SpottedStateOffsets {
-    pub mask: u64,    // i32[2] or u64? (m_bSpottedByMask)
+    pub mask: u64, // i32[2] or u64? (m_bSpottedByMask)
+}
+
+#[derive(Debug, Default)]
+pub struct ActionTrackingServicesOffsets {
+    pub round_kills: u64,  // i32 (m_iNumRoundKills)
+    pub round_damage: u64, // f32 (m_flTotalRoundDamageDealt)
 }
 
 #[derive(Debug, Default)]
@@ -162,6 +169,7 @@ pub struct Offsets {
     pub molotov: MolotovOffsets,
     pub inferno: InfernoOffsets,
     pub spotted_state: SpottedStateOffsets,
+    pub action_tracking: ActionTrackingServicesOffsets,
     pub camera_services: CameraServicesOffsets,
     pub item_services: ItemServicesOffsets,
     pub weapon_services: WeaponServicesOffsets,
