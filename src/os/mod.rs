@@ -1,7 +1,6 @@
 use std::sync::LazyLock;
 
 pub mod crash;
-pub mod leaderboard;
 pub mod mouse;
 pub mod process;
 

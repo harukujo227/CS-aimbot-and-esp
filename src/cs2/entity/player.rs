@@ -396,6 +396,7 @@ impl Player {
             .read(self.controller + cs2.offsets.controller.action_tracking_services)
     }
 
+    #[allow(dead_code)]
     pub fn round_kills(&self, cs2: &CS2) -> Option<i32> {
         let action_tracking_services = self.action_tracking_services(cs2);
         if action_tracking_services == 0 {
