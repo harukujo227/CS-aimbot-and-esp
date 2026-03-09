@@ -147,13 +147,12 @@ impl CS2 {
             }
         }
 
-        if self.target.player.is_none() {
+        let Some(target) = &self.target.player else {
             return;
-        }
+        };
 
         // update target angle
         let mut smallest_fov = 360.0;
-        let target = self.target.player.as_ref().unwrap();
         for bone in Bones::iter() {
             let bone_position = target.bone_position(self, bone.u64());
             let distance = eye_position.distance(bone_position);

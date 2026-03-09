@@ -126,11 +126,15 @@ impl Radar {
         let message = tungstenite::Message::text(
             serde_json::json!({"kind":"connect_server","uuid":self.uuid}).to_string(),
         );
-        websocket.send(message).unwrap();
+        if websocket.send(message).is_err() {
+            return false;
+        }
 
         loop {
             if websocket.can_read() {
-                let reply = websocket.read().unwrap();
+                let Ok(reply) = websocket.read() else {
+                    return false;
+                };
                 let json: ConnectionAccept =
                     serde_json::from_str(reply.into_text().unwrap().as_str()).unwrap();
                 if json.kind != "accept" {
