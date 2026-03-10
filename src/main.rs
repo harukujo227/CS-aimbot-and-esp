@@ -6,12 +6,7 @@ use utils::{
     sync::Mutex,
 };
 
-use crate::{
-    data::Data,
-    os::mouse::check_uinput,
-    parser::parse_maps,
-    ui::{app::App, grenades::read_grenades},
-};
+use crate::{data::Data, os::mouse::check_uinput, parser::parse_maps, ui::app::App};
 
 mod config;
 mod constants;
@@ -55,11 +50,9 @@ fn main() {
     let (channel_gui, channel_game) = Channel::new();
     let data = Arc::new(Mutex::new(Data::default()));
     let data_game = data.clone();
-    let grenades = Arc::new(Mutex::new(read_grenades()));
-    let grenades_game = grenades.clone();
 
     std::thread::spawn(move || {
-        game::GameManager::new(channel_game, data_game, grenades_game).run();
+        game::GameManager::new(channel_game, data_game).run();
     });
 
     let event_loop = match winit::event_loop::EventLoop::new() {
@@ -70,6 +63,6 @@ fn main() {
         }
     };
     event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
-    let mut app = App::new(channel_gui, data, grenades);
+    let mut app = App::new(channel_gui, data);
     event_loop.run_app(&mut app).unwrap();
 }

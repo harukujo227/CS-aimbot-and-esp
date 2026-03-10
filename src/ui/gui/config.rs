@@ -25,7 +25,7 @@ impl App {
             collapsing_open(right, "Configs", |right| {
                 if right.button("Reload").clicked() {
                     self.available_configs = available_configs();
-                    *self.grenades.lock() = read_grenades();
+                    self.grenades = read_grenades();
                 }
 
                 right.horizontal(|right| {

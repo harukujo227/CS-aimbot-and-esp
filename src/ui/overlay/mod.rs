@@ -110,8 +110,7 @@ impl App {
         let position = data.local_player.position;
         let map = &data.map_name;
 
-        let grenades = self.grenades.lock();
-        let Some(grenades) = grenades.get(map) else {
+        let Some(grenades) = self.grenades.get(map) else {
             return;
         };
 

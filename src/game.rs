@@ -10,7 +10,6 @@ use crate::{
     data::Data,
     message::{GameStatus, Message},
     os::mouse::Mouse,
-    ui::grenades::GrenadeList,
 };
 
 pub trait Game: std::fmt::Debug {
@@ -29,11 +28,7 @@ pub struct GameManager {
 }
 
 impl GameManager {
-    pub fn new(
-        channel: Channel<Message>,
-        data: Arc<Mutex<Data>>,
-        grenades: Arc<Mutex<GrenadeList>>,
-    ) -> Self {
+    pub fn new(channel: Channel<Message>, data: Arc<Mutex<Data>>) -> Self {
         let mouse = match Mouse::open() {
             Ok(mouse) => mouse,
             Err(err) => {
@@ -48,7 +43,7 @@ impl GameManager {
             data,
             config: Config::default(),
             mouse,
-            game: CS2::new(grenades),
+            game: CS2::new(),
         };
 
         let config_path = CONFIG_PATH.join(DEFAULT_CONFIG_NAME);

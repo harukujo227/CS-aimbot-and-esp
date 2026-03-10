@@ -20,7 +20,7 @@ use crate::{
     data::{Data, SoundType},
     message::{GameStatus, Message},
     ui::{
-        grenades::{Grenade, GrenadeList},
+        grenades::{Grenade, GrenadeList, read_grenades},
         gui::{Tab, aimbot::AimbotTab},
         trail::Trail,
         window_context::WindowContext,
@@ -43,7 +43,7 @@ pub struct App {
     pub trails: HashMap<u64, Trail>,
     pub player_sounds: HashMap<u64, (Instant, SoundType)>,
 
-    pub grenades: Arc<Mutex<GrenadeList>>,
+    pub grenades: GrenadeList,
     pub new_grenade: Grenade,
     pub current_grenade: Option<(String, usize)>,
 
@@ -58,15 +58,12 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(
-        channel: Channel<Message>,
-        data: Arc<Mutex<Data>>,
-        grenades: Arc<Mutex<GrenadeList>>,
-    ) -> Self {
+    pub fn new(channel: Channel<Message>, data: Arc<Mutex<Data>>) -> Self {
         // read config
         let config = parse_config(&CONFIG_PATH.join(DEFAULT_CONFIG_NAME));
         // override config if invalid
         write_config(&config, &CONFIG_PATH.join(DEFAULT_CONFIG_NAME));
+        let grenades = read_grenades();
 
         let ret = Self {
             gui: None,

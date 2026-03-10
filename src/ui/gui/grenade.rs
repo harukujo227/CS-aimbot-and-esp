@@ -32,8 +32,7 @@ impl App {
     fn grenade_list(&mut self, ui: &mut Ui) {
         let mut should_write = false;
 
-        let mut grenades = self.grenades.lock();
-        for (map, grenades) in grenades.iter_mut() {
+        for (map, grenades) in self.grenades.iter_mut() {
             let mut delete_grenade_index = None;
 
             ui.collapsing(map, |ui| {
@@ -66,7 +65,7 @@ impl App {
         }
 
         if should_write {
-            write_grenades(&grenades);
+            write_grenades(&self.grenades);
         }
     }
 
@@ -101,14 +100,12 @@ impl App {
             ui.checkbox(&mut self.new_grenade.modifiers.run, "Run");
 
             if ui.button("Save").clicked() {
-                let mut grenades = self.grenades.lock();
-
                 let map = &data.map_name;
-                let grenade_list = match grenades.get_mut(map) {
+                let grenade_list = match self.grenades.get_mut(map) {
                     Some(list) => list,
                     None => {
-                        grenades.insert(map.to_owned(), Vec::new());
-                        grenades.get_mut(map).unwrap()
+                        self.grenades.insert(map.to_owned(), Vec::new());
+                        self.grenades.get_mut(map).unwrap()
                     }
                 };
 
@@ -120,7 +117,7 @@ impl App {
                 new_grenade.view_angles = data.view_angles;
 
                 grenade_list.push(new_grenade);
-                write_grenades(&grenades);
+                write_grenades(&self.grenades);
             }
         });
     }
@@ -132,8 +129,7 @@ impl App {
                 None => return,
             };
 
-            let mut grenades = self.grenades.lock();
-            let Some(grenades) = grenades.get_mut(map) else {
+            let Some(grenades) = self.grenades.get_mut(map) else {
                 return;
             };
             let Some(grenade) = grenades.get_mut(*index) else {

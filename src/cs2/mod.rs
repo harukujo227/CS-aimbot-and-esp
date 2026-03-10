@@ -1,7 +1,5 @@
-use std::sync::Arc;
-
 use glam::{IVec2, Mat4, Vec2, Vec3};
-use utils::{log, sync::Mutex};
+use utils::log;
 
 use crate::{
     config::{AimbotConfig, Config, KeyMode, RcsConfig, TriggerbotConfig},
@@ -21,7 +19,6 @@ use crate::{
     math::{angles_from_vector, vec2_clamp},
     os::{mouse::Mouse, process::Process},
     parser::{bvh::Bvh, load_map},
-    ui::grenades::{Grenade, GrenadeList},
 };
 
 pub mod bones;
@@ -51,8 +48,6 @@ pub struct CS2 {
     esp: EspToggle,
     weapon: Weapon,
     planted_c4: Option<PlantedC4>,
-    grenades: Arc<Mutex<GrenadeList>>,
-    target_grenade: Option<Grenade>,
 }
 
 impl Game for CS2 {
@@ -250,7 +245,7 @@ impl Game for CS2 {
 }
 
 impl CS2 {
-    pub fn new(grenades: Arc<Mutex<GrenadeList>>) -> Self {
+    pub fn new() -> Self {
         Self {
             is_valid: false,
             process: Process::new(-1),
@@ -267,8 +262,6 @@ impl CS2 {
             esp: EspToggle::default(),
             weapon: Weapon::default(),
             planted_c4: None,
-            grenades,
-            target_grenade: None,
         }
     }
 
