@@ -1,4 +1,4 @@
-use utils::bitset::BitSet;
+use utils::bitset::DynamicBitSet;
 
 use crate::{
     cs2::{key_codes::KeyCode, offsets::Offsets},
@@ -7,8 +7,8 @@ use crate::{
 
 #[derive(Debug)]
 pub struct Input {
-    previous_state: BitSet,
-    current_state: BitSet,
+    previous_state: DynamicBitSet,
+    current_state: DynamicBitSet,
 }
 
 impl Input {
@@ -16,8 +16,8 @@ impl Input {
 
     pub fn new() -> Self {
         Self {
-            previous_state: BitSet::new(),
-            current_state: BitSet::new(),
+            previous_state: DynamicBitSet::new(),
+            current_state: DynamicBitSet::new(),
         }
     }
 
@@ -28,15 +28,16 @@ impl Input {
         );
 
         std::mem::swap(&mut self.previous_state, &mut self.current_state);
-        self.current_state = BitSet::from_vec(state);
+        self.current_state = DynamicBitSet::from(state);
     }
 
     pub fn is_key_pressed(&self, key: KeyCode) -> bool {
-        self.current_state.get(key.usize())
+        self.current_state.get(key.usize()).unwrap_or(false)
     }
 
     #[allow(dead_code)]
     pub fn key_just_pressed(&self, key: KeyCode) -> bool {
-        !self.previous_state.get(key.usize()) && self.current_state.get(key.usize())
+        !self.previous_state.get(key.usize()).unwrap_or(false)
+            && self.current_state.get(key.usize()).unwrap_or(false)
     }
 }
