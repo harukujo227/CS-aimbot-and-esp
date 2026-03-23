@@ -21,7 +21,6 @@ const REFRESH_RATE: u64 = 120;
 pub const LOOP_DURATION: Duration = Duration::from_millis(1000 / REFRESH_RATE);
 pub const SLEEP_DURATION: Duration = Duration::from_secs(5);
 pub const DEFAULT_CONFIG_NAME: &str = "deadlocked.toml";
-pub const DEFAULT_URL: &str = "localhost:6346";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
@@ -29,7 +28,6 @@ pub struct Config {
     pub aim: AimConfig,
     pub player: PlayerConfig,
     pub hud: HudConfig,
-    pub radar: RadarConfig,
     pub misc: UnsafeConfig,
     pub accent_color: Color32,
 }
@@ -40,7 +38,6 @@ impl Default for Config {
             aim: AimConfig::default(),
             player: PlayerConfig::default(),
             hud: HudConfig::default(),
-            radar: RadarConfig::default(),
             misc: UnsafeConfig::default(),
             accent_color: Colors::BLUE,
         }
@@ -331,22 +328,6 @@ impl Default for HudConfig {
             font_size: 16.0,
             icon_size: 20.0,
             debug: false,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
-pub struct RadarConfig {
-    pub enabled: bool,
-    pub url: String,
-}
-
-impl Default for RadarConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            url: DEFAULT_URL.to_string(),
         }
     }
 }
