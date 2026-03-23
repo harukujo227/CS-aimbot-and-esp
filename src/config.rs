@@ -17,7 +17,7 @@ use crate::{
     ui::color::Colors,
 };
 
-const REFRESH_RATE: u64 = 100;
+const REFRESH_RATE: u64 = 120;
 pub const LOOP_DURATION: Duration = Duration::from_millis(1000 / REFRESH_RATE);
 pub const SLEEP_DURATION: Duration = Duration::from_secs(5);
 pub const DEFAULT_CONFIG_NAME: &str = "deadlocked.toml";
