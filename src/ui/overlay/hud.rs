@@ -71,6 +71,28 @@ impl App {
         }
     }
 
+    pub fn draw_keybind_list(&self, painter: &Painter, data: &Data) {
+        if !self.config.hud.keybind_list {
+            return;
+        }
+
+        let position = pos2(10.0, data.window_size.y / 2.0);
+        self.text(
+            painter,
+            format!("Aimbot: {:?}", self.config.aim.aimbot_hotkey),
+            position,
+            Align2::LEFT_TOP,
+            None,
+        );
+        self.text(
+            painter,
+            format!("RCS: {:?}", self.config.aim.triggerbot_hotkey),
+            position + egui::vec2(0.0, self.config.hud.font_size),
+            Align2::LEFT_TOP,
+            None,
+        );
+    }
+
     fn get_current_fov(&self) -> f32 {
         (if self.config.misc.fov_changer {
             self.config.misc.desired_fov
