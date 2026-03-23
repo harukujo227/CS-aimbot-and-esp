@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use glam::{IVec2, Mat4, Vec2, Vec3};
 use utils::log;
 
@@ -48,6 +50,7 @@ pub struct CS2 {
     esp: EspToggle,
     weapon: Weapon,
     planted_c4: Option<PlantedC4>,
+    last_cache: Instant,
 }
 
 impl Game for CS2 {
@@ -86,8 +89,11 @@ impl Game for CS2 {
         self.input.update(&self.process, &self.offsets);
 
         // self.cache_players();
-        self.cache_entities();
-        self.check_bvh();
+        if self.last_cache.elapsed() > Duration::from_millis(200) {
+            self.cache_entities();
+            self.check_bvh();
+            self.last_cache = Instant::now();
+        }
 
         for entity in &self.entities {
             if let Entity::Smoke(smoke) = entity {
@@ -262,6 +268,7 @@ impl CS2 {
             esp: EspToggle::default(),
             weapon: Weapon::default(),
             planted_c4: None,
+            last_cache: Instant::now(),
         }
     }
 
