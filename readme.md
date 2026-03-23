@@ -86,20 +86,16 @@ Running NixOS or Fedora Atomic? See [OS-Specific Setup](os-setup.md).
 
 - Sniper crosshair
 - Bomb timer
-- Spectator list
 
 ### Unsafe
 
 > [!WARNING]
-> These features write to game memory and carry ban risk.
+> These features write to game memory and might get you banned.
 
 - No flash (with max flash alpha)
 - FOV changer
 - No smoke
 - Smoke color change
-
-> [!CAUTION]
-> VACNet 3.0 is better at detecting aimbot and wallhacks. **Do not** use aim lock. Play with a low FOV. Use visuals sparingly.
 
 ## FAQ
 
@@ -124,19 +120,17 @@ Configs are saved in `$XDG_CONFIG_HOME` with fallback to `$HOME/.config`. Otherw
 - i3
 - OpenBox
 - XFCE
-
-**Limited/No support:**
-
-- Hyprland (poor X11 support)
-- Other Wayland-only compositors
+- Hyprland (tweaks may be needed; no guarantees)
 
 ### I'm using Hyprland and something doesn't work
 
-Hyprland has poor X11 support for the techniques this cheat uses. This cannot be fixed.
+Hyprland has poor X11 support for the techniques this cheat uses, not much i can do about that.
+Try another WM if possible.
 
 ### I'm using Gamescope and the overlay is too small
 
-The game still thinks it's running in 16:9 resolution. This cannot be fixed.
+The game still thinks it's running in 16:9 resolution, so the cheat gets the wrong window resolution.
+Try running the game without Gamescope.
 
 ### My screen/overlay is black
 
