@@ -3,7 +3,10 @@ use utils::log;
 
 use crate::{
     config::{Config, KeyMode},
-    cs2::{CS2, entity::player::Player},
+    cs2::{
+        CS2,
+        entity::{player::Player, weapon_class::WeaponClass},
+    },
     math::{angles_to_fov, vec2_clamp},
     os::mouse::Mouse,
 };
@@ -49,6 +52,16 @@ impl CS2 {
         let Some(local_player) = Player::local_player(self) else {
             return;
         };
+
+        let weapon_class = local_player.weapon_class(self);
+        let disallowed_weapons = [
+            WeaponClass::Unknown,
+            WeaponClass::Knife,
+            WeaponClass::Grenade,
+        ];
+        if disallowed_weapons.contains(&weapon_class) {
+            return;
+        }
 
         if config.flash_check && local_player.is_flashed(self) {
             return;
