@@ -117,22 +117,15 @@ impl App {
                 self.send_config();
             }
 
-            ui.horizontal(|ui| {
-                if ui
-                    .add(
-                        DragValue::new(&mut self.weapon_config().aimbot.start_bullet)
-                            .range(0..=10)
-                            .speed(0.05),
-                    )
-                    .on_hover_text(
-                        "How many bullets you need to shoot\nbefore the aimbot starts aiming",
-                    )
-                    .changed()
-                {
-                    self.send_config();
-                }
-                ui.label("Start Bullet");
-            });
+            if drag(
+                ui,
+                "Start Bullet",
+                DragValue::new(&mut self.weapon_config().aimbot.start_bullet)
+                    .range(0..=10)
+                    .speed(0.05),
+            ) {
+                self.send_config();
+            }
 
             if combo_box(
                 ui,
@@ -145,20 +138,19 @@ impl App {
         });
 
         ui.collapsing("Checks", |ui| {
-            if ui
-                .checkbox(
-                    &mut self.weapon_config().aimbot.visibility_check,
-                    "Visibility Check",
-                )
-                .changed()
-            {
+            if checkbox(
+                ui,
+                "Visibility Check",
+                &mut self.weapon_config().aimbot.visibility_check,
+            ) {
                 self.send_config();
             }
 
-            if ui
-                .checkbox(&mut self.weapon_config().aimbot.flash_check, "Flash Check")
-                .changed()
-            {
+            if checkbox(
+                ui,
+                "Flash Check",
+                &mut self.weapon_config().aimbot.flash_check,
+            ) {
                 self.send_config();
             }
         });

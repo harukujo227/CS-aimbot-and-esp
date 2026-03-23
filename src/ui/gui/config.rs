@@ -23,7 +23,7 @@ impl App {
             let right = &mut cols[1];
 
             collapsing_open(right, "Configs", |right| {
-                if right.button("Reload").clicked() {
+                if right.button("Refresh").clicked() {
                     self.available_configs = available_configs();
                     self.grenades = read_grenades();
                 }
