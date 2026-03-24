@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "rust" ]
 
+permissions:
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -20,7 +23,7 @@ jobs:
       run: cargo build --release
 
     - name: Upload Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: |
           target/release/deadlocked
