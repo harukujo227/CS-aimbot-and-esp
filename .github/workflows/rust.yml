@@ -18,3 +18,12 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: cargo build --verbose
+
+    - name: Upload Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          target/release/deadlocked
+        tag_name: deadlocked
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
