@@ -1,7 +1,8 @@
 use egui::{Align2, Color32, Painter, Stroke, pos2};
 
 use crate::{
-    cs2::entity::weapon_class::WeaponClass, data::Data, math::world_to_screen, ui::app::App,
+    config::KeyMode, cs2::entity::weapon_class::WeaponClass, data::Data, math::world_to_screen,
+    ui::app::App,
 };
 
 impl App {
@@ -54,12 +55,16 @@ impl App {
     }
 
     pub fn draw_fov_circle(&self, painter: &Painter, data: &Data) {
-        if !self.config.hud.fov_circle || !self.aimbot_config(&data.weapon).enabled || !data.in_game
-        {
+        if !self.config.hud.fov_circle || !data.in_game {
             return;
         }
 
         let weapon_config = self.aimbot_config(&data.weapon);
+
+        if !weapon_config.enabled || (weapon_config.mode == KeyMode::Toggle && !data.aimbot_active)
+        {
+            return;
+        }
 
         let aim_fov = weapon_config.fov;
 
