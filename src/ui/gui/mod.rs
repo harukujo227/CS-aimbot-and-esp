@@ -42,6 +42,7 @@ impl App {
     }
 
     fn gui(&mut self, ui: &mut Ui) {
+        ui.ctx().set_pixels_per_point(self.display_scale);
         egui::Panel::left("sidebar")
             .resizable(false)
             .show_inside(ui, |ui| {

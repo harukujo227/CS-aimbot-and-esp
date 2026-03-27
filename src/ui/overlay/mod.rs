@@ -24,6 +24,7 @@ impl App {
     }
 
     pub fn overlay(&mut self, ui: &mut Ui) {
+        ui.ctx().set_pixels_per_point(1.0);
         let painter = ui.layer_painter(egui::LayerId::background());
 
         self.update_trails();
