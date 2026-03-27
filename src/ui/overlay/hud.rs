@@ -54,7 +54,8 @@ impl App {
     }
 
     pub fn draw_fov_circle(&self, painter: &Painter, data: &Data) {
-        if !self.config.hud.fov_circle || !data.in_game {
+        if !self.config.hud.fov_circle || !self.aimbot_config(&data.weapon).enabled || !data.in_game
+        {
             return;
         }
 
