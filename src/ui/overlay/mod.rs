@@ -1,4 +1,4 @@
-use egui::{Align2, Color32, Context, Painter, Pos2, Shape, Stroke, pos2};
+use egui::{Align2, Color32, Painter, Pos2, Shape, Stroke, Ui, pos2};
 use glam::{Vec3, vec3};
 
 use crate::{
@@ -23,9 +23,8 @@ impl App {
         &self.config.aim.global.aimbot
     }
 
-    pub fn overlay(&mut self, ctx: &Context) {
-        ctx.set_pixels_per_point(1.0);
-        let painter = ctx.layer_painter(egui::LayerId::background());
+    pub fn overlay(&mut self, ui: &mut Ui) {
+        let painter = ui.layer_painter(egui::LayerId::background());
 
         self.update_trails();
         self.update_player_sounds();

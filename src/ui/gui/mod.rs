@@ -99,7 +99,7 @@ impl App {
             log::error!("could not make gui window current: {err}");
             return;
         }
-        gui.run(|ctx| (unsafe { &mut *self_ptr }).gui(ctx));
+        gui.run(|ui| (unsafe { &mut *self_ptr }).gui(ui));
         gui.clear();
         gui.paint();
 
@@ -116,8 +116,8 @@ impl App {
             return;
         }
 
-        overlay.run(move |egui_ctx| {
-            (unsafe { &mut *self_ptr }).overlay(egui_ctx);
+        overlay.run(move |ui| {
+            (unsafe { &mut *self_ptr }).overlay(ui);
         });
         overlay.clear();
         overlay.paint();
