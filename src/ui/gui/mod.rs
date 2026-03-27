@@ -1,4 +1,4 @@
-use egui::{Align, Context};
+use egui::{Align, Ui};
 use utils::log;
 
 use crate::{
@@ -41,11 +41,10 @@ impl App {
         write_config(&self.config, &self.current_config);
     }
 
-    fn gui(&mut self, ctx: &Context) {
-        ctx.set_pixels_per_point(self.display_scale);
-        egui::SidePanel::left("sidebar")
+    fn gui(&mut self, ui: &mut Ui) {
+        egui::Panel::left("sidebar")
             .resizable(false)
-            .show(ctx, |ui| {
+            .show_inside(ui, |ui| {
                 ui.selectable_value(&mut self.current_tab, Tab::Aimbot, "\u{f04fe} Aimbot");
                 ui.selectable_value(&mut self.current_tab, Tab::Player, "\u{f0013} Player");
                 ui.selectable_value(&mut self.current_tab, Tab::Hud, "\u{f0379} Hud");
@@ -69,13 +68,13 @@ impl App {
                 });
             });
 
-        egui::CentralPanel::default().show(ctx, |ui| match self.current_tab {
+        egui::CentralPanel::default().show_inside(ui, |ui| match self.current_tab {
             Tab::Aimbot => self.aimbot_settings(ui),
             Tab::Player => self.player_settings(ui),
             Tab::Hud => self.hud_settings(ui),
             Tab::Grenades => self.grenade_settings(ui),
             Tab::Unsafe => self.unsafe_settings(ui),
-            Tab::Config => self.config_settings(ui, ctx),
+            Tab::Config => self.config_settings(ui),
         });
     }
 

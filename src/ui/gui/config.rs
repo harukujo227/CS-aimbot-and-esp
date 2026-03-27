@@ -1,4 +1,4 @@
-use egui::{Align, Button, Context, Ui};
+use egui::{Align, Button, Ui};
 use utils::log;
 
 use crate::{
@@ -10,14 +10,14 @@ use crate::{
 };
 
 impl App {
-    pub fn config_settings(&mut self, ui: &mut Ui, ctx: &Context) {
+    pub fn config_settings(&mut self, ui: &mut Ui) {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
             egui::ScrollArea::vertical()
                 .auto_shrink([false, true])
                 .id_salt("config_left")
                 .show(left, |left| {
-                    self.config_left(left, ctx);
+                    self.config_left(left);
                 });
 
             let right = &mut cols[1];
@@ -52,7 +52,7 @@ impl App {
         });
     }
 
-    fn config_left(&mut self, ui: &mut Ui, ctx: &Context) {
+    fn config_left(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Config", |ui| {
             if ui.button("Reset").clicked() {
                 self.config = Config::default();
@@ -87,7 +87,8 @@ impl App {
                             .clicked()
                         {
                             self.config.accent_color = color;
-                            ctx.style_mut(|style| style.visuals.selection.bg_fill = color);
+                            ui.ctx()
+                                .global_style_mut(|style| style.visuals.selection.bg_fill = color);
                             self.send_config();
                         }
                     }
@@ -122,8 +123,9 @@ impl App {
             self.config = parse_config(&config_path);
             self.current_config = config_path;
             self.send_config();
-            ui.ctx()
-                .style_mut(|style| style.visuals.selection.bg_fill = self.config.accent_color);
+            ui.ctx().global_style_mut(|style| {
+                style.visuals.selection.bg_fill = self.config.accent_color
+            });
         }
 
         if let Some(config) = delete {
