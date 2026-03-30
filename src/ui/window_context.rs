@@ -34,7 +34,7 @@ impl WindowContext {
                 .with_decorations(false)
                 .with_inner_size(winit::dpi::PhysicalSize::new(1, 1))
                 .with_position(winit::dpi::PhysicalPosition::new(0, 0))
-                .with_resizable(true)
+                .with_resizable(false)
                 .with_transparent(true)
                 .with_window_level(winit::window::WindowLevel::AlwaysOnTop)
                 .with_override_redirect(true)
