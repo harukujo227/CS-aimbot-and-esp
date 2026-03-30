@@ -202,6 +202,8 @@ impl CS2 {
         offsets.weapon.item = client.get("C_AttributeContainer", "m_Item")?;
         offsets.weapon.item_definition_index =
             client.get("C_EconItemView", "m_iItemDefinitionIndex")?;
+        offsets.weapon.clip_primary = client.get("C_BasePlayerWeapon", "m_iClip1")?;
+        offsets.weapon.reserve_ammo = client.get("C_BasePlayerWeapon", "m_pReserveAmmo")?;
 
         offsets.planted_c4.is_ticking = client.get("C_PlantedC4", "m_bBombTicking")?;
         offsets.planted_c4.blow_time = client.get("C_PlantedC4", "m_flC4Blow")?;

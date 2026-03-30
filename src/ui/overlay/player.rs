@@ -246,6 +246,13 @@ impl App {
                 icon_font.clone(),
                 text_color,
             );
+            self.text(
+                painter,
+                format!("{}/{}", player.ammo.0, player.ammo.1),
+                pos2(bl.x + half_width, bl.y + font_size),
+                Align2::CENTER_TOP,
+                None,
+            )
         }
     }
 

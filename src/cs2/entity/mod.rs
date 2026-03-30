@@ -37,7 +37,11 @@ pub enum Entity {
 
 #[derive(Debug, Clone, Serialize)]
 pub enum EntityInfo {
-    Weapon { weapon: Weapon, position: Vec3 },
+    Weapon {
+        weapon: Weapon,
+        position: Vec3,
+        ammo: (i32, i32),
+    },
     Inferno(InfernoInfo),
     Smoke(SmokeInfo),
     Molotov(MolotovInfo),

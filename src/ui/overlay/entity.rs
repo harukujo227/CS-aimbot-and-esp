@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use egui::{Align2, Color32, FontId, Painter, Pos2, Stroke};
+use egui::{Align2, Color32, Painter, Pos2, Stroke};
 
 use crate::{
     cs2::entity::{
@@ -14,19 +14,30 @@ use crate::{
 impl App {
     pub fn draw_entity(&self, painter: &Painter, entity: &EntityInfo, data: &Data) {
         match entity {
-            EntityInfo::Weapon { weapon, position } => {
+            EntityInfo::Weapon {
+                weapon,
+                position,
+                ammo,
+            } => {
                 if !self.config.hud.dropped_weapons {
                     return;
                 }
                 let Some(position) = world_to_screen(position, data) else {
                     return;
                 };
-                painter.text(
+                self.text(
+                    painter,
+                    format!("{weapon}"),
                     position,
                     Align2::CENTER_CENTER,
-                    format!("{weapon}"),
-                    FontId::proportional(self.config.hud.font_size),
-                    self.config.hud.text_color,
+                    None,
+                );
+                self.text(
+                    painter,
+                    format!("{}/{}", ammo.0, ammo.1),
+                    egui::pos2(position.x, position.y + self.config.hud.font_size),
+                    Align2::CENTER_CENTER,
+                    None,
                 );
             }
             EntityInfo::Inferno(inferno) => self.inferno(painter, data, inferno),

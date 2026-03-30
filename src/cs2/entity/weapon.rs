@@ -91,6 +91,14 @@ impl Weapon {
         Self::from_index(weapon_index)
     }
 
+    pub fn clip_ammo(entity: u64, cs2: &CS2) -> i32 {
+        cs2.process.read(entity + cs2.offsets.weapon.clip_primary)
+    }
+
+    pub fn reserve_ammo(entity: u64, cs2: &CS2) -> i32 {
+        cs2.process.read(entity + cs2.offsets.weapon.reserve_ammo)
+    }
+
     pub fn from_index(index: u16) -> Self {
         use Weapon::*;
         match index {

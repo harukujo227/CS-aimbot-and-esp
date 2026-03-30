@@ -160,6 +160,7 @@ impl Game for CS2 {
                 head: player.bone_position(self, Bones::Head.u64()),
                 name: player.name(self),
                 weapon: player.weapon(self),
+                ammo: (player.clip_ammo(self), player.reserve_ammo(self)),
                 bones: player.all_bones(self),
                 has_defuser: player.has_defuser(self),
                 has_helmet: player.has_helmet(self),
@@ -185,6 +186,10 @@ impl Game for CS2 {
             head: local_player.bone_position(self, Bones::Head.u64()),
             name: local_player.name(self),
             weapon: local_player.weapon(self),
+            ammo: (
+                local_player.clip_ammo(self),
+                local_player.reserve_ammo(self),
+            ),
             bones: local_player.all_bones(self),
             has_defuser: local_player.has_defuser(self),
             has_helmet: local_player.has_helmet(self),
@@ -202,6 +207,10 @@ impl Game for CS2 {
                 Entity::Weapon { weapon, entity } => EntityInfo::Weapon {
                     weapon: weapon.clone(),
                     position: Player::entity(*entity).position(self),
+                    ammo: (
+                        Weapon::clip_ammo(*entity, self),
+                        Weapon::reserve_ammo(*entity, self),
+                    ),
                 },
                 Entity::Inferno(inferno) => EntityInfo::Inferno(inferno.info(self)),
                 Entity::Smoke(smoke) => EntityInfo::Smoke(smoke.info(self)),

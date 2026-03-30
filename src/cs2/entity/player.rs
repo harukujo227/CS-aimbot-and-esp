@@ -182,6 +182,10 @@ impl Player {
         WeaponClass::from_string(&self.weapon_name(cs2))
     }
 
+    fn weapon_address(&self, cs2: &CS2) -> u64 {
+        cs2.process.read(self.pawn + cs2.offsets.pawn.weapon)
+    }
+
     pub fn weapon(&self, cs2: &CS2) -> Weapon {
         // BasePlayerWeapon/EconEntity
         let current_weapon: u64 = cs2.process.read(self.pawn + cs2.offsets.pawn.weapon);
@@ -218,6 +222,24 @@ impl Player {
         }
 
         weapons
+    }
+
+    pub fn clip_ammo(&self, cs2: &CS2) -> i32 {
+        let weapon = self.weapon_address(cs2);
+        if weapon == 0 {
+            return 0;
+        };
+
+        cs2.process.read(weapon + cs2.offsets.weapon.clip_primary)
+    }
+
+    pub fn reserve_ammo(&self, cs2: &CS2) -> i32 {
+        let weapon = self.weapon_address(cs2);
+        if weapon == 0 {
+            return 0;
+        };
+
+        cs2.process.read(weapon + cs2.offsets.weapon.reserve_ammo)
     }
 
     fn game_scene_node(&self, cs2: &CS2) -> u64 {

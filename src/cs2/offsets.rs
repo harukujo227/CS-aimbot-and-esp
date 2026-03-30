@@ -138,6 +138,8 @@ pub struct WeaponOffsets {
     pub attribute_manager: u64,     // AttributeContainer (m_AttributeManager)
     pub item: u64,                  // EIconItemView (m_Item)
     pub item_definition_index: u64, // u16 (m_iItemDefinitionIndex)
+    pub clip_primary: u64,          // i32 (m_iClip1)
+    pub reserve_ammo: u64,          // i32[2] (m_pReserveAmmo)
 }
 
 #[derive(Debug, Default)]
