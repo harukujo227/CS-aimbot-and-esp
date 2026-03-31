@@ -17,7 +17,6 @@ use crate::{
         target::Target,
     },
     data::{Data, PlayerData},
-    game::Game,
     math::{angles_from_vector, vec2_clamp},
     os::{mouse::Mouse, process::Process},
     parser::{bvh::Bvh, load_map},
@@ -53,12 +52,12 @@ pub struct CS2 {
     last_cache: Instant,
 }
 
-impl Game for CS2 {
-    fn is_valid(&self) -> bool {
+impl CS2 {
+    pub fn is_valid(&self) -> bool {
         self.is_valid && self.process.is_valid()
     }
 
-    fn setup(&mut self) {
+    pub fn setup(&mut self) {
         let Some(process) = Process::open(cs2::PROCESS_NAME) else {
             self.is_valid = false;
             return;
@@ -79,7 +78,7 @@ impl Game for CS2 {
         self.is_valid = true;
     }
 
-    fn run(&mut self, config: &Config, mouse: &mut Mouse) {
+    pub fn run(&mut self, config: &Config, mouse: &mut Mouse) {
         if !self.process.is_valid() {
             self.is_valid = false;
             log::debug!("process is no longer valid");
@@ -122,7 +121,7 @@ impl Game for CS2 {
         self.aimbot(config, mouse);
     }
 
-    fn data(&self, config: &Config, data: &mut Data) {
+    pub fn data(&self, config: &Config, data: &mut Data) {
         data.players.clear();
         data.friendlies.clear();
         data.entities.clear();
@@ -257,9 +256,7 @@ impl Game for CS2 {
             data.bomb.planted = false;
         }
     }
-}
 
-impl CS2 {
     pub fn new() -> Self {
         Self {
             is_valid: false,

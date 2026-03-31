@@ -12,19 +12,12 @@ use crate::{
     os::mouse::Mouse,
 };
 
-pub trait Game: std::fmt::Debug {
-    fn is_valid(&self) -> bool;
-    fn setup(&mut self);
-    fn run(&mut self, config: &Config, mouse: &mut Mouse);
-    fn data(&self, config: &Config, data: &mut Data);
-}
-
 pub struct GameManager {
     channel: Channel<Message>,
     data: Arc<Mutex<Data>>,
     config: Config,
     mouse: Mouse,
-    game: CS2,
+    cs2: CS2,
 }
 
 impl GameManager {
@@ -43,7 +36,7 @@ impl GameManager {
             data,
             config: Config::default(),
             mouse,
-            game: CS2::new(),
+            cs2: CS2::new(),
         };
 
         let config_path = CONFIG_PATH.join(DEFAULT_CONFIG_NAME);
@@ -69,14 +62,14 @@ impl GameManager {
                 self.parse_message(message);
             }
 
-            let mut is_valid = self.game.is_valid();
+            let mut is_valid = self.cs2.is_valid();
             if !is_valid {
                 if previous_status == GameStatus::Working {
                     self.send_game_message(Message::GameStatus(GameStatus::NotStarted));
                     previous_status = GameStatus::NotStarted;
                 }
-                self.game.setup();
-                is_valid = self.game.is_valid();
+                self.cs2.setup();
+                is_valid = self.cs2.is_valid();
             }
 
             if is_valid {
@@ -84,9 +77,9 @@ impl GameManager {
                     self.send_game_message(Message::GameStatus(GameStatus::Working));
                     previous_status = GameStatus::Working;
                 }
-                self.game.run(&self.config, &mut self.mouse);
+                self.cs2.run(&self.config, &mut self.mouse);
                 let mut data = self.data.lock();
-                self.game.data(&self.config, &mut data);
+                self.cs2.data(&self.config, &mut data);
             } else {
                 *self.data.lock() = Data::default();
             }
