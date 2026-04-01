@@ -192,6 +192,14 @@ impl Player {
         Weapon::from_handle(current_weapon, cs2)
     }
 
+    pub fn weapon_game_scene_node(&self, cs2: &CS2) -> Option<u64> {
+        let weapon = self.weapon_address(cs2);
+        if weapon == 0 {
+            return None;
+        }
+        Some(Player::pawn(weapon).game_scene_node(cs2))
+    }
+
     pub fn all_weapons(&self, cs2: &CS2) -> Vec<Weapon> {
         let mut weapons = vec![];
         let weapon_services: u64 = cs2
