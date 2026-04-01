@@ -19,7 +19,7 @@ use crate::{
     data::{Data, PlayerData},
     math::{angles_from_vector, vec2_clamp},
     os::{mouse::Mouse, process::Process},
-    parser::{bvh::Bvh, load_map},
+    parser::{bvh::Bvh, read_map},
 };
 
 pub mod bones;
@@ -359,7 +359,7 @@ impl CS2 {
     fn check_bvh(&mut self) {
         let current_map = self.current_map();
         if current_map != self.current_bvh {
-            self.bvh = load_map(&current_map);
+            self.bvh = read_map(self.process.pid, self.offsets.direct.vphys_world);
             if self.bvh.is_some() {
                 log::info!("loaded bvh for {current_map}");
                 self.current_bvh = current_map;

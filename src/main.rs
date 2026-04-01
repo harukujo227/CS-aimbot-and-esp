@@ -6,7 +6,7 @@ use utils::{
     sync::Mutex,
 };
 
-use crate::{data::Data, os::mouse::check_uinput, parser::parse_maps, ui::app::App};
+use crate::{data::Data, os::mouse::check_uinput, ui::app::App};
 
 mod config;
 mod constants;
@@ -31,8 +31,6 @@ fn main() {
             .module(module_path!()),
     );
 
-    let args: Vec<String> = std::env::args().collect();
-
     if !check_uinput() {
         return;
     }
@@ -40,12 +38,6 @@ fn main() {
     // this runs as x11 for now, because wayland decorations for winit are not good
     // and don't support disabling the maximize button
     unsafe { std::env::remove_var("WAYLAND_DISPLAY") };
-
-    let force_reparse = args.iter().any(|arg| arg == "--force-reparse");
-    let use_system_binary = args.iter().any(|arg| arg == "--local-s2v");
-    std::thread::spawn(move || {
-        parse_maps(force_reparse, use_system_binary);
-    });
 
     let (channel_gui, channel_game) = Channel::new();
     let data = Arc::new(Mutex::new(Data::default()));

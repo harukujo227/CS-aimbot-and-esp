@@ -104,6 +104,20 @@ impl CS2 {
         };
         offsets.direct.global_vars = self.process.get_relative_address(global_vars, 0x03, 0x07);
 
+        let Some(vphys_world) = self.process.scan(
+            "4c 89 ee 48 81 ec ? ? 00 00 4c 8d 3d ? ? ? ? 49 8b 3f e8",
+            offsets.library.client,
+        ) else {
+            log::warn!("could not find vphys_world offset");
+            return None;
+        };
+        // 0x0D + 4, 12, 20, 28
+        let vphys_world_global_ptr = self
+            .process
+            .get_relative_address(vphys_world, 0x0D, 0x0D + 4);
+        let vphys_world_global: u64 = self.process.read(vphys_world_global_ptr);
+        offsets.direct.vphys_world = vphys_world_global;
+
         let Some(ffa_address) = self
             .process
             .get_convar(offsets.interface.cvar, "mp_teammates_are_enemies")

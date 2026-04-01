@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ "rust" ]
 
-permissions:
-  contents: write
-
 env:
   CARGO_TERM_COLOR: always
 
@@ -21,13 +18,3 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: cargo build --release
-
-    - name: Upload Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: |
-          target/release/deadlocked
-        tag_name: deadlocked
-        name: deadlocked
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

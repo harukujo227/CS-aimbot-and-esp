@@ -1,8 +1,3 @@
-use std::{
-    fs::File,
-    io::{BufWriter, Read as _},
-};
-
 use glam::Vec3;
 use serde::{Deserialize, Serialize};
 
@@ -80,10 +75,6 @@ pub struct Triangle {
 }
 
 impl Triangle {
-    pub fn new(v0: Vec3, v1: Vec3, v2: Vec3) -> Self {
-        Self { v0, v1, v2 }
-    }
-
     pub fn aabb(&self) -> Aabb {
         Aabb::from_points(&[self.v0, self.v1, self.v2])
     }
@@ -154,21 +145,8 @@ impl Bvh {
         }
     }
 
-    pub fn save(&self, file: &mut File) {
-        let mut writer = BufWriter::new(file);
-        postcard::to_io(self, &mut writer).unwrap();
-    }
-
-    pub fn load(file: &mut File) -> Option<Self> {
-        let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer).ok()?;
-        postcard::from_bytes(&buffer).ok()
-    }
-
-    pub fn insert(&mut self, triangle: Triangle) -> usize {
-        let idx = self.triangles.len();
-        self.triangles.push(triangle);
-        idx
+    pub fn set(&mut self, triangles: Vec<Triangle>) {
+        self.triangles = triangles;
     }
 
     #[allow(unused)]
