@@ -2,7 +2,7 @@ use egui::{DragValue, Ui};
 
 use crate::ui::{
     app::App,
-    gui::helpers::{collapsing_open, color_picker},
+    gui::helpers::{collapsing_open, color_picker, drag},
 };
 
 impl App {
@@ -179,6 +179,14 @@ impl App {
                 .checkbox(&mut self.config.hud.debug, "Debug Overlay")
                 .changed()
             {
+                self.send_config();
+            }
+
+            if drag(
+                ui,
+                "FPS",
+                DragValue::new(&mut self.config.fps).range(30..=500),
+            ) {
                 self.send_config();
             }
         });

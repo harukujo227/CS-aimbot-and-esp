@@ -1,11 +1,13 @@
-use std::{sync::Arc, thread::sleep, time::Instant};
+use std::{
+    sync::Arc,
+    thread::sleep,
+    time::{Duration, Instant},
+};
 
 use utils::{channel::Channel, log, sync::Mutex};
 
 use crate::{
-    config::{
-        CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, LOOP_DURATION, SLEEP_DURATION, parse_config,
-    },
+    config::{CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, SLEEP_DURATION, parse_config},
     cs2::CS2,
     data::Data,
     message::{GameStatus, Message},
@@ -86,15 +88,14 @@ impl GameManager {
 
             if is_valid {
                 let elapsed = start.elapsed();
-                if elapsed < LOOP_DURATION {
-                    sleep(LOOP_DURATION - elapsed);
+                if elapsed < self.loop_duration() {
+                    sleep(self.loop_duration() - elapsed);
                 } else {
                     log::debug!(
                         "game loop took {} ms (max {} ms)",
                         elapsed.as_millis(),
-                        LOOP_DURATION.as_millis()
+                        self.loop_duration().as_millis()
                     );
-                    sleep(LOOP_DURATION);
                 }
             } else {
                 sleep(SLEEP_DURATION);
@@ -106,5 +107,9 @@ impl GameManager {
         if let Message::Config(config) = message {
             self.config = *config;
         }
+    }
+
+    fn loop_duration(&self) -> Duration {
+        Duration::from_secs_f32(1.0 / self.config.fps as f32)
     }
 }
