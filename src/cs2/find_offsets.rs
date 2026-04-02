@@ -126,11 +126,7 @@ impl CS2 {
             log::warn!("could not find network client offset");
             return None;
         };
-        offsets.direct.network_client = self.process.get_relative_address(network_client, 2, 0);
-        for i in 0..32 {
-            let _delta_tick: i32 = self.process.read(offsets.direct.network_client + 0x25C + i);
-            // dbg!(_delta_tick);
-        }
+        offsets.direct.network_client = self.process.get_relative_address(network_client, 3, 12);
 
         let Some(ffa_address) = self
             .process

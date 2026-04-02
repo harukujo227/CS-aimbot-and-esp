@@ -27,8 +27,12 @@ impl CS2 {
             return;
         };
 
-        Weapon::apply_skin(weapon_address, self);
+        let changed = Weapon::apply_skin(weapon_address, self);
         local_player.update_view_model(self, weapon_address);
+        if changed {
+            self.process
+                .write(self.offsets.direct.network_client + 0x25C, -1);
+        }
 
         // NetworkGameClient_DeltaTick (0x??) = -1
 
