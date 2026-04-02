@@ -342,7 +342,6 @@ pub struct UnsafeConfig {
     pub no_smoke: bool,
     pub change_smoke_color: bool,
     pub smoke_color: Color32,
-    pub skin_changer: bool,
 }
 
 impl Default for UnsafeConfig {
@@ -355,7 +354,6 @@ impl Default for UnsafeConfig {
             no_smoke: false,
             change_smoke_color: false,
             smoke_color: Color32::RED,
-            skin_changer: false,
         }
     }
 }

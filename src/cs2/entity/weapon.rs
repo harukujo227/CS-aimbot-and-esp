@@ -99,28 +99,6 @@ impl Weapon {
         cs2.process.read(entity + cs2.offsets.weapon.reserve_ammo)
     }
 
-    pub fn apply_skin(entity: u64, cs2: &CS2) -> bool {
-        let paint_kit: i32 = cs2.process.read(entity + cs2.offsets.weapon.paint_kit);
-        if paint_kit == 44 {
-            return false;
-        }
-
-        let econ_view = entity + cs2.offsets.weapon.attribute_manager + cs2.offsets.weapon.item;
-
-        cs2.process
-            .write(econ_view + cs2.offsets.econ_item_view.item_id_high, -1);
-
-        cs2.process.write(entity + cs2.offsets.weapon.paint_kit, 44);
-
-        let weapon_gsn: u64 = cs2.process.read(entity + cs2.offsets.pawn.game_scene_node);
-        let model_state: u64 = weapon_gsn + cs2.offsets.game_scene_node.model_state;
-
-        cs2.process
-            .write(model_state + cs2.offsets.model_state.mesh_group_mask, 2u64);
-
-        true
-    }
-
     pub fn from_index(index: u16) -> Self {
         use Weapon::*;
         match index {

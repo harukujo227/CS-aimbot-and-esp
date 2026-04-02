@@ -118,16 +118,6 @@ impl CS2 {
         let vphys_world_global: u64 = self.process.read(vphys_world_global_ptr);
         offsets.direct.vphys_world = vphys_world_global;
 
-        // xref: "CNetworkGameClient already exists"
-        let Some(network_client) = self
-            .process
-            .scan("48 83 ? ? ? ? 00 00 55 be", offsets.library.engine)
-        else {
-            log::warn!("could not find network client offset");
-            return None;
-        };
-        offsets.direct.network_client = self.process.get_relative_address(network_client, 3, 12);
-
         let Some(ffa_address) = self
             .process
             .get_convar(offsets.interface.cvar, "mp_teammates_are_enemies")
@@ -177,7 +167,6 @@ impl CS2 {
         offsets.pawn.flash_alpha = client.get("C_CSPlayerPawnBase", "m_flFlashMaxAlpha")?;
         offsets.pawn.flash_duration = client.get("C_CSPlayerPawnBase", "m_flFlashDuration")?;
         offsets.pawn.deathmatch_immunity = client.get("C_CSPlayerPawn", "m_bGunGameImmunity")?;
-        offsets.pawn.arms_model = client.get("C_CSPlayerPawn", "m_hHudModelArms")?;
 
         offsets.pawn.camera_services = client.get("C_BasePlayerPawn", "m_pCameraServices")?;
         offsets.pawn.item_services = client.get("C_BasePlayerPawn", "m_pItemServices")?;
@@ -187,11 +176,7 @@ impl CS2 {
         offsets.game_scene_node.dormant = client.get("CGameSceneNode", "m_bDormant")?;
         offsets.game_scene_node.origin = client.get("CGameSceneNode", "m_vecAbsOrigin")?;
         offsets.game_scene_node.model_state = client.get("CSkeletonInstance", "m_modelState")?;
-        offsets.game_scene_node.child = client.get("CGameSceneNode", "m_pChild")?;
-        offsets.game_scene_node.owner = client.get("CGameSceneNode", "m_pOwner")?;
-        offsets.game_scene_node.next_sibling = client.get("CGameSceneNode", "m_pNextSibling")?;
 
-        offsets.model_state.mesh_group_mask = client.get("CModelState", "m_MeshGroupMask")?;
         offsets.model_state.skeleton_instance =
             client.get("CBodyComponentSkeletonInstance", "m_skeletonInstance")?;
 
@@ -228,15 +213,12 @@ impl CS2 {
             client.get("CPlayer_ObserverServices", "m_hObserverTarget")?;
 
         offsets.weapon.attribute_manager = client.get("C_EconEntity", "m_AttributeManager")?;
-        offsets.weapon.paint_kit = client.get("C_EconEntity", "m_nFallbackPaintKit")?;
         offsets.weapon.item = client.get("C_AttributeContainer", "m_Item")?;
         offsets.weapon.clip_primary = client.get("C_BasePlayerWeapon", "m_iClip1")?;
         offsets.weapon.reserve_ammo = client.get("C_BasePlayerWeapon", "m_pReserveAmmo")?;
 
         offsets.econ_item_view.item_definition_index =
             client.get("C_EconItemView", "m_iItemDefinitionIndex")?;
-        offsets.econ_item_view.item_id_high = client.get("C_EconItemView", "m_iItemIDHigh")?;
-        offsets.econ_item_view.item_id_low = client.get("C_EconItemView", "m_iItemIDLow")?;
 
         offsets.planted_c4.is_ticking = client.get("C_PlantedC4", "m_bBombTicking")?;
         offsets.planted_c4.blow_time = client.get("C_PlantedC4", "m_flC4Blow")?;

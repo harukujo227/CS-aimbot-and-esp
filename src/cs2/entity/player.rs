@@ -553,53 +553,6 @@ impl Player {
                 .write(self.controller + cs2.offsets.controller.desired_fov, value);
         }
     }
-
-    pub fn update_view_model(&self, cs2: &CS2, weapon: u64) {
-        let arms_model_handle: i32 = cs2.process.read(self.pawn + cs2.offsets.pawn.arms_model);
-        let Some(arms_model) = Player::get_entity(cs2, arms_model_handle) else {
-            return;
-        };
-
-        let gs_node = Player::pawn(arms_model).game_scene_node(cs2);
-        let mut child: u64 = cs2
-            .process
-            .read(gs_node + cs2.offsets.game_scene_node.child);
-        while child != 0 {
-            let owner: u64 = cs2.process.read(child + cs2.offsets.game_scene_node.owner);
-            if owner == 0 {
-                child = cs2
-                    .process
-                    .read(child + cs2.offsets.game_scene_node.next_sibling);
-                continue;
-            }
-
-            let Some(owner_entity) = Player::get_entity(
-                cs2,
-                cs2.process
-                    .read(owner + cs2.offsets.controller.owner_entity),
-            ) else {
-                child = cs2
-                    .process
-                    .read(child + cs2.offsets.game_scene_node.next_sibling);
-                continue;
-            };
-
-            if owner_entity == weapon {
-                let gs_node: u64 = cs2.process.read(owner + cs2.offsets.pawn.game_scene_node);
-                cs2.process.write(
-                    gs_node
-                        + cs2.offsets.game_scene_node.model_state
-                        + cs2.offsets.model_state.mesh_group_mask,
-                    2u64,
-                );
-                break;
-            }
-
-            child = cs2
-                .process
-                .read(child + cs2.offsets.game_scene_node.next_sibling);
-        }
-    }
 }
 
 impl CS2 {
