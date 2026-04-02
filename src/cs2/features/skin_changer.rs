@@ -28,8 +28,8 @@ impl CS2 {
         };
 
         let changed = Weapon::apply_skin(weapon_address, self);
-        local_player.update_view_model(self, weapon_address);
         if changed {
+            local_player.update_view_model(self, weapon_address);
             self.process
                 .write(self.offsets.direct.network_client + 0x25C, -1);
         }
