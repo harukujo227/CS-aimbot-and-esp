@@ -1,6 +1,9 @@
 use crate::{
     config::Config,
-    cs2::{CS2, entity::player::Player},
+    cs2::{
+        CS2,
+        entity::{player::Player, weapon::Weapon},
+    },
 };
 
 impl CS2 {
@@ -14,10 +17,18 @@ impl CS2 {
             return;
         };
 
-        let _weapon = local_player.weapon(self);
-        let Some(_weapon_gsn) = local_player.weapon_game_scene_node(self) else {
+        let weapon = local_player.weapon(self);
+        if weapon != Weapon::Ak47 {
+            return;
+        }
+
+        let weapon_address = local_player.weapon_address(self);
+        if weapon_address == 0 {
             return;
         };
+
+        Weapon::apply_skin(weapon_address, self);
+        local_player.update_view_model(self, weapon_address);
 
         // NetworkGameClient_DeltaTick (0x??) = -1
 

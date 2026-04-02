@@ -25,6 +25,7 @@ pub struct DirectOffsets {
     pub planted_c4: u64,
     pub global_vars: u64,
     pub vphys_world: u64,
+    pub network_client: u64,
 }
 
 #[derive(Debug, Default)]
@@ -66,6 +67,7 @@ pub struct PawnOffsets {
     pub flash_alpha: u64,         // f32 (m_flFlashMaxAlpha)
     pub flash_duration: u64,      // f32 (m_flFlashDuration)
     pub deathmatch_immunity: u64, // bool (m_bGunGameImmunity)
+    pub arms_model: u64,          // Handle<HudModelArms> (m_hHudModelArms)
     pub camera_services: u64,     // Pointer -> CameraServices (m_pCameraServices)
     pub item_services: u64,       // Pointer -> ItemServices (m_pItemServices)
     pub weapon_services: u64,     // Pointer -> WeaponSercies (m_pWeaponServices)
@@ -77,10 +79,14 @@ pub struct GameSceneNodeOffsets {
     pub dormant: u64,     // bool (m_bDormant)
     pub origin: u64,      // Vec3 (m_vecAbsOrigin)
     pub model_state: u64, // Pointer -> ModelState (m_modelState)
+    pub child: u64,       // Pointer -> GameSceneNode (m_pChild)
+    pub owner: u64,       // Pointer -> EntityInstance (m_pOwner)
+    pub next_sibling: u64, // Pointer -> GameSceneNode (m_pNextSibling)
 }
 
 #[derive(Debug, Default)]
-pub struct SkeletonInstanceOffsets {
+pub struct ModelState {
+    pub mesh_group_mask: u64,   // u64 (m_MeshGroupMask)
     pub skeleton_instance: u64, // CSkeletonInstance (m_skeletonInstance)
 }
 
@@ -136,11 +142,18 @@ pub struct ObserverServicesOffsets {
 
 #[derive(Debug, Default)]
 pub struct WeaponOffsets {
-    pub attribute_manager: u64,     // AttributeContainer (m_AttributeManager)
-    pub item: u64,                  // EIconItemView (m_Item)
+    pub attribute_manager: u64, // AttributeContainer (m_AttributeManager)
+    pub paint_kit: u64,         // i32 (m_nFallbackPaintKit)
+    pub item: u64,              // EconItemView (m_Item)
+    pub clip_primary: u64,      // i32 (m_iClip1)
+    pub reserve_ammo: u64,      // i32[2] (m_pReserveAmmo)
+}
+
+#[derive(Debug, Default)]
+pub struct EconItemViewOffsets {
     pub item_definition_index: u64, // u16 (m_iItemDefinitionIndex)
-    pub clip_primary: u64,          // i32 (m_iClip1)
-    pub reserve_ammo: u64,          // i32[2] (m_pReserveAmmo)
+    pub item_id_high: u64,          // u32 (m_iItemIDHigh)
+    pub item_id_low: u64,           // u32 (m_iItemIDLow)
 }
 
 #[derive(Debug, Default)]
@@ -167,7 +180,7 @@ pub struct Offsets {
     pub controller: PlayerControllerOffsets,
     pub pawn: PawnOffsets,
     pub game_scene_node: GameSceneNodeOffsets,
-    pub skeleton: SkeletonInstanceOffsets,
+    pub model_state: ModelState,
     pub smoke: SmokeOffsets,
     pub molotov: MolotovOffsets,
     pub inferno: InfernoOffsets,
@@ -178,6 +191,7 @@ pub struct Offsets {
     pub weapon_services: WeaponServicesOffsets,
     pub observer_services: ObserverServicesOffsets,
     pub weapon: WeaponOffsets,
+    pub econ_item_view: EconItemViewOffsets,
     pub planted_c4: PlantedC4Offsets,
     pub entity_identity: EntityIdentityOffsets,
 }

@@ -108,6 +108,7 @@ impl CS2 {
 
         self.no_flash(config);
         self.fov_changer(config);
+        // self.skin_changer(config);
 
         self.esp_toggle(config);
 
