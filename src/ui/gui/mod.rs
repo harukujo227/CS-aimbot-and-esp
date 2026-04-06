@@ -7,6 +7,7 @@ use crate::{
     ui::{app::App, color::Colors, gui::aimbot::AimbotTab},
 };
 
+mod about;
 pub mod aimbot;
 mod config;
 mod grenade;
@@ -60,6 +61,10 @@ impl App {
                             .status();
                     }
 
+                    if ui.button("About").clicked() {
+                        self.show_about = true;
+                    }
+
                     ui.label(egui::RichText::new(format!("{}", self.game_status)).color(
                         match self.game_status {
                             GameStatus::Working => Colors::GREEN,
@@ -77,6 +82,10 @@ impl App {
             Tab::Unsafe => self.unsafe_settings(ui),
             Tab::Config => self.config_settings(ui),
         });
+
+        if self.show_about {
+            self.about(ui.ctx());
+        }
     }
 
     fn weapon_config(&mut self) -> &mut WeaponConfig {

@@ -31,6 +31,7 @@ pub struct App {
     pub gui: Option<WindowContext>,
     pub overlay: Option<WindowContext>,
     next_frame_time: Instant,
+    pub show_about: bool,
 
     pub channel: Channel<Message>,
     pub data: Arc<Mutex<Data>>,
@@ -67,6 +68,7 @@ impl App {
             overlay: None,
 
             next_frame_time: Instant::now() + Duration::from_millis(16),
+            show_about: false,
 
             channel,
             data,
