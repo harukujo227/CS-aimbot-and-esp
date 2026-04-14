@@ -1,5 +1,4 @@
 use egui::{Align, Button, Ui};
-use utils::log;
 
 use crate::{
     config::{
@@ -57,7 +56,7 @@ impl App {
             if ui.button("Reset").clicked() {
                 self.config = Config::default();
                 self.send_config();
-                log::info!("loaded default config");
+                utils::info!("loaded default config");
             }
 
             if ui.button("Config Folder").clicked() {

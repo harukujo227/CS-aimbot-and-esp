@@ -1,5 +1,4 @@
 use glam::vec2;
-use utils::log;
 
 use crate::{
     config::{Config, KeyMode},
@@ -117,7 +116,7 @@ impl CS2 {
             -aim_angles.x / sensitivity * 50.0,
         ) / (config.smooth + 1.0).clamp(1.0, 20.0);
 
-        log::debug!(
+        utils::debug!(
             "aimbot mouse movement: {:.2}/{:.2}",
             mouse_angles.x,
             mouse_angles.y

@@ -1,7 +1,6 @@
 use std::time::{Duration, Instant};
 
 use glam::{IVec2, Mat4, Vec2, Vec3};
-use utils::log;
 
 use crate::{
     config::{AimbotConfig, Config, KeyMode, RcsConfig, TriggerbotConfig},
@@ -23,6 +22,7 @@ use crate::{
 };
 
 pub mod bones;
+pub mod bvh;
 pub mod entity;
 mod features;
 mod find_offsets;
@@ -62,7 +62,7 @@ impl CS2 {
             self.is_valid = false;
             return;
         };
-        log::info!("process found, pid: {}", process.pid);
+        utils::info!("process found, pid: {}", process.pid);
         self.process = process;
 
         self.offsets = match self.find_offsets() {
@@ -73,7 +73,7 @@ impl CS2 {
                 return;
             }
         };
-        log::info!("offsets found");
+        utils::info!("offsets found");
 
         self.is_valid = true;
     }
@@ -81,7 +81,7 @@ impl CS2 {
     pub fn run(&mut self, config: &Config, mouse: &mut Mouse) {
         if !self.process.is_valid() {
             self.is_valid = false;
-            log::debug!("process is no longer valid");
+            utils::debug!("process is no longer valid");
             return;
         }
 
@@ -359,9 +359,9 @@ impl CS2 {
     fn check_bvh(&mut self) {
         let current_map = self.current_map();
         if current_map != self.current_bvh {
-            self.bvh = read_map(self.process.pid, self.offsets.direct.vphys_world);
+            self.bvh = read_map(self);
             if self.bvh.is_some() {
-                log::info!("loaded bvh for {current_map}");
+                utils::info!("loaded bvh for {current_map}");
                 self.current_bvh = current_map;
             }
         }

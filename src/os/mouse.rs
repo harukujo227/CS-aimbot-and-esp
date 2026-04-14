@@ -9,7 +9,6 @@ use std::{
 
 use glam::{IVec2, Vec2};
 use nix::{ioctl_none, ioctl_write_int, ioctl_write_ptr, libc::c_ulong};
-use utils::log;
 
 #[derive(Debug, Clone, Copy)]
 struct Timeval {
@@ -207,15 +206,15 @@ impl Drop for Mouse {
 pub fn check_uinput() -> bool {
     let path = Path::new("/dev/uinput");
     if !path.exists() {
-        log::error!("the uinput kernel module is not loaded.");
-        log::error!("this module needs to be loaded for mouse input to work.");
-        log::error!("please carefully read the readme before using.");
+        utils::error!("the uinput kernel module is not loaded.");
+        utils::error!("this module needs to be loaded for mouse input to work.");
+        utils::error!("please carefully read the readme before using.");
         return false;
     }
     if File::options().write(true).open(path).is_err() {
-        log::error!("user has no write permissions for /dev/uinput.");
-        log::error!("did you run the setup script?");
-        log::error!("please carefully read the readme before using.");
+        utils::error!("user has no write permissions for /dev/uinput.");
+        utils::error!("did you run the setup script?");
+        utils::error!("please carefully read the readme before using.");
         return false;
     }
     true

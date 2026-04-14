@@ -5,7 +5,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use utils::{channel::Channel, log, sync::Mutex};
+use utils::{channel::Channel, sync::Mutex};
 use winit::{
     application::ApplicationHandler,
     event::{ElementState, StartCause, WindowEvent},
@@ -18,7 +18,7 @@ use crate::{
     },
     cs2::entity::weapon::Weapon,
     data::{Data, SoundType},
-    message::{GameStatus, Message},
+    message::{GameMessage, GameStatus, UiMessage},
     ui::{
         grenades::{Grenade, GrenadeList, read_grenades},
         gui::{Tab, aimbot::AimbotTab},
@@ -33,7 +33,7 @@ pub struct App {
     next_frame_time: Instant,
     pub show_about: bool,
 
-    pub channel: Channel<Message>,
+    pub channel: Channel<GameMessage, UiMessage>,
     pub data: Arc<Mutex<Data>>,
 
     pub game_status: GameStatus,
@@ -56,7 +56,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(channel: Channel<Message>, data: Arc<Mutex<Data>>) -> Self {
+    pub fn new(channel: Channel<GameMessage, UiMessage>, data: Arc<Mutex<Data>>) -> Self {
         // read config
         let config = parse_config(&CONFIG_PATH.join(DEFAULT_CONFIG_NAME));
         // override config if invalid
@@ -99,7 +99,7 @@ impl App {
         let overlay = WindowContext::new(event_loop, true, self.config.accent_color);
 
         self.display_scale = gui.window().scale_factor() as f32;
-        log::info!("detected display scale: {}", self.display_scale);
+        utils::info!("detected display scale: {}", self.display_scale);
 
         self.gui = Some(gui);
         self.overlay = Some(overlay);
@@ -139,9 +139,7 @@ impl ApplicationHandler for App {
         window_event: WindowEvent,
     ) {
         while let Ok(message) = self.channel.try_receive() {
-            if let Message::GameStatus(status) = message {
-                self.game_status = status
-            }
+            self.game_status = message.0;
         }
 
         let Some(gui) = &self.gui else {

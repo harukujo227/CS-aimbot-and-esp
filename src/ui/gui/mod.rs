@@ -1,9 +1,8 @@
 use egui::{Align, Ui};
-use utils::log;
 
 use crate::{
     config::{WeaponConfig, write_config},
-    message::{GameStatus, Message},
+    message::{GameMessage, GameStatus},
     ui::{app::App, color::Colors, gui::aimbot::AimbotTab},
 };
 
@@ -28,11 +27,11 @@ pub enum Tab {
 
 impl App {
     pub fn send_config(&self) {
-        self.send_message(Message::Config(Box::new(self.config.clone())));
+        self.send_message(GameMessage(Box::new(self.config.clone())));
         self.save();
     }
 
-    pub fn send_message(&self, message: Message) {
+    pub fn send_message(&self, message: GameMessage) {
         if self.channel.send(message).is_err() {
             std::process::exit(1);
         }
@@ -106,7 +105,7 @@ impl App {
         let gui = self.gui.as_mut().unwrap();
 
         if let Err(err) = gui.make_current() {
-            log::error!("could not make gui window current: {err}");
+            utils::error!("could not make gui window current: {err}");
             return;
         }
         gui.run(|ui| (unsafe { &mut *self_ptr }).gui(ui));
@@ -114,7 +113,7 @@ impl App {
         gui.paint();
 
         if let Err(err) = gui.swap_buffers() {
-            log::error!("could not swap gui window buffers: {err}");
+            utils::error!("could not swap gui window buffers: {err}");
             return;
         }
 
@@ -122,7 +121,7 @@ impl App {
 
         overlay.window().set_cursor_hittest(false).unwrap();
         if let Err(err) = overlay.make_current() {
-            log::error!("could not make overlay window current: {err}");
+            utils::error!("could not make overlay window current: {err}");
             return;
         }
 
@@ -133,7 +132,7 @@ impl App {
         overlay.paint();
 
         if let Err(err) = overlay.swap_buffers() {
-            log::error!("could not swap overlay window buffers: {err}");
+            utils::error!("could not swap overlay window buffers: {err}");
         }
     }
 }

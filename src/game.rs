@@ -4,18 +4,18 @@ use std::{
     time::{Duration, Instant},
 };
 
-use utils::{channel::Channel, log, sync::Mutex};
+use utils::{channel::Channel, sync::Mutex};
 
 use crate::{
     config::{CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, SLEEP_DURATION, parse_config},
     cs2::CS2,
     data::Data,
-    message::{GameStatus, Message},
+    message::{GameMessage, GameStatus, UiMessage},
     os::mouse::Mouse,
 };
 
 pub struct GameManager {
-    channel: Channel<Message>,
+    channel: Channel<UiMessage, GameMessage>,
     data: Arc<Mutex<Data>>,
     config: Config,
     mouse: Mouse,
@@ -23,12 +23,12 @@ pub struct GameManager {
 }
 
 impl GameManager {
-    pub fn new(channel: Channel<Message>, data: Arc<Mutex<Data>>) -> Self {
+    pub fn new(channel: Channel<UiMessage, GameMessage>, data: Arc<Mutex<Data>>) -> Self {
         let mouse = match Mouse::open() {
             Ok(mouse) => mouse,
             Err(err) => {
-                log::error!("error creating uinput device: {err}");
-                log::error!("uinput kernel module is not loaded, or user is not in input group.");
+                utils::error!("error creating uinput device: {err}");
+                utils::error!("uinput kernel module is not loaded, or user is not in input group.");
                 std::process::exit(1);
             }
         };
@@ -49,25 +49,25 @@ impl GameManager {
         game
     }
 
-    fn send_game_message(&self, message: Message) {
+    fn send_message(&self, message: UiMessage) {
         if self.channel.send(message).is_err() {
             std::process::exit(1);
         }
     }
 
     pub fn run(&mut self) {
-        self.send_game_message(Message::GameStatus(GameStatus::NotStarted));
+        self.send_message(UiMessage(GameStatus::NotStarted));
         let mut previous_status = GameStatus::NotStarted;
         loop {
             let start = Instant::now();
             while let Ok(message) = self.channel.try_receive() {
-                self.parse_message(message);
+                self.config = *message.0;
             }
 
             let mut is_valid = self.cs2.is_valid();
             if !is_valid {
                 if previous_status == GameStatus::Working {
-                    self.send_game_message(Message::GameStatus(GameStatus::NotStarted));
+                    self.send_message(UiMessage(GameStatus::NotStarted));
                     previous_status = GameStatus::NotStarted;
                 }
                 self.cs2.setup();
@@ -76,7 +76,7 @@ impl GameManager {
 
             if is_valid {
                 if previous_status == GameStatus::NotStarted {
-                    self.send_game_message(Message::GameStatus(GameStatus::Working));
+                    self.send_message(UiMessage(GameStatus::Working));
                     previous_status = GameStatus::Working;
                 }
                 self.cs2.run(&self.config, &mut self.mouse);
@@ -91,7 +91,7 @@ impl GameManager {
                 if elapsed < self.loop_duration() {
                     sleep(self.loop_duration() - elapsed);
                 } else {
-                    log::debug!(
+                    utils::debug!(
                         "game loop took {} ms (max {} ms)",
                         elapsed.as_millis(),
                         self.loop_duration().as_millis()
@@ -100,12 +100,6 @@ impl GameManager {
             } else {
                 sleep(SLEEP_DURATION);
             }
-        }
-    }
-
-    fn parse_message(&mut self, message: Message) {
-        if let Message::Config(config) = message {
-            self.config = *config;
         }
     }
 

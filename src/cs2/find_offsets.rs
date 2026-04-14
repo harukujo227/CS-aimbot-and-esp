@@ -1,7 +1,5 @@
 use std::time::Instant;
 
-use utils::log;
-
 use crate::{
     constants::cs2,
     cs2::{CS2, offsets::Offsets, schema::Schema},
@@ -23,7 +21,7 @@ impl CS2 {
             .process
             .get_interface_offset(offsets.library.engine, "GameResourceServiceClientV0")
         else {
-            log::warn!("could not get offset for GameResourceServiceClient");
+            utils::warn!("could not get offset for GameResourceServiceClient");
             return None;
         };
         offsets.interface.resource = resource_offset;
@@ -35,7 +33,7 @@ impl CS2 {
             .process
             .get_interface_offset(offsets.library.tier0, "VEngineCvar0")
         else {
-            log::warn!("could not get convar interface offset");
+            utils::warn!("could not get convar interface offset");
             return None;
         };
         offsets.interface.cvar = cvar_address;
@@ -43,7 +41,7 @@ impl CS2 {
             .process
             .get_interface_offset(offsets.library.input, "InputSystemVersion0")
         else {
-            log::warn!("could not get input interface offset");
+            utils::warn!("could not get input interface offset");
             return None;
         };
         offsets.interface.input = input_address;
@@ -52,7 +50,7 @@ impl CS2 {
             .process
             .scan("48 83 3D ? ? ? ? 00 0F 95 C0 C3", offsets.library.client)
         else {
-            log::warn!("could not find local player offset");
+            utils::warn!("could not find local player offset");
             return None;
         };
         offsets.direct.local_player = self.process.get_relative_address(local_player, 0x03, 0x08);
@@ -66,7 +64,7 @@ impl CS2 {
             .process
             .scan("C6 83 ? ? 00 00 01 4C 8D 05", offsets.library.client)
         else {
-            log::warn!("could not find view matrix offset");
+            utils::warn!("could not find view matrix offset");
             return None;
         };
 
@@ -78,7 +76,7 @@ impl CS2 {
             .process
             .get_module_export(offsets.library.sdl, "SDL_GetKeyboardFocus")
         else {
-            log::warn!("could not find sdl window offset");
+            utils::warn!("could not find sdl window offset");
             return None;
         };
         let sdl_window = self.process.get_relative_address(sdl_window, 0x02, 0x06);
@@ -89,7 +87,7 @@ impl CS2 {
             "48 8D 35 ? ? ? ? 66 0F EF C0 C6 05 ? ? ? ? 01 48 8D 3D",
             offsets.library.client,
         ) else {
-            log::warn!("could not find planted c4 offset");
+            utils::warn!("could not find planted c4 offset");
             return None;
         };
         offsets.direct.planted_c4 = self.process.get_relative_address(planted_c4, 0x03, 0x0E);
@@ -99,7 +97,7 @@ impl CS2 {
             "48 8D 05 ? ? ? ? 48 8B 00 8B 48 ? E9",
             offsets.library.client,
         ) else {
-            log::warn!("could not find global vars offset");
+            utils::warn!("could not find global vars offset");
             return None;
         };
         offsets.direct.global_vars = self.process.get_relative_address(global_vars, 0x03, 0x07);
@@ -108,7 +106,7 @@ impl CS2 {
             "4c 89 ee 48 81 ec ? ? 00 00 4c 8d 3d ? ? ? ? 49 8b 3f e8",
             offsets.library.client,
         ) else {
-            log::warn!("could not find vphys_world offset");
+            utils::warn!("could not find vphys_world offset");
             return None;
         };
         // 0x0D + 4, 12, 20, 28
@@ -122,7 +120,7 @@ impl CS2 {
             .process
             .get_convar(offsets.interface.cvar, "mp_teammates_are_enemies")
         else {
-            log::warn!("could not get mp_tammates_are_enemies convar offset");
+            utils::warn!("could not get mp_tammates_are_enemies convar offset");
             return None;
         };
         offsets.convar.ffa = ffa_address;
@@ -130,7 +128,7 @@ impl CS2 {
             .process
             .get_convar(offsets.interface.cvar, "sensitivity")
         else {
-            log::warn!("could not get sensitivity convar offset");
+            utils::warn!("could not get sensitivity convar offset");
             return None;
         };
         offsets.convar.sensitivity = sensitivity_address;
@@ -229,7 +227,7 @@ impl CS2 {
 
         offsets.entity_identity.size = client.get_class("CEntityIdentity")?.size();
 
-        log::debug!("offsets: {:?} ({:?})", offsets, Instant::now() - start);
+        utils::debug!("offsets: {:?} ({:?})", offsets, Instant::now() - start);
         Some(offsets)
     }
 }

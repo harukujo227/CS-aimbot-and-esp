@@ -10,7 +10,6 @@ use std::{
 use egui::Color32;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoEnumIterator};
-use utils::log;
 
 use crate::{
     cs2::{bones::Bones, entity::weapon::Weapon, key_codes::KeyCode},
@@ -400,9 +399,9 @@ pub fn parse_config(path: &Path) -> Config {
 
     let config = toml::from_str(&config_string);
     if config.is_err() {
-        log::warn!("config file invalid");
+        utils::warn!("config file invalid");
     } else if let Some(file_name) = path.file_name() {
-        log::info!("loaded config {:?}", file_name);
+        utils::info!("loaded config {:?}", file_name);
     }
     config.unwrap_or_default()
 }
@@ -420,7 +419,7 @@ pub fn delete_config(path: &Path) {
     if std::fs::remove_file(path).is_ok()
         && let Some(file_name) = path.file_name()
     {
-        log::info!("deleted config {:?}", file_name);
+        utils::info!("deleted config {:?}", file_name);
     }
 }
 

@@ -19,8 +19,8 @@ impl Display for GameStatus {
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum Message {
-    Config(Box<Config>),
-    GameStatus(GameStatus),
-}
+#[derive(Debug, Clone)]
+pub struct GameMessage(pub Box<Config>);
+
+#[derive(Debug, Clone)]
+pub struct UiMessage(pub GameStatus);

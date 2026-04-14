@@ -1,12 +1,8 @@
 use std::sync::Arc;
 
-use utils::{
-    channel::Channel,
-    log::{self, Logger, LoggerOptions},
-    sync::Mutex,
-};
+use utils::{channel::Channel, log::LoggerOptions, sync::Mutex};
 
-use crate::{data::Data, os::mouse::check_uinput, ui::app::App};
+use crate::{config::BASE_PATH, data::Data, os::mouse::check_uinput, ui::app::App};
 
 mod config;
 mod constants;
@@ -23,13 +19,19 @@ mod ui;
 compile_error!("only linux is supported.");
 
 fn main() {
-    Logger::install(
+    utils::log::init(
         LoggerOptions::default()
-            .file("deadlocked.log")
-            .debug(true)
-            .truncate(true)
-            .module(module_path!()),
-    );
+            .file(BASE_PATH.join("deadlocked.log"))
+            .truncate(true),
+        |w, rec| {
+            writeln!(
+                w,
+                "[{}] [{}:{}] {}",
+                rec.level, rec.location.file, rec.location.line, rec.args
+            )
+        },
+    )
+    .expect("failed to initialize logger");
 
     if !check_uinput() {
         return;
@@ -50,7 +52,7 @@ fn main() {
     let event_loop = match winit::event_loop::EventLoop::new() {
         Ok(event_loop) => event_loop,
         Err(err) => {
-            log::error!("failed to create event loop: {err}");
+            utils::error!("failed to create event loop: {err}");
             return;
         }
     };

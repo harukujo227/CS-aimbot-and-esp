@@ -2,7 +2,6 @@ use std::{collections::HashMap, fs::read_to_string};
 
 use glam::{Vec2, Vec3};
 use serde::{Deserialize, Serialize};
-use utils::log;
 use uuid::Uuid;
 
 use crate::{config::BASE_PATH, constants::GRENADE_FILE_NAME, cs2::entity::weapon::Weapon};
@@ -41,14 +40,14 @@ pub struct GrenadeModifiers {
 pub fn read_grenades() -> GrenadeList {
     let path = BASE_PATH.join(GRENADE_FILE_NAME);
     if !path.exists() {
-        log::info!("no grenade list found");
+        utils::info!("no grenade list found");
         return GrenadeList::default();
     }
 
     let grenade_list_file = read_to_string(path).unwrap();
     let grenade_list = serde_json::from_str(&grenade_list_file);
     if grenade_list.is_err() {
-        log::warn!("grenade list file invalid");
+        utils::warn!("grenade list file invalid");
     }
     grenade_list.unwrap_or_default()
 }
