@@ -3,7 +3,7 @@ use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 use strum::{AsRefStr, EnumIter};
 
-use crate::cs2::CS2;
+use crate::cs2::{CS2, entity::player::Player};
 
 #[derive(
     Debug, Default, Clone, PartialEq, Eq, Hash, AsRefStr, EnumIter, Serialize, Deserialize,
@@ -78,12 +78,18 @@ pub enum Weapon {
 }
 
 impl Weapon {
-    pub fn from_handle(handle: u64, cs2: &CS2) -> Self {
-        if handle > u64::MAX - 50000 {
-            return Self::Unknown;
+    pub fn from_handle(handle: i32, cs2: &CS2) -> Option<Self> {
+        if handle == 0 {
+            return None;
         }
+        let index = handle as u64 & 0xFFF;
+        let entity = Player::get_client_entity(cs2, index)?;
+        Some(Self::from_entity(entity, cs2))
+    }
+
+    pub fn from_entity(entity: u64, cs2: &CS2) -> Self {
         let weapon_index: u16 = cs2.process.read(
-            handle
+            entity
                 + cs2.offsets.weapon.attribute_manager
                 + cs2.offsets.weapon.item
                 + cs2.offsets.econ_item_view.item_definition_index,

@@ -103,7 +103,7 @@ impl CS2 {
         offsets.direct.global_vars = self.process.get_relative_address(global_vars, 0x03, 0x07);
 
         let Some(vphys_world) = self.process.scan(
-            "4c 89 ee 48 81 ec ? ? 00 00 4c 8d 3d ? ? ? ? 49 8b 3f e8",
+            "4c 8d 3d ? ? ? ? 49 8b 3f e8 ? ? ? ? 48 89 c2",
             offsets.library.client,
         ) else {
             utils::warn!("could not find vphys_world offset");
@@ -149,7 +149,6 @@ impl CS2 {
         offsets.pawn.armor = client.get("C_CSPlayerPawn", "m_ArmorValue")?;
         offsets.pawn.team = client.get("C_BaseEntity", "m_iTeamNum")?;
         offsets.pawn.life_state = client.get("C_BaseEntity", "m_lifeState")?;
-        offsets.pawn.weapon = client.get("C_CSPlayerPawn", "m_pClippingWeapon")?;
         offsets.pawn.fov_multiplier = client.get("C_BasePlayerPawn", "m_flFOVSensitivityAdjust")?;
         offsets.pawn.game_scene_node = client.get("C_BaseEntity", "m_pGameSceneNode")?;
         offsets.pawn.eye_offset = client.get("C_BaseModelEntity", "m_vecViewOffset")?;
@@ -205,6 +204,7 @@ impl CS2 {
             client.get("CCSPlayer_ItemServices", "m_bHasDefuser")?;
         offsets.item_services.has_helmet = client.get("CCSPlayer_ItemServices", "m_bHasHelmet")?;
 
+        offsets.weapon_services.weapons = client.get("CPlayer_WeaponServices", "m_hMyWeapons")?;
         offsets.weapon_services.weapons = client.get("CPlayer_WeaponServices", "m_hMyWeapons")?;
 
         offsets.observer_services.target =

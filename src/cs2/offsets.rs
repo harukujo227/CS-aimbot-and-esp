@@ -50,7 +50,6 @@ pub struct PawnOffsets {
     pub armor: u64,               // i32 (m_ArmorValue)
     pub team: u64,                // i32 (m_iTeamNum)
     pub life_state: u64,          // i32 (m_lifeState)
-    pub weapon: u64,              // Pointer -> WeaponBase (m_pClippingWeapon)
     pub fov_multiplier: u64,      // f32 (m_flFOVSensitivityAdjust)
     pub game_scene_node: u64,     // Pointer -> GameSceneNode (m_pGameSceneNode)
     pub eye_offset: u64,          // Vec3 (m_vecViewOffset)
@@ -126,7 +125,8 @@ pub struct ItemServicesOffsets {
 
 #[derive(Debug, Default)]
 pub struct WeaponServicesOffsets {
-    pub weapons: u64, // Pointer -> Vec<Pointer -> Weapon> (m_hMyWeapons)
+    pub active_weapon: u64, // Handle<Weapon> (m_hActiveWeapon)
+    pub weapons: u64,       // Pointer -> Vec<Pointer -> Weapon> (m_hMyWeapons)
 }
 
 #[derive(Debug, Default)]

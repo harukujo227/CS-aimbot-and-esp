@@ -75,7 +75,9 @@ impl App {
             ) {
                 self.send_config();
             }
+        });
 
+        ui.collapsing("Targeting", |ui| {
             if checkbox_hover(
                 ui,
                 "Target Friendlies",

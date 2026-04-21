@@ -160,10 +160,9 @@ impl Player {
 
     pub fn weapon_name(&self, cs2: &CS2) -> String {
         // CEntityInstance
-        let weapon_entity_instance: u64 = cs2.process.read(self.pawn + cs2.offsets.pawn.weapon);
-        if weapon_entity_instance == 0 {
+        let Some(weapon_entity_instance) = self.weapon_address(cs2) else {
             return String::from(cs2::WEAPON_UNKNOWN);
-        }
+        };
         // CEntityIdentity, 0x10 = m_pEntity
         let weapon_entity_identity: u64 = cs2.process.read(weapon_entity_instance + 0x10);
         if weapon_entity_identity == 0 {
@@ -182,14 +181,36 @@ impl Player {
         WeaponClass::from_string(&self.weapon_name(cs2))
     }
 
-    pub fn weapon_address(&self, cs2: &CS2) -> u64 {
-        cs2.process.read(self.pawn + cs2.offsets.pawn.weapon)
+    fn weapon_handle(&self, cs2: &CS2) -> Option<i32> {
+        let weapon_services: u64 = cs2
+            .process
+            .read(self.pawn + cs2.offsets.pawn.weapon_services);
+        if weapon_services == 0 {
+            return None;
+        }
+
+        Some(
+            cs2.process
+                .read(weapon_services + cs2.offsets.weapon_services.active_weapon),
+        )
+    }
+
+    fn weapon_address(&self, cs2: &CS2) -> Option<u64> {
+        let handle = self.weapon_handle(cs2)?;
+        if handle == 0 {
+            return None;
+        }
+
+        let index = handle as u64 & 0xFFF;
+        Player::get_client_entity(cs2, index)
     }
 
     pub fn weapon(&self, cs2: &CS2) -> Weapon {
-        // BasePlayerWeapon/EconEntity
-        let current_weapon: u64 = cs2.process.read(self.pawn + cs2.offsets.pawn.weapon);
-        Weapon::from_handle(current_weapon, cs2)
+        let Some(weapon_handle) = self.weapon_handle(cs2) else {
+            return Weapon::Unknown;
+        };
+
+        Weapon::from_handle(weapon_handle, cs2).unwrap_or_default()
     }
 
     pub fn all_weapons(&self, cs2: &CS2) -> Vec<Weapon> {
@@ -209,24 +230,20 @@ impl Player {
             .read(weapon_services + cs2.offsets.weapon_services.weapons + 0x08);
 
         for i in 0..length as u64 {
-            let weapon_index = cs2.process.read::<i32>(weapon_list + 0x04 * i) as u64 & 0xFFF;
-            // // BasePlayerWeapon/EconEntity
-            let Some(weapon_entity_instance) = Self::get_client_entity(cs2, weapon_index) else {
+            let weapon_handle = cs2.process.read(weapon_list + 0x04 * i);
+
+            let Some(weapon) = Weapon::from_handle(weapon_handle, cs2) else {
                 continue;
             };
-            if weapon_entity_instance == 0 {
-                continue;
-            }
 
-            weapons.push(Weapon::from_handle(weapon_entity_instance, cs2));
+            weapons.push(weapon);
         }
 
         weapons
     }
 
     pub fn clip_ammo(&self, cs2: &CS2) -> i32 {
-        let weapon = self.weapon_address(cs2);
-        if weapon == 0 {
+        let Some(weapon) = self.weapon_address(cs2) else {
             return 0;
         };
 
@@ -234,8 +251,7 @@ impl Player {
     }
 
     pub fn reserve_ammo(&self, cs2: &CS2) -> i32 {
-        let weapon = self.weapon_address(cs2);
-        if weapon == 0 {
+        let Some(weapon) = self.weapon_address(cs2) else {
             return 0;
         };
 

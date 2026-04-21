@@ -106,12 +106,12 @@ impl Class {
         let name = process.read_string_uncached(process.read(address + 0x08));
 
         let mut fields = HashMap::new();
-        let field_count: i16 = process.read(address + 0x1C);
-        let size = process.read(address + 0x18);
+        let field_count: i16 = process.read(address + 0x24);
+        let size = process.read(address + 0x20);
         if !(0..=20000).contains(&field_count) {
             return Self { name, fields, size };
         }
-        let fields_vec: u64 = process.read(address + 0x28);
+        let fields_vec: u64 = process.read(address + 0x30);
         for i in 0..field_count as u64 {
             let field = Field::new(process, fields_vec + (0x20 * i));
             fields.insert(field.name, field.offset);

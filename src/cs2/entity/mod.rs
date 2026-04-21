@@ -174,12 +174,12 @@ impl CS2 {
 
                     if name.starts_with("weapon_") {
                         if self.entity_has_owner(entity) {
-                            continue;
+                            return;
                         }
 
-                        let weapon = Weapon::from_handle(entity, self);
+                        let weapon = Weapon::from_entity(entity, self);
 
-                        self.entities.push(Entity::Weapon { weapon, entity })
+                        self.entities.push(Entity::Weapon { weapon, entity });
                     }
                 }
             }
