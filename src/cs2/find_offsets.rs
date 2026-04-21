@@ -204,7 +204,8 @@ impl CS2 {
             client.get("CCSPlayer_ItemServices", "m_bHasDefuser")?;
         offsets.item_services.has_helmet = client.get("CCSPlayer_ItemServices", "m_bHasHelmet")?;
 
-        offsets.weapon_services.weapons = client.get("CPlayer_WeaponServices", "m_hMyWeapons")?;
+        offsets.weapon_services.active_weapon =
+            client.get("CPlayer_WeaponServices", "m_hActiveWeapon")?;
         offsets.weapon_services.weapons = client.get("CPlayer_WeaponServices", "m_hMyWeapons")?;
 
         offsets.observer_services.target =
