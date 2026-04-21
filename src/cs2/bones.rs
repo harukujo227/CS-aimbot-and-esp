@@ -13,7 +13,7 @@ pub enum Bones {
     Head = 7,
     LeftShoulder = 9,
     LeftElbow = 10,
-    LeftHand = 12,
+    LeftHand = 11,
     RightShoulder = 13,
     RightElbow = 14,
     RightHand = 15,
