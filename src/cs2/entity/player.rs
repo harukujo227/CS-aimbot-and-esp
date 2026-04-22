@@ -385,16 +385,23 @@ impl Player {
     }
 
     pub fn aim_punch(&self, cs2: &CS2) -> Vec2 {
+        let aim_punch_services: u64 = cs2
+            .process
+            .read(self.pawn + cs2.offsets.pawn.aim_punch_services);
+        if aim_punch_services == 0 {
+            return Vec2::ZERO;
+        }
+
         let length: u64 = cs2
             .process
-            .read(self.pawn + cs2.offsets.pawn.aim_punch_cache);
+            .read(aim_punch_services + cs2.offsets.aim_punch_services.aim_punch_cache);
         if length < 1 {
             return Vec2::ZERO;
         }
 
         let data_address: u64 = cs2
             .process
-            .read(self.pawn + cs2.offsets.pawn.aim_punch_cache + 0x08);
+            .read(aim_punch_services + cs2.offsets.aim_punch_services.aim_punch_cache + 0x08);
         if data_address > u64::MAX - 50000 {
             return Vec2::ZERO;
         }

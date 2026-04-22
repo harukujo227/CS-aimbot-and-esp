@@ -56,7 +56,6 @@ pub struct PawnOffsets {
     pub eye_angles: u64,          // Vec3 (m_angEyeAngles)
     pub velocity: u64,            // Vec3 (m_vecAbsVelocity)
     pub flags: u64,               // i32 (m_fFlags)
-    pub aim_punch_cache: u64,     // Vector<Vec3> (m_aimPunchCache)
     pub shots_fired: u64,         // i32 (m_iShotsFired)
     pub view_angles: u64,         // Vec2 (v_angle)
     pub spotted_state: u64,       // SpottedState (m_entitySpottedState)
@@ -69,6 +68,7 @@ pub struct PawnOffsets {
     pub item_services: u64,       // Pointer -> ItemServices (m_pItemServices)
     pub weapon_services: u64,     // Pointer -> WeaponSercies (m_pWeaponServices)
     pub observer_services: u64,   // Pointer -> ObserverServices (m_pObserverServices)
+    pub aim_punch_services: u64,  // Pointer -> AimPunchServices (m_pAimPunchServices)
 }
 
 #[derive(Debug, Default)]
@@ -135,6 +135,11 @@ pub struct ObserverServicesOffsets {
 }
 
 #[derive(Debug, Default)]
+pub struct AimPunchSerciesOffsets {
+    pub aim_punch_cache: u64, // Vec<Vec3> (m_unpredictableBaseTick - 0x18)
+}
+
+#[derive(Debug, Default)]
 pub struct WeaponOffsets {
     pub attribute_manager: u64, // AttributeContainer (m_AttributeManager)
     pub item: u64,              // EconItemView (m_Item)
@@ -181,6 +186,7 @@ pub struct Offsets {
     pub item_services: ItemServicesOffsets,
     pub weapon_services: WeaponServicesOffsets,
     pub observer_services: ObserverServicesOffsets,
+    pub aim_punch_services: AimPunchSerciesOffsets,
     pub weapon: WeaponOffsets,
     pub econ_item_view: EconItemViewOffsets,
     pub planted_c4: PlantedC4Offsets,

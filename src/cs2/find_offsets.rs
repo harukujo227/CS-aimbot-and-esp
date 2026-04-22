@@ -155,7 +155,6 @@ impl CS2 {
         offsets.pawn.eye_angles = client.get("C_CSPlayerPawn", "m_angEyeAngles")?;
         offsets.pawn.velocity = client.get("C_BaseEntity", "m_vecAbsVelocity")?;
         offsets.pawn.flags = client.get("C_BaseEntity", "m_fFlags")?;
-        offsets.pawn.aim_punch_cache = client.get("C_CSPlayerPawn", "m_aimPunchTickFraction")? + 8;
         offsets.pawn.shots_fired = client.get("C_CSPlayerPawn", "m_iShotsFired")?;
         offsets.pawn.view_angles = client.get("C_BasePlayerPawn", "v_angle")?;
         offsets.pawn.spotted_state = client.get("C_CSPlayerPawn", "m_entitySpottedState")?;
@@ -169,6 +168,7 @@ impl CS2 {
         offsets.pawn.item_services = client.get("C_BasePlayerPawn", "m_pItemServices")?;
         offsets.pawn.weapon_services = client.get("C_BasePlayerPawn", "m_pWeaponServices")?;
         offsets.pawn.observer_services = client.get("C_BasePlayerPawn", "m_pObserverServices")?;
+        offsets.pawn.aim_punch_services = client.get("C_CSPlayerPawn", "m_pAimPunchServices")?;
 
         offsets.game_scene_node.dormant = client.get("CGameSceneNode", "m_bDormant")?;
         offsets.game_scene_node.origin = client.get("CGameSceneNode", "m_vecAbsOrigin")?;
@@ -210,6 +210,9 @@ impl CS2 {
 
         offsets.observer_services.target =
             client.get("CPlayer_ObserverServices", "m_hObserverTarget")?;
+
+        offsets.aim_punch_services.aim_punch_cache =
+            client.get("CCSPlayer_AimPunchServices", "m_unpredictableBaseTick")? - 0x18;
 
         offsets.weapon.attribute_manager = client.get("C_EconEntity", "m_AttributeManager")?;
         offsets.weapon.item = client.get("C_AttributeContainer", "m_Item")?;
