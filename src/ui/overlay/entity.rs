@@ -32,13 +32,15 @@ impl App {
                     Align2::CENTER_CENTER,
                     None,
                 );
-                self.text(
-                    painter,
-                    format!("{}/{}", ammo.0, ammo.1),
-                    egui::pos2(position.x, position.y + self.config.hud.font_size),
-                    Align2::CENTER_CENTER,
-                    None,
-                );
+                if ammo.0 >= 0 {
+                    self.text(
+                        painter,
+                        format!("{}/{}", ammo.0, ammo.1),
+                        egui::pos2(position.x, position.y + self.config.hud.font_size),
+                        Align2::CENTER_CENTER,
+                        None,
+                    );
+                }
             }
             EntityInfo::Inferno(inferno) => self.inferno(painter, data, inferno),
             EntityInfo::Smoke(smoke) => self.smoke(painter, data, smoke),
