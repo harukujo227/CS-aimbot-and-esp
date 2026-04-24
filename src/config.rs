@@ -148,7 +148,8 @@ impl Default for AimbotConfig {
 pub struct RcsConfig {
     pub enable_override: bool,
     pub enabled: bool,
-    pub smooth: f32,
+    pub x_strength: f32,
+    pub y_strength: f32,
 }
 
 impl Default for RcsConfig {
@@ -156,7 +157,8 @@ impl Default for RcsConfig {
         Self {
             enable_override: false,
             enabled: false,
-            smooth: 0.3,
+            x_strength: 0.5,
+            y_strength: 0.5,
         }
     }
 }
