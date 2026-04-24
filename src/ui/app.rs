@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     path::PathBuf,
-    sync::Arc,
+    sync::{Arc, atomic::Ordering},
     time::{Duration, Instant},
 };
 
@@ -14,11 +14,13 @@ use winit::{
 
 use crate::{
     config::{
-        CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, available_configs, parse_config, write_config,
+        ApplicationConfig, CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, available_configs,
+        parse_config, read_app_config, write_config,
     },
     cs2::entity::weapon::Weapon,
     data::{Data, SoundType},
     message::{GameMessage, GameStatus, UiMessage},
+    os::crash::STACKTRACE_SENT,
     ui::{
         grenades::{Grenade, GrenadeList, read_grenades},
         gui::{Tab, aimbot::AimbotTab},
@@ -45,6 +47,7 @@ pub struct App {
     pub new_grenade: Grenade,
     pub current_grenade: Option<(String, usize)>,
 
+    pub app_config: ApplicationConfig,
     pub config: Config,
     pub current_config: PathBuf,
     pub available_configs: Vec<PathBuf>,
@@ -63,6 +66,13 @@ impl App {
         write_config(&config, &CONFIG_PATH.join(DEFAULT_CONFIG_NAME));
         let grenades = read_grenades();
 
+        let app_config = read_app_config();
+
+        // was selected to be no,
+        if !app_config.first_launch && !app_config.send_stacktraces {
+            STACKTRACE_SENT.store(true, Ordering::Relaxed);
+        }
+
         let ret = Self {
             gui: None,
             overlay: None,
@@ -72,6 +82,8 @@ impl App {
 
             channel,
             data,
+
+            app_config,
             config,
             current_config: CONFIG_PATH.join(DEFAULT_CONFIG_NAME),
             available_configs: available_configs(),

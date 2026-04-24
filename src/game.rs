@@ -7,7 +7,7 @@ use std::{
 use utils::{channel::Channel, sync::Mutex};
 
 use crate::{
-    config::{CONFIG_PATH, Config, DEFAULT_CONFIG_NAME, SLEEP_DURATION, parse_config},
+    config::{Config, SLEEP_DURATION},
     cs2::CS2,
     data::Data,
     message::{GameMessage, GameStatus, UiMessage},
@@ -33,20 +33,13 @@ impl GameManager {
             }
         };
 
-        let mut game = Self {
+        Self {
             channel,
             data,
             config: Config::default(),
             mouse,
             cs2: CS2::new(),
-        };
-
-        let config_path = CONFIG_PATH.join(DEFAULT_CONFIG_NAME);
-        if config_path.exists() {
-            game.config = parse_config(&config_path);
         }
-
-        game
     }
 
     fn send_message(&self, message: UiMessage) {

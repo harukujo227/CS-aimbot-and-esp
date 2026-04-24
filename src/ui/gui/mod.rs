@@ -8,6 +8,7 @@ use crate::{
 
 mod about;
 pub mod aimbot;
+mod application;
 mod config;
 mod grenade;
 mod helpers;
@@ -23,6 +24,7 @@ pub enum Tab {
     Grenades,
     Unsafe,
     Config,
+    Application,
 }
 
 impl App {
@@ -52,6 +54,11 @@ impl App {
                 ui.selectable_value(&mut self.current_tab, Tab::Grenades, "\u{f0691} Grenades");
                 ui.selectable_value(&mut self.current_tab, Tab::Unsafe, "\u{f0ce6} Unsafe");
                 ui.selectable_value(&mut self.current_tab, Tab::Config, "\u{f168b} Config");
+                ui.selectable_value(
+                    &mut self.current_tab,
+                    Tab::Application,
+                    "\u{f1577} Application",
+                );
 
                 ui.with_layout(egui::Layout::bottom_up(Align::Min), |ui| {
                     if ui.button("Report Issue").clicked() {
@@ -80,10 +87,15 @@ impl App {
             Tab::Grenades => self.grenade_settings(ui),
             Tab::Unsafe => self.unsafe_settings(ui),
             Tab::Config => self.config_settings(ui),
+            Tab::Application => self.application_settings(ui),
         });
 
         if self.show_about {
             self.about(ui.ctx());
+        }
+
+        if self.app_config.first_launch {
+            self.stacktrace_popup(ui.ctx());
         }
     }
 

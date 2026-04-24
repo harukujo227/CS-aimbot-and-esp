@@ -21,6 +21,40 @@ pub const DEFAULT_CONFIG_NAME: &str = "deadlocked.toml";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
+pub struct ApplicationConfig {
+    pub first_launch: bool,
+    pub send_stacktraces: bool,
+}
+
+impl Default for ApplicationConfig {
+    fn default() -> Self {
+        Self {
+            first_launch: true,
+            send_stacktraces: true,
+        }
+    }
+}
+
+pub fn read_app_config() -> ApplicationConfig {
+    if !APP_CONFIG_PATH.exists() {
+        return ApplicationConfig::default();
+    }
+
+    let Ok(config_string) = read_to_string(APP_CONFIG_PATH.as_path()) else {
+        return ApplicationConfig::default();
+    };
+
+    let config = toml::from_str(&config_string);
+    config.unwrap_or_default()
+}
+
+pub fn write_app_config(config: &ApplicationConfig) {
+    let out = toml::to_string(&config).unwrap();
+    let _ = std::fs::write(APP_CONFIG_PATH.as_path(), out);
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Config {
     pub aim: AimConfig,
     pub player: PlayerConfig,
@@ -387,6 +421,8 @@ pub static CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
     }
     path
 });
+
+pub static APP_CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| BASE_PATH.join("deadlocked.toml"));
 
 pub fn parse_config(path: &Path) -> Config {
     if !path.exists() || path.is_dir() {
