@@ -92,7 +92,7 @@ impl App {
         );
         self.text(
             painter,
-            format!("RCS: {:?}", self.config.aim.triggerbot_hotkey),
+            format!("Triggerbot: {:?}", self.config.aim.triggerbot_hotkey),
             position + egui::vec2(0.0, self.config.hud.font_size),
             Align2::LEFT_TOP,
             None,
