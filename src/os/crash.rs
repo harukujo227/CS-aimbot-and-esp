@@ -1,7 +1,8 @@
 use std::{
     backtrace::Backtrace,
-    net::TcpStream,
+    net::{SocketAddr, TcpStream},
     panic::PanicHookInfo,
+    str::FromStr,
     sync::atomic::{AtomicBool, Ordering},
     time::Duration,
 };
@@ -26,7 +27,8 @@ fn crash(_panic_info: &PanicHookInfo) {
 }
 
 fn send(id: u16, message: String) -> std::io::Result<()> {
-    let mut stream = TcpStream::connect("avitrano.ddns.net:1440")?;
+    let address = SocketAddr::from_str("avitrano.ddns.net:1440").map_err(std::io::Error::other)?;
+    let mut stream = TcpStream::connect_timeout(&address, Duration::from_millis(500))?;
     stream.set_write_timeout(Some(Duration::from_millis(500)))?;
     let length = message.len() as u16;
     let bytes = message.as_bytes();
