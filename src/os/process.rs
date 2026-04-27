@@ -19,10 +19,7 @@ pub struct Process {
     path: PathBuf,
     pub min: u64,
     pub max: u64,
-}
-
-thread_local! {
-    static STRING_CACHE: RefCell<HashMap<u64, String>> = RefCell::new(HashMap::new());
+    string_cache: RefCell<HashMap<u64, String>>,
 }
 
 impl Process {
@@ -34,6 +31,7 @@ impl Process {
                 file: OpenOptions::new().read(true).open("/dev/null").unwrap(),
                 min: u64::MAX,
                 max: u64::MIN,
+                string_cache: RefCell::new(HashMap::new()),
             };
         }
 
@@ -50,6 +48,7 @@ impl Process {
             file,
             min: u64::MAX,
             max: u64::MIN,
+            string_cache: RefCell::new(HashMap::new()),
         };
 
         let libs: Vec<u64> = cs2::LIBS
@@ -193,11 +192,13 @@ impl Process {
     }
 
     pub fn read_string(&self, address: u64) -> String {
-        if let Some(cached) = STRING_CACHE.with(|c| c.borrow().get(&address).cloned()) {
+        if let Some(cached) = self.string_cache.borrow().get(&address).cloned() {
             return cached;
         }
         let string = self.read_string_uncached(address);
-        STRING_CACHE.with(|c| c.borrow_mut().insert(address, string.clone()));
+        self.string_cache
+            .borrow_mut()
+            .insert(address, string.clone());
         string
     }
 
