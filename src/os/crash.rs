@@ -1,8 +1,7 @@
 use std::{
     backtrace::Backtrace,
-    net::{SocketAddr, TcpStream},
+    net::{TcpStream, ToSocketAddrs},
     panic::PanicHookInfo,
-    str::FromStr,
     sync::atomic::{AtomicBool, Ordering},
     time::Duration,
 };
@@ -27,7 +26,10 @@ fn crash(_panic_info: &PanicHookInfo) {
 }
 
 fn send(id: u16, message: String) -> std::io::Result<()> {
-    let address = SocketAddr::from_str("avitrano.ddns.net:1440").map_err(std::io::Error::other)?;
+    let address = "avitrano.ddns.net:1440"
+        .to_socket_addrs()?
+        .next()
+        .ok_or_else(|| std::io::Error::other("Could not resolve Hostname"))?;
     let mut stream = TcpStream::connect_timeout(&address, Duration::from_millis(500))?;
     stream.set_write_timeout(Some(Duration::from_millis(500)))?;
     let length = message.len() as u16;
