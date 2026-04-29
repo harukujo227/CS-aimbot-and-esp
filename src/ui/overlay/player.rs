@@ -84,6 +84,14 @@ impl App {
             Some(alpha) => alpha.clamp(0.0, 1.0),
             None => 1.0,
         };
+        let distance = data
+            .local_player
+            .position
+            .distance(player.position)
+            .max(1.0);
+
+        let esp_scale = (500.0 / distance).clamp(0.4, 1.0);
+        let line_width = self.config.hud.line_width * esp_scale;
 
         let health_color =
             self.health_color(player.health, self.config.player.box_visible_color.a());
@@ -101,8 +109,8 @@ impl App {
 
         color = Self::alpha(color, alpha);
 
-        let stroke = Stroke::new(self.config.hud.line_width, color);
-        let icon_font = FontId::monospace(self.config.hud.icon_size);
+        let stroke = Stroke::new(line_width, color);
+        let icon_font = FontId::monospace(self.config.hud.icon_size * esp_scale);
 
         let midpoint = (player.position + player.head) / 2.0;
         let height = player.head.z - player.position.z + 24.0;
@@ -160,20 +168,20 @@ impl App {
 
         // health bar
         if self.config.player.health_bar {
-            let x = bl.x - self.config.hud.line_width * 2.0;
+            let x = bl.x - line_width * 2.0;
             let delta = bl.y - tl.y;
             painter.line(
                 vec![
                     pos2(x, bl.y),
                     pos2(x, bl.y - (delta * player.health as f32 / 100.0)),
                 ],
-                Stroke::new(self.config.hud.line_width, Self::alpha(health_color, alpha)),
+                Stroke::new(line_width, Self::alpha(health_color, alpha)),
             );
         }
 
         if self.config.player.armor_bar && player.armor > 0 {
             let x = bl.x
-                - self.config.hud.line_width
+                - line_width
                     * if self.config.player.health_bar {
                         4.0
                     } else {
@@ -186,22 +194,23 @@ impl App {
                     pos2(x, bl.y - (delta * player.armor as f32 / 100.0)),
                 ],
                 Stroke::new(
-                    self.config.hud.line_width,
+                    line_width,
                     Self::alpha(Color32::BLUE, alpha),
                 ),
             );
         }
 
         let mut offset = 0.0;
-        let font_size = self.config.hud.font_size;
+        let font_size = self.config.hud.font_size * esp_scale;
         let text_color = Self::alpha(self.config.hud.text_color, alpha);
         if self.config.player.player_name {
-            self.text(
+            self.text_sized(
                 painter,
                 &player.name,
                 pos2(tr.x + ew, tr.y + offset),
                 Align2::LEFT_TOP,
                 Some(text_color),
+                font_size,
             );
             offset += font_size;
         }
@@ -247,18 +256,26 @@ impl App {
                 text_color,
             );
             if player.ammo.0 >= 0 {
-                self.text(
+                self.text_sized(
                     painter,
                     format!("{}/{}", player.ammo.0, player.ammo.1),
                     pos2(bl.x + half_width, bl.y + font_size),
                     Align2::CENTER_TOP,
                     Some(text_color),
+                    font_size,
                 );
             }
         }
     }
 
     fn skeleton(&self, painter: &Painter, player: &PlayerData, data: &Data, alpha: Option<f32>) {
+        let distance = data
+            .local_player
+            .position
+            .distance(player.position)
+            .max(1.0);
+        let esp_scale = (500.0 / distance).clamp(0.25, 1.0);
+
         let mut color = match &self.config.player.draw_skeleton {
             DrawMode::None => return,
             DrawMode::Health => {
@@ -269,7 +286,7 @@ impl App {
         if let Some(alpha) = alpha {
             color = Self::alpha(color, alpha);
         }
-        let stroke = Stroke::new(self.config.hud.line_width, color);
+        let stroke = Stroke::new(self.config.hud.line_width * esp_scale, color);
 
         for (a, b) in &Bones::CONNECTIONS {
             let Some(a) = player.bones.get(a) else {
