@@ -322,33 +322,29 @@ impl App {
                 self.send_config();
             }
 
-            ui.horizontal(|ui| {
-                if ui
-                    .add(
-                        DragValue::new(&mut self.weapon_config().rcs.x_strength)
+            if ui
+                .horizontal(|ui| {
+                    let rcs = &mut self.weapon_config().rcs;
+                    let x = ui.add(
+                        DragValue::new(&mut rcs.strength.x)
+                            .prefix("X ")
                             .range(0.0..=1.0)
                             .speed(0.01),
-                    )
-                    .changed()
-                {
-                    self.send_config();
-                }
-                ui.label("X Strength");
-            });
-
-            ui.horizontal(|ui| {
-                if ui
-                    .add(
-                        DragValue::new(&mut self.weapon_config().rcs.y_strength)
+                    );
+                    let y = ui.add(
+                        DragValue::new(&mut rcs.strength.y)
+                            .prefix("Y ")
                             .range(0.0..=1.0)
                             .speed(0.01),
-                    )
-                    .changed()
-                {
-                    self.send_config();
-                }
-                ui.label("Y Strength");
-            });
+                    );
+                    ui.label("Strength");
+                    x | y
+                })
+                .inner
+                .changed()
+            {
+                self.send_config();
+            }
         });
     }
 }
