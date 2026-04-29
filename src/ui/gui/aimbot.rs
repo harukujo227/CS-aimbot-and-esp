@@ -322,20 +322,29 @@ impl App {
                 self.send_config();
             }
 
-            ui.horizontal(|ui| {
-                if ui
-                    .add(
-                        DragValue::new(&mut self.weapon_config().rcs.smooth)
+            if ui
+                .horizontal(|ui| {
+                    let rcs = &mut self.weapon_config().rcs;
+                    let x = ui.add(
+                        DragValue::new(&mut rcs.strength.x)
+                            .prefix("X ")
                             .range(0.0..=1.0)
-                            .speed(0.02),
-                    )
-                    .on_hover_text("Lower values mean more direct recoil control")
-                    .changed()
-                {
-                    self.send_config();
-                }
-                ui.label("RCS Smooth");
-            });
+                            .speed(0.01),
+                    );
+                    let y = ui.add(
+                        DragValue::new(&mut rcs.strength.y)
+                            .prefix("Y ")
+                            .range(0.0..=1.0)
+                            .speed(0.01),
+                    );
+                    ui.label("Strength");
+                    x | y
+                })
+                .inner
+                .changed()
+            {
+                self.send_config();
+            }
         });
     }
 }

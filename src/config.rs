@@ -8,6 +8,7 @@ use std::{
 };
 
 use egui::Color32;
+use glam::Vec2;
 use serde::{Deserialize, Serialize};
 use strum::{EnumIter, IntoEnumIterator};
 
@@ -148,7 +149,7 @@ impl Default for AimbotConfig {
 pub struct RcsConfig {
     pub enable_override: bool,
     pub enabled: bool,
-    pub smooth: f32,
+    pub strength: Vec2,
 }
 
 impl Default for RcsConfig {
@@ -156,7 +157,7 @@ impl Default for RcsConfig {
         Self {
             enable_override: false,
             enabled: false,
-            smooth: 0.3,
+            strength: Vec2::splat(0.5),
         }
     }
 }
