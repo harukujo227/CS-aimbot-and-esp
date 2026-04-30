@@ -61,14 +61,12 @@ impl Player {
     pub fn get_client_entity(cs2: &CS2, index: u64) -> Option<u64> {
         let bucket_index = index >> 9;
         let index_in_bucket = index & 0x1FF;
-        // wtf is this doing, and how?
         let bucket_ptr: u64 = cs2
             .process
             .read(cs2.offsets.interface.entity + 0x08 * bucket_index);
         if bucket_ptr == 0 {
             return None;
         }
-        // what?
         let entity = cs2
             .process
             .read(bucket_ptr + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
@@ -79,11 +77,9 @@ impl Player {
     }
 
     fn get_entity(cs2: &CS2, handle: i32) -> Option<u64> {
-        // upper bits = something irrelevant
         let index = handle as u64 & 0x7FFF;
         let bucket_index = index >> 9;
         let index_in_bucket = index & 0x1FF;
-        // what the fuck is this doing?
         let bucket_ptr: u64 = cs2
             .process
             .read(cs2.offsets.interface.entity + 8 * bucket_index);
@@ -91,7 +87,6 @@ impl Player {
             return None;
         }
 
-        // bit-fuckery, why is this needed exactly?
         let entity = cs2
             .process
             .read(bucket_ptr + cs2.offsets.entity_identity.size as u64 * index_in_bucket);
