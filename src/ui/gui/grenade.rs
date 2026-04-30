@@ -6,27 +6,24 @@ use crate::{
         app::App,
         color::Colors,
         grenades::{Grenade, write_grenades},
-        gui::helpers::collapsing_open,
+        gui::helpers::{collapsing_open, scroll},
     },
 };
 
 impl App {
     pub fn grenade_settings(&mut self, ui: &mut Ui) {
-        egui::ScrollArea::vertical()
-            .auto_shrink([false, true])
-            .id_salt("hud")
-            .show(ui, |ui| {
-                if self.current_grenade.is_some() {
-                    self.edit_grenade(ui);
-                } else {
-                    self.record_grenade(ui);
-                }
+        scroll(ui, "hud", |ui| {
+            if self.current_grenade.is_some() {
+                self.edit_grenade(ui);
+            } else {
+                self.record_grenade(ui);
+            }
 
-                // grenade list
-                ui.collapsing("Grenade List", |ui| {
-                    self.grenade_list(ui);
-                });
+            // grenade list
+            ui.collapsing("Grenade List", |ui| {
+                self.grenade_list(ui);
             });
+        });
     }
 
     fn grenade_list(&mut self, ui: &mut Ui) {

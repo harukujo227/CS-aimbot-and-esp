@@ -181,23 +181,20 @@ impl App {
     fn aimbot_right(&mut self, ui: &mut Ui) {
         collapsing_open(ui, "Triggerbot", |ui| {
             if self.aimbot_tab == AimbotTab::Weapon
-                && ui
-                    .checkbox(
-                        &mut self.weapon_config().triggerbot.enable_override,
-                        "Enable Override",
-                    )
-                    .changed()
+                && checkbox(
+                    ui,
+                    "Enable Override",
+                    &mut self.weapon_config().triggerbot.enable_override,
+                )
             {
                 self.send_config();
             }
 
-            if ui
-                .checkbox(
-                    &mut self.weapon_config().triggerbot.enabled,
-                    "Enable Triggerbot",
-                )
-                .changed()
-            {
+            if checkbox(
+                ui,
+                "Enable Triggerbot",
+                &mut self.weapon_config().triggerbot.enabled,
+            ) {
                 self.send_config();
             }
 
@@ -210,18 +207,16 @@ impl App {
                 self.send_config();
             }
 
-            ui.horizontal(|ui| {
-                if ui
-                    .add(DragRange::new(
-                        &mut self.weapon_config().triggerbot.delay,
-                        0..=999,
-                    ))
-                    .changed()
-                {
-                    self.send_config();
-                }
-                ui.label("Delay (ms)");
-            });
+            if ui
+                .add(DragRange::new(
+                    "Delay (ms)",
+                    &mut self.weapon_config().triggerbot.delay,
+                    0..=999,
+                ))
+                .changed()
+            {
+                self.send_config();
+            }
 
             if combo_box(
                 ui,
@@ -232,93 +227,73 @@ impl App {
                 self.send_config();
             }
 
-            if ui
-                .checkbox(&mut self.weapon_config().triggerbot.head_only, "Head Only")
-                .changed()
-            {
+            if checkbox(
+                ui,
+                "Head Only",
+                &mut self.weapon_config().triggerbot.head_only,
+            ) {
                 self.send_config();
             }
 
-            ui.horizontal(|ui| {
-                if ui
-                    .add(
-                        DragValue::new(&mut self.weapon_config().triggerbot.shot_duration)
-                            .range(0..=2000)
-                            .speed(10.0),
-                    )
-                    .changed()
-                {
-                    self.send_config();
-                }
-                ui.label("Additional Duration (ms)");
-            });
+            if drag(
+                ui,
+                "Hold Duration (ms)",
+                DragValue::new(&mut self.weapon_config().triggerbot.shot_duration)
+                    .range(0..=2000)
+                    .speed(10.0),
+            ) {
+                self.send_config();
+            }
         });
 
-        ui.collapsing("Checks\u{200b}", |ui| {
-            if ui
-                .checkbox(
-                    &mut self.weapon_config().triggerbot.flash_check,
-                    "Flash Check",
-                )
-                .changed()
-            {
+        ui.collapsing("Checks", |ui| {
+            if checkbox(
+                ui,
+                "Flash Check",
+                &mut self.weapon_config().triggerbot.flash_check,
+            ) {
                 self.send_config();
             }
 
-            if ui
-                .checkbox(
-                    &mut self.weapon_config().triggerbot.scope_check,
-                    "Scope Check",
-                )
-                .changed()
-            {
+            if checkbox(
+                ui,
+                "Scope Check",
+                &mut self.weapon_config().triggerbot.scope_check,
+            ) {
                 self.send_config();
             }
 
-            if ui
-                .checkbox(
-                    &mut self.weapon_config().triggerbot.velocity_check,
-                    "Velocity Check",
-                )
-                .on_hover_text("Only shoot if the player moves slower than the specified threshold")
-                .changed()
-            {
+            if checkbox_hover(
+                ui,
+                "Velocity Check",
+                "Only shoot if the player moves slower than the specified threshold",
+                &mut self.weapon_config().triggerbot.velocity_check,
+            ) {
                 self.send_config();
             }
 
-            ui.horizontal(|ui| {
-                if ui
-                    .add(
-                        DragValue::new(&mut self.weapon_config().triggerbot.velocity_threshold)
-                            .range(0..=5000),
-                    )
-                    .on_hover_text(
-                        "Maximum velocity at which the triggerbot can shoot (in CS2 Units)",
-                    )
-                    .changed()
-                {
-                    self.send_config();
-                }
-                ui.label("Velocity Threshold");
-            });
+            if drag(
+                ui,
+                "Velocity Threshold",
+                DragValue::new(&mut self.weapon_config().triggerbot.velocity_threshold)
+                    .range(0..=5000),
+            ) {
+                self.send_config();
+            }
         });
 
         collapsing_open(ui, "RCS", |ui| {
             if self.aimbot_tab == AimbotTab::Weapon
-                && ui
-                    .checkbox(
-                        &mut self.weapon_config().rcs.enable_override,
-                        "Enable Override",
-                    )
-                    .changed()
+                && checkbox(
+                    ui,
+                    "Enable Override",
+                    &mut self.weapon_config().rcs.enable_override,
+                )
             {
                 self.send_config();
             }
 
-            if ui
-                .checkbox(&mut self.weapon_config().rcs.enabled, "Enable RCS")
-                .changed()
-            {
+            if checkbox(ui, "Enable RCS", &mut self.weapon_config().rcs.enabled) {
                 self.send_config();
             }
 
@@ -327,21 +302,20 @@ impl App {
                     let rcs = &mut self.weapon_config().rcs;
                     let x = ui.add(
                         DragValue::new(&mut rcs.strength.x)
-                            .prefix("X ")
+                            .prefix("X: ")
                             .range(0.0..=1.0)
                             .speed(0.01),
                     );
                     let y = ui.add(
                         DragValue::new(&mut rcs.strength.y)
-                            .prefix("Y ")
+                            .prefix("Y: ")
                             .range(0.0..=1.0)
                             .speed(0.01),
                     );
                     ui.label("Strength");
-                    x | y
+                    (x | y).changed()
                 })
                 .inner
-                .changed()
             {
                 self.send_config();
             }

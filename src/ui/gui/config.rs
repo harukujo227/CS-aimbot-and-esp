@@ -5,19 +5,19 @@ use crate::{
         BASE_PATH, CONFIG_PATH, Config, available_configs, delete_config, parse_config,
         write_config,
     },
-    ui::{app::App, color::Colors, grenades::read_grenades, gui::helpers::collapsing_open},
+    ui::{
+        app::App,
+        color::Colors,
+        grenades::read_grenades,
+        gui::helpers::{collapsing_open, scroll},
+    },
 };
 
 impl App {
     pub fn config_settings(&mut self, ui: &mut Ui) {
         ui.columns(2, |cols| {
             let left = &mut cols[0];
-            egui::ScrollArea::vertical()
-                .auto_shrink([false, true])
-                .id_salt("config_left")
-                .show(left, |left| {
-                    self.config_left(left);
-                });
+            scroll(left, "config_left", |left| self.config_left(left));
 
             let right = &mut cols[1];
 
@@ -41,12 +41,7 @@ impl App {
                     right.text_edit_singleline(&mut self.new_config_name);
                 });
 
-                egui::ScrollArea::vertical()
-                    .auto_shrink([false, true])
-                    .id_salt("config_right")
-                    .show(right, |right| {
-                        self.config_right(right);
-                    });
+                scroll(right, "config_right", |right| self.config_right(right));
             });
         });
     }

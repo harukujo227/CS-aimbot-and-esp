@@ -33,6 +33,7 @@ winit = { version = "0.30", default-features = false, features = ["x11"] }
 overflow-checks = false
 
 [profile.release]
+debug = true
 lto = true
 
 [features]
