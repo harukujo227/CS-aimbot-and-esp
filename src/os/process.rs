@@ -430,7 +430,10 @@ impl Process {
     fn get_pid(process_name: &str) -> Option<i32> {
         for dir in read_dir("/proc").unwrap() {
             let entry = dir.unwrap();
-            if !entry.file_type().unwrap().is_dir() {
+            let Ok(file_type) = entry.file_type() else {
+                continue;
+            };
+            if !file_type.is_dir() {
                 continue;
             }
 
