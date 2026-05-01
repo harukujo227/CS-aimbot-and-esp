@@ -367,7 +367,7 @@ fn convex_hull(points: &[Vec3]) -> Vec<Vec3> {
         return points.to_vec();
     }
 
-    let mut sorted_points = points.to_vec();
+    let mut sorted_points: Vec<Vec3> = points.iter().filter(|p| !p.is_nan()).copied().collect();
     sorted_points.sort_by(|a, b| {
         a.x.partial_cmp(&b.x)
             .unwrap_or(std::cmp::Ordering::Equal)
