@@ -246,7 +246,7 @@ impl App {
             }
         });
 
-        ui.collapsing("Checks", |ui| {
+        ui.collapsing("Checks\u{200b}", |ui| {
             if checkbox(
                 ui,
                 "Flash Check",
