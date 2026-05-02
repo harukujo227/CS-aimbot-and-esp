@@ -83,19 +83,30 @@ impl App {
         }
 
         let position = pos2(10.0, data.window_size.y / 2.0);
+        let aimbot_color = if data.aimbot_active {
+            Color32::GREEN
+        } else {
+            Color32::WHITE
+        };
         self.text(
             painter,
             format!("Aimbot: {:?}", self.config.aim.aimbot_hotkey),
             position,
             Align2::LEFT_TOP,
-            None,
+            Some(aimbot_color),
         );
+
+        let triggerbot_color = if data.triggerbot_active {
+            Color32::GREEN
+        } else {
+            Color32::WHITE
+        };
         self.text(
             painter,
             format!("Triggerbot: {:?}", self.config.aim.triggerbot_hotkey),
             position + egui::vec2(0.0, self.config.hud.font_size),
             Align2::LEFT_TOP,
-            None,
+            Some(triggerbot_color),
         );
     }
 
