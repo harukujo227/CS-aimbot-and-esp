@@ -106,6 +106,10 @@ impl App {
             if checkbox(ui, "Dropped Weapons", &mut self.config.hud.dropped_weapons) {
                 self.send_config();
             }
+
+            if checkbox(ui, "Keybinds", &mut self.config.hud.keybind_list) {
+                self.send_config();
+            }
         });
     }
 
