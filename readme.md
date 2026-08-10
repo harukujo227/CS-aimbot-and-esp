@@ -1,8 +1,7 @@
 <div align="center">
 
-# deadlocked
+# CS@ aimbot and esp
 
-[![Casual Maintenance Intended](https://casuallymaintained.tech/badge.svg)](https://casuallymaintained.tech/)
 
 <br>
 
