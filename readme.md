@@ -27,7 +27,7 @@ The built-in update checker compares against the latest release tag and will pro
 > 
 > See the [compatibility,md](compatibility.md).
 
-Download the [latest release](https://github.com/avitran0/deadlocked/releases). Each release contains the `deadlocked` binary and `setup.sh`.
+Download the [latest release](https://github.com/harukujo227/deadlocked/releases). Each release contains the `deadlocked` binary and `setup.sh`.
 
 **Setup (one-time only):**
 
